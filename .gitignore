@@ -1,0 +1,5 @@
+build/*
+*~
+.lock*
+*.lock
+*.pyc
