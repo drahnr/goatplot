@@ -35,15 +35,19 @@ struct _GoatPlotPrivate
 	GArray *array;
 };
 
-G_DEFINE_TYPE (GoatPlot, goat_plot, GTK_TYPE_DRAWING_AREA);
+G_DEFINE_TYPE_WITH_PRIVATE (GoatPlot, goat_plot, GTK_TYPE_DRAWING_AREA);
+
 
 static void
 goat_plot_finalize (GObject *object)
 {
 	GoatPlot *plot = GOAT_PLOT (object);
-
-	g_array_free (plot->priv->array, TRUE); //FIXME check if we need to remove all items maually first aswell in order to apply the GDestroyNotify func we registered earlier
-	g_free (plot->priv);
+	GoatPlotPrivate *priv = plot->priv;
+	gint i = priv->array->len;
+	while (--i >= 0) {
+		g_object_unref (g_array_index (priv->array, GoatDataset*, i));
+	}
+	g_array_free (plot->priv->array, TRUE);
 
 	G_OBJECT_CLASS (goat_plot_parent_class)->finalize (object);
 }
@@ -65,8 +69,6 @@ goat_plot_class_init (GoatPlotClass *klass)
 	widget_class->scroll_event = goat_plot_scroll_event;
 	widget_class->get_preferred_width = goat_plot_get_prefered_width;
 	widget_class->get_preferred_height = goat_plot_get_prefered_height;
-
-	g_type_class_add_private (klass, sizeof (GoatPlotPrivate));
 }
 
 static void
@@ -84,8 +86,7 @@ goat_plot_init (GoatPlot *self)
 	gtk_widget_set_can_focus (widget, TRUE);
 	gtk_widget_grab_focus (widget);
 
-	self->priv->array = g_array_sized_new (TRUE, TRUE, sizeof(gpointer), 7);
-	g_array_set_clear_func (self->priv->array, g_object_unref);
+	self->priv->array = g_array_new (TRUE, TRUE, sizeof(gpointer));
 }
 
 

@@ -31,7 +31,7 @@ struct _GoatDatasetPrivate
 	gint count;
 };
 
-G_DEFINE_TYPE (GoatDataset, goat_dataset, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GoatDataset, goat_dataset, G_TYPE_OBJECT);
 
 static void
 goat_dataset_finalize (GObject *object)
@@ -40,9 +40,9 @@ goat_dataset_finalize (GObject *object)
 }
 
 enum {
-PROP_0,
-PROP_LIST,
-PROP_COUNT,
+	PROP_0,
+	PROP_LIST,
+	PROP_COUNT,
 };
 
 
@@ -102,7 +102,6 @@ goat_dataset_class_init (GoatDatasetClass *klass)
 	    g_param_spec_int ("count", "GoatDataset::count",
 	    "count of datapoints", -1, 10000, -1, G_PARAM_READABLE));
 
-	g_type_class_add_private (object_class, sizeof (GoatDatasetPrivate));
 }
 
 static void
