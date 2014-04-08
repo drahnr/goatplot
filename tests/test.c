@@ -24,8 +24,8 @@ main (int argc, char *argv[])
 	GList *list = NULL;
 	for (i=0; i<120; i++) {
 		GoatPair *pair = g_new (GoatPair, 1);
-		pair->x = i*3.f;
-		pair->y = i*i % 11 - 3.f;
+		pair->x = i*15.f;
+		pair->y = i*i % 141 - 3.f;
 		list = g_list_prepend (list, pair);
 	}
 	GoatDataset *dataset = goat_dataset_new (list);

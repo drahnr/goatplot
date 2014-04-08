@@ -126,10 +126,19 @@ draw_axis (GoatPlot *plot, cairo_t *cr, GtkAllocation *allocation)
 //	cairo_rectangle (cr, left, top, right-left, bottom-top);
 //	cairo_clip (cr);
 
+	// reduce the allocation width / height to what is visible
 	allocation->width = right - left;
-	allocation->width = bottom - top;
+	allocation->height = bottom - top;
 	allocation->x = left;
 	allocation->y = top;
+
+	// set the clip region to the bounded data region
+	cairo_rectangle (cr,
+	                 allocation->x, allocation->y,
+	                 allocation->width, allocation->height);
+	//cairo_fill_preserve (cr);
+	cairo_clip (cr);
+
 	return TRUE;
 }
 

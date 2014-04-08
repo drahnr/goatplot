@@ -171,18 +171,24 @@ goat_plot_draw_bars (GoatPlot *plot, GoatDataset *dataset, cairo_t *cr, GtkAlloc
 
 	goat_dataset_iter_init (&dit, dataset);
 
+	// translate origin to plot graphs to (0,0) of our plot
+	cairo_translate (cr, allocation->x, allocation->height + allocation->y);
+	// make it plot naturally +up, -down
+	cairo_scale (cr, 1., -1.);
+
 	// draw points
 	cairo_set_source_rgba (cr, 0., 1., 0., 1.);
 	while (goat_dataset_iter_next (&dit, &x, &y)) {
-		bar_height = (x * (allocation->height-spacetoborder)*0.9) / (x_max-x_min);
 #if 0
+		bar_height = (x * (allocation->height-spacetoborder)*0.9) / (x_max-x_min);
+
 		cairo_rectangle (cr, ((((float)(i))-0.5) * column_width + pad/2),
 		                     allocation->height - bar_height - spacetoborder,
 		                     column_width - pad,
 		                     bar_height);
 #else
-		cairo_rectangle (cr, x + pad_left,
-		                     allocation->height - y - pad_bottom,
+		cairo_rectangle (cr, x-3,
+		                     y-3,
 		                     6,
 		                     6);
 #endif
@@ -213,7 +219,7 @@ goat_plot_draw (GtkWidget *widget, cairo_t *cr)
 		//TODO clip (plot, cr, &allocation);
 
 		// draw the actual data
-		for (i=0; i<GOAT_PLOT_GET_PRIVATE(plot)->array->len; i++) {
+		for (i=0; i<priv->array->len; i++) {
 			dataset = g_array_index (priv->array, GoatDataset *, i);
 			goat_plot_draw_bars (plot, dataset, cr, &allocation);
 		}
