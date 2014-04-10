@@ -29,6 +29,8 @@ struct _GoatDatasetPrivate
 {
 	GList *list;
 	gint count;
+
+	GoatDatasetStyle style;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (GoatDataset, goat_dataset, G_TYPE_OBJECT);
@@ -134,6 +136,12 @@ goat_dataset_iter_init (GoatDatasetIter *iter, GoatDataset *dataset)
 {
 	GoatDatasetPrivate *priv = dataset->priv;
 	iter->state = priv->list;
+}
+
+GoatDatasetStyle
+goat_dataset_get_style (GoatDataset *dataset)
+{
+	return GOAT_STYLE_POINT;
 }
 
 gboolean

@@ -129,17 +129,13 @@ goat_plot_remove_dataset (GoatPlot *plot, gint datasetid)
 
 //FIXME draw on a surface so redraw is really really fast
 static gboolean
-goat_plot_draw_bars (GoatPlot *plot, GoatDataset *dataset, cairo_t *cr, GtkAllocation *allocation)
+draw_dataset (GoatPlot *plot, cairo_t *cr, GoatDataset *dataset)
 {
 	int column_width;
 	int x_max, x_min;
 	int y_max, y_min;
 	int bar_height;
-	const int pad = 2; //vertical padding between the bars
-	const int spacetoborder = 20; //between graph and draw border
 
-	const int pad_left = 18;
-	const int pad_bottom = 18;
 	if (goat_dataset_get_length(dataset) <= 0) {
 		return FALSE;
 	}
@@ -171,27 +167,27 @@ goat_plot_draw_bars (GoatPlot *plot, GoatDataset *dataset, cairo_t *cr, GtkAlloc
 
 	goat_dataset_iter_init (&dit, dataset);
 
-	// translate origin to plot graphs to (0,0) of our plot
-	cairo_translate (cr, allocation->x, allocation->height + allocation->y);
-	// make it plot naturally +up, -down
-	cairo_scale (cr, 1., -1.);
-
 	// draw points
+	const double diameter = 4.;
 	cairo_set_source_rgba (cr, 0., 1., 0., 1.);
 	while (goat_dataset_iter_next (&dit, &x, &y)) {
-#if 0
-		bar_height = (x * (allocation->height-spacetoborder)*0.9) / (x_max-x_min);
-
-		cairo_rectangle (cr, ((((float)(i))-0.5) * column_width + pad/2),
-		                     allocation->height - bar_height - spacetoborder,
-		                     column_width - pad,
-		                     bar_height);
-#else
-		cairo_rectangle (cr, x-3,
-		                     y-3,
-		                     6,
-		                     6);
-#endif
+		// TODO spline/linear interconnect here
+		switch (goat_dataset_get_style (dataset)) {
+		case GOAT_STYLE_SQUARE:
+			cairo_rectangle (cr, x-diameter/2., y-diameter/2.,
+				                 diameter, diameter);
+			break;
+		case GOAT_STYLE_POINT:
+			cairo_move_to (cr, x + diameter / 2., y + diameter / 2.);
+			cairo_arc (cr,
+			           x, y,
+			           diameter / 2.,
+			           0., 2 * M_PI);
+			break;
+		default:
+			g_warning ("not implemented yet... sorry.");
+			break;
+		}
 	}
 	cairo_fill (cr);
 	return TRUE;
@@ -205,6 +201,7 @@ goat_plot_draw (GtkWidget *widget, cairo_t *cr)
 	GoatDataset *dataset;
 	GoatPlotPrivate *priv;
 	GtkAllocation allocation; //==gint x,y,width,height
+	GtkBorder padding = {18, 18, 18, 18}; // left, right, top, bottom
 	gint i;
 
 	if (gtk_widget_is_drawable (widget)) {
@@ -214,14 +211,39 @@ goat_plot_draw (GtkWidget *widget, cairo_t *cr)
 
 		gtk_widget_get_allocation (widget, &allocation);
 
-		// clips drawable region, adjusts allocation object size
-		draw_axis (plot, cr, &allocation);
-		//TODO clip (plot, cr, &allocation);
+#if 0
+		//FIXME this is all zer0es
+		gtk_style_context_get_padding (gtk_widget_get_style_context (widget), GTK_STATE_FLAG_ACTIVE, &padding);
 
+		g_print ("alocation x,y %i %i    w,h %i %i\n",
+		         allocation.x, allocation.y, allocation.width, allocation.height);
+		g_print ("padding left,right,top,bottom %i %i %i %i\n",
+		         padding.left, padding.right, padding.top, padding.bottom);
+#endif
+
+		// translate origin to plot graphs to (0,0) of our plot
+
+		cairo_translate (cr, allocation.x + padding.left,
+		                     allocation.height + allocation.y - padding.bottom);
+
+		// make it plot naturally +up, -down
+		cairo_scale (cr, 1., -1.);
+
+		// draw the background
+		draw_background (plot, cr, &allocation, &padding);
+
+		// the scale we just drew should not be drawable either
+		// now the coords are y↑ x→
+		cairo_rectangle (cr,
+			             -allocation.x + 1,
+			             -allocation.y + 1,
+			             allocation.width - padding.left - padding.right - 2,
+			             allocation.height - padding.top - padding.bottom - 2);
+		cairo_clip (cr);
 		// draw the actual data
 		for (i=0; i<priv->array->len; i++) {
 			dataset = g_array_index (priv->array, GoatDataset *, i);
-			goat_plot_draw_bars (plot, dataset, cr, &allocation);
+			draw_dataset (plot, cr, dataset);
 		}
 		cairo_restore (cr);
 		return TRUE;

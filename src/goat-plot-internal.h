@@ -10,14 +10,10 @@ goat_set_source (cairo_t *cr, GdkRGBA *rgba)
 }
 
 gboolean
-draw_axis (GoatPlot *plot, cairo_t *cr, GtkAllocation *allocation)
+draw_background (GoatPlot *plot, cairo_t *cr, GtkAllocation *allocation, GtkBorder *padding)
 {
 	int i;
 	int top, bottom, left, right;
-	const int pad_top = 18; //pad 10pixels in all directions
-	const int pad_left = 18; //pad 10pixels in all directions
-	const int pad_right = 18; //pad 10pixels in all directions
-	const int pad_bottom = 18; //pad 10pixels in all directions
 
 	const int width_tick = 10; //major
 	const int width_tock = 5; //minor
@@ -29,10 +25,10 @@ draw_axis (GoatPlot *plot, cairo_t *cr, GtkAllocation *allocation)
 	GdkRGBA color_grid_tick = {0.9, 0.9, 0.9, 1.};
 	GdkRGBA color_grid_tock = {0.95, 0.95, 0.95, 1.};
 
-	top = pad_top;
-	left = pad_left;
-	bottom = allocation->height - pad_bottom;
-	right = allocation->width - pad_right;
+	top = allocation->x;
+	left = allocation->y;
+	bottom = allocation->height - padding->bottom - padding->top;
+	right = allocation->width - padding->right - padding->left;
 
 	cairo_rectangle (cr, left, top, right-left, bottom-top);
 	cairo_set_source_rgba (cr, 1., 1., 1., 1.);
@@ -123,21 +119,6 @@ draw_axis (GoatPlot *plot, cairo_t *cr, GtkAllocation *allocation)
 	}
 
 #endif
-//	cairo_rectangle (cr, left, top, right-left, bottom-top);
-//	cairo_clip (cr);
-
-	// reduce the allocation width / height to what is visible
-	allocation->width = right - left;
-	allocation->height = bottom - top;
-	allocation->x = left;
-	allocation->y = top;
-
-	// set the clip region to the bounded data region
-	cairo_rectangle (cr,
-	                 allocation->x, allocation->y,
-	                 allocation->width, allocation->height);
-	//cairo_fill_preserve (cr);
-	cairo_clip (cr);
 
 	return TRUE;
 }

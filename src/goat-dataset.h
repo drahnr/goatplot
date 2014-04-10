@@ -68,10 +68,24 @@ struct _GoatPair
 	gdouble x, y;
 };
 
+typedef enum {
+	GOAT_STYLE_UNKNOWN = 0,
+	GOAT_STYLE_POINT = 1,
+	GOAT_STYLE_SQUARE = 2,
+	GOAT_STYLE_TRIANGLE = 3,
+} GoatDatasetStyle;
+
 GType goat_dataset_get_type (void) G_GNUC_CONST;
 GoatDataset *goat_dataset_new (GList *list);
 gint
 goat_dataset_get_length (GoatDataset *dataset);
+
+GoatDatasetStyle
+goat_dataset_get_style (GoatDataset *dataset);
+
+void
+goat_dataset_set_style (GoatDataset *dataset, GoatDatasetStyle oxq);
+
 
 void goat_dataset_iter_init (GoatDatasetIter *iter, GoatDataset *dataset);
 gboolean goat_dataset_iter_next (GoatDatasetIter *iter, double *x, double *y);
