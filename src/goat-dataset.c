@@ -112,6 +112,7 @@ goat_dataset_init (GoatDataset *self)
 	self->priv = GOAT_DATASET_GET_PRIVATE (self);
 	self->priv->list = NULL;
 	self->priv->count = -1;
+	self->priv->style = GOAT_DATASET_STYLE_SQUARE;
 }
 
 GoatDataset *
@@ -131,17 +132,19 @@ goat_dataset_get_length (GoatDataset *dataset)
 	return priv->count = (gint)g_list_length (priv->list);
 }
 
+
+GoatDatasetStyle
+goat_dataset_get_style (GoatDataset *dataset)
+{
+	return dataset->priv->style;
+}
+
+
 void
 goat_dataset_iter_init (GoatDatasetIter *iter, GoatDataset *dataset)
 {
 	GoatDatasetPrivate *priv = dataset->priv;
 	iter->state = priv->list;
-}
-
-GoatDatasetStyle
-goat_dataset_get_style (GoatDataset *dataset)
-{
-	return GOAT_STYLE_POINT;
 }
 
 gboolean
@@ -157,4 +160,43 @@ goat_dataset_iter_next (GoatDatasetIter *iter, double *x, double *y)
 	}
 	iter->state = i->next;
 	return (iter->state!=NULL);
+}
+
+
+
+//FIXME add some caching
+gboolean
+goat_dataset_get_extrema (GoatDataset *dataset,
+                          double *xmin, double *xmax,
+                          double *ymin, double *ymax)
+{
+	GoatDatasetIter iter;
+	double x, y;
+	double register x_min, y_min;
+	double register x_max, y_max;
+
+	goat_dataset_iter_init (&iter, dataset);
+	if (goat_dataset_iter_next (&iter, &x, &y)) {
+		x_min = x_max = x;
+		y_min = y_max = y;
+		while (goat_dataset_iter_next (&iter, &x, &y)) {
+			if (x<x_min) {
+				x_min = x;
+			} else if (x>x_max) {
+				x_max = x;
+			}
+			if (y<y_min) {
+				y_min = y;
+			} else if (y>y_max) {
+				y_max = y;
+			}
+		}
+	} else {
+		return FALSE;
+	}
+	*xmin = x_min;
+	*xmax = x_max;
+	*ymin = y_min;
+	*ymax = y_max;
+	return TRUE;
 }

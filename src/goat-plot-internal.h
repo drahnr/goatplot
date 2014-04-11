@@ -9,120 +9,290 @@ goat_set_source (cairo_t *cr, GdkRGBA *rgba)
 	cairo_set_source_rgba (cr, rgba->red, rgba->green, rgba->blue, rgba->alpha);
 }
 
+
+typedef enum {
+	GOAT_DIRECTION_UNKNOWN = 0,
+	GOAT_DIRECTION_HORIZONTAL,
+	GOAT_DIRECTION_VERTICAL,
+} GoatDirection;
+
+typedef enum {
+	GOAT_BORDER_TOP = 1,
+	GOAT_BORDER_LEFT = 3,
+	GOAT_BORDER_RIGHT = 4,
+	GOAT_BORDER_BOTTOM = 2,
+} GoatBorderPosition;
+
+
+
+
+/**
+ * @param x_nil in pixel
+ * @param x_factor convert unit to pixel
+ */
 gboolean
-draw_background (GoatPlot *plot, cairo_t *cr, GtkAllocation *allocation, GtkBorder *padding)
+draw_scale_horizontal (GoatPlot *plot,
+                       cairo_t *cr,
+                       int left, int right, int top, int bottom,
+                       gdouble x_nil,
+                       gdouble x_factor,
+                       GoatBorderPosition toporbottom,
+                       gboolean grid,
+                       int step_minor, int step_major,
+                       int width_minor, int width_major,
+                       GdkRGBA color_minor, GdkRGBA color_major)
 {
-	int i;
-	int top, bottom, left, right;
+	const int register start = (left-x_nil)/step_minor/x_factor;
+	const int register end = (right-x_nil)/step_minor/x_factor;
+	int register i;
 
-	const int width_tick = 10; //major
-	const int width_tock = 5; //minor
-	const int step_tick = 50; //FIXME calculate this dynamically based on the size
-	const int step_tock = 10;
+	g_print ("[] right %i   left %i   x_nil %lf\n", right, left, x_nil);
+	g_print (">>> start=%i end=%i  %lf x_factor\n", start, end, x_factor);
+	cairo_set_line_width (cr, 1.);
 
-	GdkRGBA color_tick = {0.8, 0., 0., 1.};
-	GdkRGBA color_tock = {0., 0., 0., 1.};
-	GdkRGBA color_grid_tick = {0.9, 0.9, 0.9, 1.};
-	GdkRGBA color_grid_tock = {0.95, 0.95, 0.95, 1.};
+	if (toporbottom == GOAT_BORDER_BOTTOM) {
+		for (i=start; i<=end; i++) {
+			gboolean majorstip = (i*step_minor % step_major == 0);
+			const double register x = x_nil+left+step_minor*x_factor*i;
+			cairo_move_to (cr, x, top);
+			if (majorstip) {
+				cairo_line_to (cr, x, top-width_major);
+				goat_set_source (cr, &color_major);
+			} else {
+				cairo_line_to (cr, x, top-width_minor);
+				goat_set_source (cr, &color_minor);
+			}
+			cairo_stroke (cr);
+		}
+	}
+
+	if (grid) {
+		GdkRGBA color_grid_major = {0.9, 0.9, 0.9, 1.};
+		GdkRGBA color_grid_minor = {0.95, 0.95, 0.95, 1.};
+		for (i=start; i<=end; i++) {
+			gboolean majorstip = (i*step_minor % step_major == 0);
+			const double register x = x_nil+left+step_minor*x_factor*i;
+			cairo_move_to (cr, x, top);
+			cairo_line_to (cr, x, bottom);
+			if (majorstip) {
+				goat_set_source (cr, &color_grid_major);
+			} else {
+				goat_set_source (cr, &color_grid_minor);
+			}
+			cairo_stroke (cr);
+		}
+	}
+
+	if (toporbottom == GOAT_BORDER_TOP) {
+		for (i=start; i<=end; i++) {
+			gboolean majorstip = (i*step_minor % step_major == 0);
+			const double register x = x_nil+left+step_minor*x_factor*i;
+			cairo_move_to (cr, x, bottom);
+			if (majorstip) {
+				cairo_line_to (cr, x, bottom+width_major);
+				goat_set_source (cr, &color_major);
+			} else {
+				cairo_line_to (cr, x, bottom+width_minor);
+				goat_set_source (cr, &color_minor);
+			}
+			cairo_stroke (cr);
+		}
+	}
+	return TRUE;
+}
+
+/**
+ * @param y_nil in pixel
+ * @param y_factor convert unit to pixel
+ */
+gboolean
+draw_scale_vertical (GoatPlot *plot,
+                  cairo_t *cr,
+                  int left, int right, int top, int bottom,
+                  double y_nil,
+                  gdouble y_factor,
+		          GoatBorderPosition leftorright,
+                  gboolean grid,
+                  int step_minor, int step_major,
+                  int width_minor, int width_major,
+                  GdkRGBA color_minor, GdkRGBA color_major)
+{
+	const int register start = (top-y_nil)/step_minor/y_factor;
+	const int register end = (bottom-y_nil)/step_minor/y_factor;
+	int register i;
+
+	g_print ("[] bottom %i   top %i   x_nil %lf\n", bottom, top, y_nil);
+	g_print ("> start=%i end=%i         %lf y_factor\n", start, end,y_factor);
+	cairo_set_line_width (cr, 1.);
+
+	if (leftorright == GOAT_BORDER_LEFT) {
+		for (i=start; i<=end; i++) {
+			const gboolean register majorstip = (i*step_minor % step_major == 0);
+			const double register y = y_nil+top+step_minor*y_factor*i;
+			cairo_move_to (cr, left, y);
+			if (majorstip) {
+				cairo_line_to (cr, left-width_major, y);
+				goat_set_source (cr, &color_major);
+			} else {
+				cairo_line_to (cr, left-width_minor, y);
+				goat_set_source (cr, &color_minor);
+			}
+			cairo_stroke (cr);
+		}
+	}
+
+	if (grid) {
+
+		GdkRGBA color_grid_major = {0.9, 0.9, 0.9, 1.};
+		GdkRGBA color_grid_minor = {0.95, 0.95, 0.95, 1.};
+		for (i=start; i<=end; i++) {
+			const gboolean register majorstip = (i*step_minor % step_major == 0);
+			const double register y = y_nil+top+step_minor*y_factor*i;
+			cairo_move_to (cr, left, y);
+			cairo_line_to (cr, right, y);
+			if (majorstip) {
+				goat_set_source (cr, &color_grid_major);
+			} else {
+				goat_set_source (cr, &color_grid_minor);
+			}
+			cairo_stroke (cr);
+		}
+	}
+
+	if (leftorright == GOAT_BORDER_RIGHT) {
+		for (i=start; i<=end; i++) {
+			const gboolean register majorstip = (i*step_minor % step_major == 0);
+			const double register y = y_nil+top+step_minor*y_factor*i;
+			cairo_move_to (cr, left, y);
+			if (majorstip) {
+				cairo_line_to (cr, left-width_major, y);
+				goat_set_source (cr, &color_major);
+			} else {
+				cairo_line_to (cr, left-width_minor, y);
+				goat_set_source (cr, &color_minor);
+			}
+			cairo_stroke (cr);
+		}
+	}
+	return TRUE;
+}
+
+
+
+
+
+gboolean
+draw_nil_lines (GoatPlot *plot, cairo_t *cr,
+                int width, int height,
+                double x_nil_pixel, double y_nil_pixel)
+{
+	cairo_set_line_width (cr, 1.);
+	cairo_set_source_rgba (cr, 0.7, 0., 0., 1.);
+	cairo_move_to (cr,    0., y_nil_pixel);
+	cairo_line_to (cr, width, y_nil_pixel);
+	cairo_move_to (cr, x_nil_pixel, 0.);
+	cairo_line_to (cr, x_nil_pixel, height);
+	cairo_stroke (cr);
+	return TRUE;
+}
+
+
+gboolean
+draw_scales (GoatPlot *plot,
+             cairo_t *cr,
+             GtkAllocation *allocation,
+             GtkBorder *padding,
+             gdouble x_nil,
+             gdouble y_nil,
+             gdouble x_factor,
+             gdouble y_factor)
+{
+	int top,left,right,bottom;
 
 	top = allocation->x;
 	left = allocation->y;
 	bottom = allocation->height - padding->bottom - padding->top;
 	right = allocation->width - padding->right - padding->left;
 
+	GdkRGBA color_major = {0.8, 0., 0., 1.};
+	GdkRGBA color_minor = {0., 0., 0., 1.};
+//	GdkRGBA color_grid_major = {0.9, 0.9, 0.9, 1.};
+//	GdkRGBA color_grid_minor = {0.95, 0.95, 0.95, 1.};
+
+	draw_scale_horizontal (plot, cr,
+	                       left, right, top, bottom,
+	                       x_nil, x_factor,
+	                       GOAT_BORDER_TOP,
+	                       TRUE, 1, 5,
+	                       6, 12,
+	                       color_minor, color_major);
+	draw_scale_vertical (plot, cr,
+                         left, right, top, bottom,
+	                     y_nil, y_factor,
+	                     GOAT_BORDER_LEFT,
+	                     TRUE, 10, 50,
+	                     6, 12,
+	                     color_minor, color_major);
+	return TRUE;
+}
+
+
+
+gboolean
+draw_background (GoatPlot *plot,
+                 cairo_t *cr,
+                 GtkAllocation *allocation,
+                 GtkBorder *padding,
+                 gdouble x_nil,
+                 gdouble y_nil,
+                 gdouble x_factor,
+                 gdouble y_factor)
+{
+	int top, bottom, left, right;
+
+	top = allocation->x;
+	left = allocation->y;
+	bottom = allocation->height - padding->bottom - padding->top;
+	right = allocation->width - padding->right - padding->left;
+
+
 	cairo_rectangle (cr, left, top, right-left, bottom-top);
 	cairo_set_source_rgba (cr, 1., 1., 1., 1.);
 	cairo_fill (cr);
+
 
 	cairo_rectangle (cr, left, top, right-left, bottom-top);
 	cairo_set_source_rgba (cr, 0., 0., 0., 1.);
 	cairo_set_line_width (cr, 1.);
 	cairo_stroke (cr);
 
-#if 1
-	//horizontal top
-	i = CLAMP((bottom-top)/step_tock, 1, 10000);
-	cairo_set_line_width (cr, 1.);
-	for (; i>-1; i--) {
-		//left
-		if (i*step_tock%step_tick==0) {
-			cairo_move_to (cr, left,            top+step_tock*i);
-			cairo_line_to (cr, left-width_tick, top+step_tock*i);
-			goat_set_source (cr, &color_tick);
-		} else {
-			cairo_move_to (cr, left,            top+step_tock*i);
-			cairo_line_to (cr, left-width_tock, top+step_tock*i);
-			goat_set_source (cr, &color_tock);
-		}
-		cairo_stroke (cr);
-		//grid
-		if (i*step_tock%step_tick==0) {
-			cairo_move_to (cr, left,  top+step_tock*i);
-			cairo_line_to (cr, right, top+step_tock*i);
-			goat_set_source (cr, &color_grid_tick);
-		} else {
-			cairo_move_to (cr, left,  top+step_tock*i);
-			cairo_line_to (cr, right, top+step_tock*i);
-			goat_set_source (cr, &color_grid_tock);
-		}
-		cairo_stroke (cr);
-		//right
-		if (i*step_tock%step_tick==0) {
-			cairo_move_to (cr, right, top+step_tock*i);
-			cairo_line_to (cr, right+width_tick, top+step_tock*i);
-			goat_set_source (cr, &color_tick);
-		} else {
-			cairo_move_to (cr, right,            top+step_tock*i);
-			cairo_line_to (cr, right+width_tock, top+step_tock*i);
-			goat_set_source (cr, &color_tock);
-		}
-		cairo_stroke (cr);
-	}
-#endif
-#if 1
-	//horizontal axis stiple top
-	i = CLAMP((right-left)/step_tock, 1, 10000);
-	for (; i>-1; i--) {
-		//top
-		if (i*step_tock%step_tick==0) {
-			cairo_move_to (cr, left+step_tock*i, top);
-			cairo_line_to (cr, left+step_tock*i, top-width_tick);
-			goat_set_source (cr, &color_tick);
-		} else {
-			cairo_move_to (cr, left+step_tock*i, top);
-			cairo_line_to (cr, left+step_tock*i, top-width_tock);
-			goat_set_source (cr, &color_tock);
-		}
-		cairo_stroke (cr);
-		//grid
-		if (i*step_tock%step_tick==0) {
-			cairo_move_to (cr, left+step_tock*i, top);
-			cairo_line_to (cr, left+step_tock*i, bottom);
-			goat_set_source (cr, &color_grid_tick);
-		} else {
-			cairo_move_to (cr, left+step_tock*i, top);
-			cairo_line_to (cr, left+step_tock*i, bottom);
-			goat_set_source (cr, &color_grid_tock);
-		}
-		cairo_stroke (cr);
-		//bottom
-		if (i*step_tock%step_tick==0) {
-			cairo_move_to (cr, left+step_tock*i, bottom);
-			cairo_line_to (cr, left+step_tock*i, bottom+width_tick);
-			goat_set_source (cr, &color_tick);
-		} else {
-			cairo_move_to (cr, left+step_tock*i, bottom);
-			cairo_line_to (cr, left+step_tock*i, bottom+width_tock);
-			goat_set_source (cr, &color_tock);
-		}
-		cairo_stroke (cr);
-	}
+	return TRUE;
+}
 
-#endif
+gboolean
+clip_drawable_area (GoatPlot *plot,
+                 cairo_t *cr,
+                 GtkAllocation *allocation,
+                 GtkBorder *padding)
+{
+	int top, bottom, left, right;
+
+	top = allocation->x;
+	left = allocation->y;
+	bottom = allocation->height - padding->bottom - padding->top;
+	right = allocation->width - padding->right - padding->left;
+
+
+	cairo_rectangle (cr, left, top, right-left, bottom-top);
+	cairo_clip (cr);
 
 	return TRUE;
 }
 
+
+/**
+ * nice upper bound
+ */
 
 
 /*

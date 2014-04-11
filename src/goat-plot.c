@@ -21,18 +21,22 @@
 #include "goat-plot.h"
 #include "goat-plot-internal.h"
 #include "goat-dataset.h"
+#include <math.h>
 
-static gboolean goat_plot_draw (GtkWidget *widget, cairo_t *cr);
-static void goat_plot_get_prefered_width (GtkWidget *widget, int *minimal, int *natural);
-static void goat_plot_get_prefered_height (GtkWidget *widget, int *minimal, int *natural);
-static gboolean goat_plot_event (GtkWidget *widget, GdkEvent *event);
-static gboolean goat_plot_scroll_event (GtkWidget *widget, GdkEventScroll *event);
+static gboolean draw (GtkWidget *widget, cairo_t *cr);
+static void get_prefered_width (GtkWidget *widget, int *minimal, int *natural);
+static void get_prefered_height (GtkWidget *widget, int *minimal, int *natural);
+static gboolean event (GtkWidget *widget, GdkEvent *event);
+static gboolean scroll_event (GtkWidget *widget, GdkEventScroll *event);
 
 #define GOAT_PLOT_GET_PRIVATE(object)(G_TYPE_INSTANCE_GET_PRIVATE((object), GOAT_TYPE_PLOT, GoatPlotPrivate))
 
 struct _GoatPlotPrivate
 {
-	GArray *array;
+	GArray *array; // array of GoatDataset pointers
+	GoatPlotScaleType scale_x, scale_y; //remove this, its the users duty to prescale data properly FIXME
+	// FIXME GoatPlotGridType gridtype [LOG, EXP, LIN=DEFAULT]
+	gboolean scale_fixed;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (GoatPlot, goat_plot, GTK_TYPE_DRAWING_AREA);
@@ -59,16 +63,16 @@ goat_plot_class_init (GoatPlotClass *klass)
 	object_class->finalize = goat_plot_finalize;
 
 	GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
-	widget_class->draw = goat_plot_draw;
+	widget_class->draw = draw;
 #if 0
 	widget_class->button_press_event = goat_plot_button_press_event;
 	widget_class->button_release_event = goat_plot_button_release_event;
 	widget_class->key_press_event = goat_plot_key_press_event;
 	widget_class->key_release_event = goat_plot_key_release_event;
 #endif
-	widget_class->scroll_event = goat_plot_scroll_event;
-	widget_class->get_preferred_width = goat_plot_get_prefered_width;
-	widget_class->get_preferred_height = goat_plot_get_prefered_height;
+	widget_class->scroll_event = scroll_event;
+	widget_class->get_preferred_width = get_prefered_width;
+	widget_class->get_preferred_height = get_prefered_height;
 }
 
 static void
@@ -86,6 +90,9 @@ goat_plot_init (GoatPlot *self)
 	gtk_widget_set_can_focus (widget, TRUE);
 	gtk_widget_grab_focus (widget);
 
+	self->priv->scale_x = GOAT_PLOT_SCALE_LIN; //KICKE MEE
+	self->priv->scale_y = GOAT_PLOT_SCALE_LIN; //KICK MEE
+	self->priv->scale_fixed = TRUE;
 	self->priv->array = g_array_new (TRUE, TRUE, sizeof(gpointer));
 }
 
@@ -127,57 +134,138 @@ goat_plot_remove_dataset (GoatPlot *plot, gint datasetid)
 }
 
 
-//FIXME draw on a surface so redraw is really really fast
-static gboolean
-draw_dataset (GoatPlot *plot, cairo_t *cr, GoatDataset *dataset)
+/**
+ * @param window window height or width, or if fixed scale, us a const for that
+ * @param min in units
+ * @param max in units
+ * @param unit_to_pixel [out] 
+ */
+gboolean
+get_unit_to_pixel_factor (int window, gdouble min, gdouble max, gdouble *unit_to_pixel)
 {
-	int column_width;
-	int x_max, x_min;
-	int y_max, y_min;
-	int bar_height;
+	gdouble delta = max - min;
+	if (delta==0.) { //yes really equal
+		return FALSE;
+	} else {
+		*unit_to_pixel = (double)window/delta;
+	}
+	return TRUE;
+}
 
+
+//FIXME draw on a surface so redraw is really really fast? Do some benchmarking (and check CPU load)
+/**
+ * @param height the height of the drawable plotting area
+ * @param height the width of the drawable plotting area
+ */
+static gboolean
+draw_dataset (GoatPlot *plot, cairo_t *cr,
+              GoatDataset *dataset,
+              gint height, gint width,
+              gdouble x_min, gdouble x_max, gdouble x_nil_pixel, gdouble x_unit_to_pixel,
+              gdouble y_min, gdouble y_max, gdouble y_nil_pixel, gdouble y_unit_to_pixel)
+{
 	if (goat_dataset_get_length(dataset) <= 0) {
 		return FALSE;
 	}
 
+	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (plot);
+#if 0
+	// find max and apply the extra scale if necessary
+	switch (priv->scale_y) {
+	case GOAT_PLOT_SCALE_EXP:
+		y_min = exp(y_min);
+		break;
+	case GOAT_PLOT_SCALE_LOG:
+		y_min = log(y_min * (y_min < 0. ? -1 : +1));
+		break;
+	default:
+		break;
+	}
+	switch (priv->scale_y) {
+	case GOAT_PLOT_SCALE_EXP:
+		y_max = exp(y_max);
+		break;
+	case GOAT_PLOT_SCALE_LOG:
+		y_max = log(y_max * (y_max < 0. ? -1 : +1));
+		break;
+	default:
+		break;
+	}
+
+	switch (priv->scale_x) {
+	case GOAT_PLOT_SCALE_EXP:
+		x_min = exp(x_min);
+		break;
+	case GOAT_PLOT_SCALE_LOG:
+		x_min = log (x_min * (x_min < 0. ? -1 : +1));
+		break;
+	default:
+		break;
+	}
+	switch (priv->scale_x) {
+	case GOAT_PLOT_SCALE_EXP:
+		x_max = exp(x_max);
+		break;
+	case GOAT_PLOT_SCALE_LOG:
+		x_max = log(x_max * (x_max < 0. ? -1 : +1));
+		break;
+	default:
+		break;
+	}
+#endif
+
+
 	gdouble x,y;
 	GoatDatasetIter dit;
-
-
-	column_width = 20; //allocation->width / plot->num_valy;
-
-	// find max
-	goat_dataset_iter_init (&dit, dataset);
-	if (goat_dataset_iter_next (&dit, &x, &y)) {
-		x_min = x_max = x;
-		y_min = y_max = y;
-		while (goat_dataset_iter_next (&dit, &x, &y)) {
-			if (x_max < y) {
-				x_max = y;
-			} else if (x_min > y) {
-				x_min = y;
-			}
-			if (y_max < y) {
-				y_max = y;
-			} else if (y_min > y) {
-				y_min = y;
-			}
-		}
-	}
 
 	goat_dataset_iter_init (&dit, dataset);
 
 	// draw points
-	const double diameter = 4.;
-	cairo_set_source_rgba (cr, 0., 1., 0., 1.);
+	const double diameter = 4.5;
+	cairo_set_source_rgba (cr, g_random_double_range (0.1,0.9),
+	                           g_random_double_range (0.1,0.9),
+	                           g_random_double_range (0.1,0.9), 1.);
 	while (goat_dataset_iter_next (&dit, &x, &y)) {
+	#if 0
+		switch (priv->scale_x) {
+		case GOAT_PLOT_SCALE_EXP:
+			x = exp (x) * x_unit_to_pixel;
+			break;
+		case GOAT_PLOT_SCALE_LOG:
+			x = log (x) * x_unit_to_pixel;
+			break;
+		default:
+			x *= x_unit_to_pixel;
+			break;
+		}
+		x -= x_nil; //plottable
+
+		switch (priv->scale_y) {
+		case GOAT_PLOT_SCALE_EXP:
+			y = exp (y) * y_unit_to_pixel;
+			break;
+		case GOAT_PLOT_SCALE_LOG:
+			y = log (y) * y_unit_to_pixel;
+			break;
+		default:
+			y *= y_unit_to_pixel;
+			break;
+		}
+		y -= y_nil; //plottable
+#endif
+
+		x *= x_unit_to_pixel;
+		x += x_nil_pixel;
+		y *= y_unit_to_pixel;
+		y += y_nil_pixel;
 		// TODO spline/linear interconnect here
 		switch (goat_dataset_get_style (dataset)) {
-		case GOAT_STYLE_SQUARE:
-			cairo_rectangle (cr, x-diameter/2., y-diameter/2.,
+		case GOAT_DATASET_STYLE_SQUARE:
+			cairo_rectangle (cr, x - diameter/2., y - diameter/2.,
 				                 diameter, diameter);
 			break;
-		case GOAT_STYLE_POINT:
+		case GOAT_DATASET_STYLE_POINT:
 			cairo_move_to (cr, x + diameter / 2., y + diameter / 2.);
 			cairo_arc (cr,
 			           x, y,
@@ -190,12 +278,13 @@ draw_dataset (GoatPlot *plot, cairo_t *cr, GoatDataset *dataset)
 		}
 	}
 	cairo_fill (cr);
+
 	return TRUE;
 }
 
 
 static gboolean
-goat_plot_draw (GtkWidget *widget, cairo_t *cr)
+draw (GtkWidget *widget, cairo_t *cr)
 {
 	GoatPlot *plot;
 	GoatDataset *dataset;
@@ -203,7 +292,13 @@ goat_plot_draw (GtkWidget *widget, cairo_t *cr)
 	GtkAllocation allocation; //==gint x,y,width,height
 	GtkBorder padding = {18, 18, 18, 18}; // left, right, top, bottom
 	gint i;
-
+	gdouble x_min, x_max;
+	gdouble y_min, y_max;
+	gdouble x_nil_pixel;
+	gdouble y_nil_pixel;
+	gdouble x_unit_to_pixel;
+	gdouble y_unit_to_pixel;
+	
 	if (gtk_widget_is_drawable (widget)) {
 		plot = GOAT_PLOT (widget);
 		priv = GOAT_PLOT_GET_PRIVATE (plot);
@@ -228,42 +323,72 @@ goat_plot_draw (GtkWidget *widget, cairo_t *cr)
 
 		// make it plot naturally +up, -down
 		cairo_scale (cr, 1., -1.);
-
-		// draw the background
-		draw_background (plot, cr, &allocation, &padding);
+		// draw the background (scale + grid + white box)
 
 		// the scale we just drew should not be drawable either
 		// now the coords are y↑ x→
-		cairo_rectangle (cr,
-			             -allocation.x + 1,
-			             -allocation.y + 1,
-			             allocation.width - padding.left - padding.right - 2,
-			             allocation.height - padding.top - padding.bottom - 2);
-		cairo_clip (cr);
+		const gint width = allocation.width - padding.left - padding.right;
+		const gint height = allocation.height - padding.top - padding.bottom;
+
 		// draw the actual data
+		//FIXME this only works for one dataset, find a way to fix it
 		for (i=0; i<priv->array->len; i++) {
 			dataset = g_array_index (priv->array, GoatDataset *, i);
-			draw_dataset (plot, cr, dataset);
+			goat_dataset_get_extrema (dataset, &x_min, &x_max, &y_min, &y_max);
 		}
+		if (get_unit_to_pixel_factor (width, x_min, x_max, &x_unit_to_pixel)) {
+			g_warning ("Bad x range. This is boring too to plot.");
+		}
+		if (get_unit_to_pixel_factor (height, y_min, y_max, &y_unit_to_pixel)) {
+			g_warning ("Bad y range. This is boring too to plot.");
+		}
+		x_nil_pixel = -x_min * x_unit_to_pixel;
+		y_nil_pixel = -y_min * y_unit_to_pixel;
+		
+		draw_background (plot, cr, &allocation, &padding,
+		                 x_nil_pixel, y_nil_pixel,
+		                 x_unit_to_pixel, y_unit_to_pixel);
+		draw_scales (plot, cr, &allocation, &padding,
+		             x_nil_pixel, y_nil_pixel,
+		             x_unit_to_pixel, y_unit_to_pixel);
+		             
+		clip_drawable_area (plot, cr, &allocation, &padding);
+
+		draw_nil_lines (plot, cr, width, height, x_nil_pixel, y_nil_pixel);
+
+		for (i=0; i<priv->array->len; i++) {
+			dataset = g_array_index (priv->array, GoatDataset *, i);
+			draw_dataset (plot, cr, dataset,
+			              height, width,
+			              x_min, x_max, x_nil_pixel, x_unit_to_pixel,
+			              y_min, y_max, y_nil_pixel, y_unit_to_pixel);
+		}
+
 		cairo_restore (cr);
 		return TRUE;
 	}
 	return FALSE;
 }
 
-void
-goat_plot_get_prefered_width (GtkWidget *widget, int *minimal, int *natural)
+static void
+get_prefered_width (GtkWidget *widget, int *minimal, int *natural)
 {
 	*minimal = 200;
 	*natural = 350;
 }
 
-void
-goat_plot_get_prefered_height (GtkWidget *widget, int *minimal, int *natural)
+static void
+get_prefered_height (GtkWidget *widget, int *minimal, int *natural)
 {
 	*minimal = 200;
 	*natural = 350;
 }
+
+
+
+
+
+
 
 
 
@@ -271,9 +396,10 @@ goat_plot_get_prefered_height (GtkWidget *widget, int *minimal, int *natural)
 
 
 static gboolean
-goat_plot_scroll_event (GtkWidget *widget, GdkEventScroll *event)
+scroll_event (GtkWidget *widget, GdkEventScroll *event)
 {
 	g_print ("scroll event\n");
+	return FALSE;
 }
 
 
@@ -281,7 +407,7 @@ goat_plot_scroll_event (GtkWidget *widget, GdkEventScroll *event)
 
 
 static gboolean
-goat_plot_event (GtkWidget *widget, GdkEvent *event)
+event (GtkWidget *widget, GdkEvent *event)
 {
 	g_warning ("ehllllo\n??\n");
 	switch (event->type) {

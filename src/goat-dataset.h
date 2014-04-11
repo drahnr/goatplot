@@ -68,11 +68,13 @@ struct _GoatPair
 	gdouble x, y;
 };
 
+//FIXME this does not make much sense here, make this an option for the GoatPlot widget itself,
+//FIXME it is the users duty to convert his data to the proper form
 typedef enum {
-	GOAT_STYLE_UNKNOWN = 0,
-	GOAT_STYLE_POINT = 1,
-	GOAT_STYLE_SQUARE = 2,
-	GOAT_STYLE_TRIANGLE = 3,
+	GOAT_DATASET_STYLE_UNKNOWN = 0,
+	GOAT_DATASET_STYLE_POINT = 1,
+	GOAT_DATASET_STYLE_SQUARE = 2,
+	GOAT_DATASET_STYLE_TRIANGLE = 3,
 } GoatDatasetStyle;
 
 GType goat_dataset_get_type (void) G_GNUC_CONST;
@@ -89,6 +91,10 @@ goat_dataset_set_style (GoatDataset *dataset, GoatDatasetStyle oxq);
 
 void goat_dataset_iter_init (GoatDatasetIter *iter, GoatDataset *dataset);
 gboolean goat_dataset_iter_next (GoatDatasetIter *iter, double *x, double *y);
+gboolean
+goat_dataset_get_extrema (GoatDataset *dataset,
+                          double *xmin, double *xmax,
+                          double *ymin, double *ymax);
 
 G_END_DECLS
 
