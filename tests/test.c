@@ -50,14 +50,17 @@ main (int argc, char *argv[])
 	GoatDataset *dataset;
 
 	dataset = goat_dataset_new (list1);
+	goat_dataset_set_style (dataset, GOAT_DATASET_STYLE_TRIANGLE);
 	g_assert (goat_dataset_get_length (dataset) > 0);
 	goat_plot_add_dataset (plot, dataset);
 #if TEST_MULTIPLE
 	dataset = goat_dataset_new (list2);
+	goat_dataset_set_style (dataset, GOAT_DATASET_STYLE_POINT);
 	g_assert (goat_dataset_get_length (dataset) > 0);
 	goat_plot_add_dataset (plot, dataset);
 
 	dataset = goat_dataset_new (list3);
+	goat_dataset_set_style (dataset, GOAT_DATASET_STYLE_SQUARE);
 	g_assert (goat_dataset_get_length (dataset) > 0);
 	goat_plot_add_dataset (plot, dataset);
 #endif

@@ -138,7 +138,7 @@ goat_plot_remove_dataset (GoatPlot *plot, gint datasetid)
  * @param window window height or width, or if fixed scale, us a const for that
  * @param min in units
  * @param max in units
- * @param unit_to_pixel [out] 
+ * @param unit_to_pixel [out]
  */
 gboolean
 get_unit_to_pixel_factor (int window, gdouble min, gdouble max, gdouble *unit_to_pixel)
@@ -165,6 +165,7 @@ draw_dataset (GoatPlot *plot, cairo_t *cr,
               gdouble x_min, gdouble x_max, gdouble x_nil_pixel, gdouble x_unit_to_pixel,
               gdouble y_min, gdouble y_max, gdouble y_nil_pixel, gdouble y_unit_to_pixel)
 {
+	g_return_val_if_fail (plot, FALSE);
 	if (goat_dataset_get_length(dataset) <= 0) {
 		return FALSE;
 	}
@@ -222,7 +223,7 @@ draw_dataset (GoatPlot *plot, cairo_t *cr,
 	goat_dataset_iter_init (&dit, dataset);
 
 	// draw points
-	const double diameter = 4.5;
+	const double diameter = 8.;
 	cairo_set_source_rgba (cr, g_random_double_range (0.1,0.9),
 	                           g_random_double_range (0.1,0.9),
 	                           g_random_double_range (0.1,0.9), 1.);
@@ -253,7 +254,7 @@ draw_dataset (GoatPlot *plot, cairo_t *cr,
 			break;
 		}
 		y -= y_nil; //plottable
-#endif
+	#endif
 
 		x *= x_unit_to_pixel;
 		x += x_nil_pixel;
@@ -261,6 +262,12 @@ draw_dataset (GoatPlot *plot, cairo_t *cr,
 		y += y_nil_pixel;
 		// TODO spline/linear interconnect here
 		switch (goat_dataset_get_style (dataset)) {
+		case GOAT_DATASET_STYLE_TRIANGLE:
+			g_warning ("spacken!");
+		    cairo_move_to(cr, x+diameter/2., y-diameter/2.);
+		    cairo_line_to(cr, x-diameter/2., y-diameter/2.);
+		    cairo_line_to(cr, x+0., y+diameter/2.);
+			break;
 		case GOAT_DATASET_STYLE_SQUARE:
 			cairo_rectangle (cr, x - diameter/2., y - diameter/2.,
 				                 diameter, diameter);
@@ -272,9 +279,16 @@ draw_dataset (GoatPlot *plot, cairo_t *cr,
 			           diameter / 2.,
 			           0., 2 * M_PI);
 			break;
+
+		case GOAT_DATASET_STYLE_UNKNOWN:
+			g_warning ("psst .. I have no clue what to do...");
+			return FALSE;
 		default:
-			g_warning ("not implemented yet... sorry.");
-			break;
+			{
+			gint gds = (gint)goat_dataset_get_style(dataset);
+			g_warning ("DatasetStyle enum out of bounds %i", gds);
+			}
+			return FALSE;
 		}
 	}
 	cairo_fill (cr);
@@ -298,7 +312,7 @@ draw (GtkWidget *widget, cairo_t *cr)
 	gdouble y_nil_pixel;
 	gdouble x_unit_to_pixel;
 	gdouble y_unit_to_pixel;
-	
+
 	if (gtk_widget_is_drawable (widget)) {
 		plot = GOAT_PLOT (widget);
 		priv = GOAT_PLOT_GET_PRIVATE (plot);
@@ -337,21 +351,21 @@ draw (GtkWidget *widget, cairo_t *cr)
 			goat_dataset_get_extrema (dataset, &x_min, &x_max, &y_min, &y_max);
 		}
 		if (get_unit_to_pixel_factor (width, x_min, x_max, &x_unit_to_pixel)) {
-			g_warning ("Bad x range. This is boring too to plot.");
+			g_warning ("Bad x range. This is too boring to plot.");
 		}
 		if (get_unit_to_pixel_factor (height, y_min, y_max, &y_unit_to_pixel)) {
-			g_warning ("Bad y range. This is boring too to plot.");
+			g_warning ("Bad y range. This is too boring to plot.");
 		}
 		x_nil_pixel = -x_min * x_unit_to_pixel;
 		y_nil_pixel = -y_min * y_unit_to_pixel;
-		
+
 		draw_background (plot, cr, &allocation, &padding,
 		                 x_nil_pixel, y_nil_pixel,
 		                 x_unit_to_pixel, y_unit_to_pixel);
 		draw_scales (plot, cr, &allocation, &padding,
 		             x_nil_pixel, y_nil_pixel,
 		             x_unit_to_pixel, y_unit_to_pixel);
-		             
+
 		clip_drawable_area (plot, cr, &allocation, &padding);
 
 		draw_nil_lines (plot, cr, width, height, x_nil_pixel, y_nil_pixel);

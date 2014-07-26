@@ -136,7 +136,19 @@ goat_dataset_get_length (GoatDataset *dataset)
 GoatDatasetStyle
 goat_dataset_get_style (GoatDataset *dataset)
 {
+	g_return_val_if_fail (dataset, GOAT_DATASET_STYLE_UNKNOWN);
+	g_return_val_if_fail (GOAT_IS_DATASET (dataset), GOAT_DATASET_STYLE_UNKNOWN);
 	return dataset->priv->style;
+}
+
+
+
+void
+goat_dataset_set_style (GoatDataset *dataset, GoatDatasetStyle oxq)
+{
+	g_return_if_fail (dataset);
+	g_return_if_fail (GOAT_IS_DATASET (dataset));
+	dataset->priv->style = oxq;
 }
 
 
@@ -146,6 +158,7 @@ goat_dataset_iter_init (GoatDatasetIter *iter, GoatDataset *dataset)
 	GoatDatasetPrivate *priv = dataset->priv;
 	iter->state = priv->list;
 }
+
 
 gboolean
 goat_dataset_iter_next (GoatDatasetIter *iter, double *x, double *y)
