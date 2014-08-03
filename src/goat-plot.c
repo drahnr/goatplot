@@ -377,8 +377,8 @@ draw (GtkWidget *widget, cairo_t *cr)
 			              x_min, x_max, x_nil_pixel, x_unit_to_pixel,
 			              y_min, y_max, y_nil_pixel, y_unit_to_pixel);
 		}
-
 		cairo_restore (cr);
+
 		return TRUE;
 	}
 	return FALSE;

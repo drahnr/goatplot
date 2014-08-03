@@ -24,8 +24,6 @@ typedef enum {
 } GoatBorderPosition;
 
 
-
-
 /**
  * @param x_nil in pixel
  * @param x_factor convert unit to pixel

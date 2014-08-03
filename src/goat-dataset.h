@@ -75,6 +75,7 @@ typedef enum {
 	GOAT_DATASET_STYLE_POINT = 1,
 	GOAT_DATASET_STYLE_SQUARE = 2,
 	GOAT_DATASET_STYLE_TRIANGLE = 3,
+	GOAT_DATASET_STYLE_CUSTOM = ~1,
 } GoatDatasetStyle;
 
 GType goat_dataset_get_type (void) G_GNUC_CONST;
