@@ -79,8 +79,12 @@ typedef enum {
 	GOAT_DATASET_STYLE_CUSTOM = ~1,
 } GoatDatasetStyle;
 
-GType goat_dataset_get_type (void) G_GNUC_CONST;
-GoatDataset *goat_dataset_new (GList *list);
+GType
+goat_dataset_get_type (void) G_GNUC_CONST;
+
+GoatDataset *
+goat_dataset_new (GList *list);
+
 gint
 goat_dataset_get_length (GoatDataset *dataset);
 
@@ -90,9 +94,12 @@ goat_dataset_get_style (GoatDataset *dataset);
 void
 goat_dataset_set_style (GoatDataset *dataset, GoatDatasetStyle oxq);
 
+void
+goat_dataset_iter_init (GoatDatasetIter *iter, GoatDataset *dataset);
 
-void goat_dataset_iter_init (GoatDatasetIter *iter, GoatDataset *dataset);
-gboolean goat_dataset_iter_next (GoatDatasetIter *iter, double *x, double *y);
+gboolean
+goat_dataset_iter_next (GoatDatasetIter *iter, double *x, double *y);
+
 gboolean
 goat_dataset_get_extrema (GoatDataset *dataset,
                           double *xmin, double *xmax,
