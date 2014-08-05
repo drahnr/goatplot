@@ -3,6 +3,8 @@
 
 #include <gtk/gtk.h>
 
+#include "goat-plot-enum.h"
+
 G_BEGIN_DECLS
 
 #define GOAT_TYPE_SCALE				(goat_scale_get_type ())
@@ -17,7 +19,7 @@ typedef struct _GoatScale			GoatScale;
 typedef struct _GoatScaleClass		GoatScaleClass;
 typedef struct _GoatScalePrivate	GoatScalePrivate;
 
-typedef void (*GoatScaleDrawCallback)(cairo_t *cr);
+typedef void (*GoatScaleDrawCallback)(GoatScale *gs, cairo_t *cr);
 
 struct _GoatScale
 {
@@ -29,8 +31,6 @@ struct _GoatScale
 struct _GoatScaleClass
 {
 	GObjectClass parent_class;
-
-	GoatScaleDrawCallback draw;
 };
 
 GType goat_scale_get_type (void) G_GNUC_CONST;

@@ -1,59 +1,10 @@
 #include "goat-plot-scale.h"
+#include "goat-plot-enum.h"
 
 
 #define GOAT_SCALE_GET_PRIVATE(object)(G_TYPE_INSTANCE_GET_PRIVATE((object), GOAT_TYPE_SCALE, GoatScalePrivate));
 
-typedef enum {
-	GOAT_ORIENTATION_VERTICAL = 1,
-	GOAT_ORIENTATION_HORIZONTAL = 2
-} GoatOrientation;
 
-#define GOAT_TYPE_ORIENTATION (goat_orientation_get_type ())
-static GType
-goat_orientation_get_type (void)
-{
-	static GType t = 0;
-
-	if (!t) {
-		static GEnumValue ts[] = {
-			{ GOAT_ORIENTATION_VERTICAL, "Vertical scale",    "vertical" },
-			{ GOAT_ORIENTATION_HORIZONTAL,  "Horizontal scale", "horizontal"  },
-			{ 0, NULL, NULL },
-		};
-		t = g_enum_register_static ("GoatOrientationTypes", ts);
-	}
-	return t;
-}
-
-
-
-
-typedef enum {
-	GOAT_POSITION_TOP = 1,
-	GOAT_POSITION_BOTTOM = 2,
-	GOAT_POSITION_LEFT = 3,
-	GOAT_POSITION_RIGHT = 4
-} GoatPosition;
-
-#define GOAT_TYPE_POSITION (goat_position_get_type ())
-static GType
-goat_position_get_type (void)
-{
-	static GType t = 0;
-
-	if (!t) {
-		static GEnumValue ts[] = {
-			{ GOAT_POSITION_TOP, "Ontop the graph",    "top" },
-			{ GOAT_POSITION_BOTTOM,  "Below graph", "bottom"  },
-			{ GOAT_POSITION_LEFT, "Left of the graph", "left" },
-			{ GOAT_POSITION_RIGHT, "Right of the graph", "right" },
-			{ 0, NULL, NULL },
-		};
-		t = g_enum_register_static ("GoatPositionTypes", ts);
-	}
-
-	return t;
-}
 
 
 

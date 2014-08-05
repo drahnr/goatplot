@@ -23,6 +23,7 @@
 
 #include <gtk/gtk.h>
 #include "goat-dataset.h"
+#include "goat-plot-enum.h"
 
 G_BEGIN_DECLS
 
@@ -50,25 +51,6 @@ struct _GoatPlotClass
 	GtkDrawingAreaClass parent_class;
 };
 
-typedef enum {
-	GOAT_PLOT_SCALE_UNKNOWN = 0,
-	GOAT_PLOT_SCALE_LIN = 1,
-	GOAT_PLOT_SCALE_LOG = 2,
-	GOAT_PLOT_SCALE_EXP = 3,
-} GoatPlotScaleType;
-
-
-typedef enum {
-	GOAT_PLOT_SCALE_LEFT = 1,
-	GOAT_PLOT_SCALE_RIGHT = 2,
-	GOAT_PLOT_SCALE_TOP = 2,
-	GOAT_PLOT_SCALE_BOTTOM = 2
-} GoatPlotScalePosition;
-
-typedef enum {
-	GOAT_PLOT_SCALE_IN = 1,
-	GOAT_PLOT_SCALE_OUT = 2,
-} GoatPlotScaleHeading;
 
 
 GType goat_plot_get_type (void) G_GNUC_CONST;
@@ -83,7 +65,10 @@ void goat_plot_set_dynamic_y_size (GoatPlot *plot, gboolean dyn);
 void goat_plot_set_grid_visible (GoatPlot *plot, gboolean visible);
 void goat_plot_set_xlabel (GoatPlot *plot, gchar *xlabel);
 void goat_plot_set_ylabel (GoatPlot *plot, gchar *ylabel);
-
+void goat_plot_set_range_x (GoatPlot *plot, gdouble min_x, gdouble max_x);
+void goat_plot_set_range_y (GoatPlot *plot, gdouble min_y, gdouble max_y);
+void goat_plot_set_ticks_x (GoatPlot *plot, gdouble major, gint minors_per_major);
+void goat_plot_set_ticks_y (GoatPlot *plot, gdouble major, gint minors_per_major);
 G_END_DECLS
 
 #endif /* __GOAT_PLOT_H__ */

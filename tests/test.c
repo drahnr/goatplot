@@ -10,7 +10,7 @@ void destroy(GtkWidget *widget, gpointer data)
     gtk_main_quit();
 }
 
-#define TEST_MULTIPLE 0
+#define TEST_MULTIPLE 1
 int
 main (int argc, char *argv[])
 {

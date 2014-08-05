@@ -37,6 +37,20 @@ struct _GoatPlotPrivate
 	GoatPlotScaleType scale_x, scale_y; //remove this, its the users duty to prescale data properly FIXME
 	// FIXME GoatPlotGridType gridtype [LOG, EXP, LIN=DEFAULT]
 	gboolean scale_fixed;
+
+	// visible area of datasets
+	gdouble x_min, x_max;
+	gdouble y_min, y_max;
+	// automatically choose x_min, ... y_max according to the datasets
+	gboolean x_autorange;
+	gboolean y_autorange;
+
+	// ticks
+	gdouble major_delta_x;
+	gint minors_per_major_x;
+	gdouble major_delta_y;
+	gint minors_per_major_y;
+
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (GoatPlot, goat_plot, GTK_TYPE_DRAWING_AREA);
@@ -94,10 +108,18 @@ goat_plot_init (GoatPlot *self)
 	self->priv->scale_y = GOAT_PLOT_SCALE_LIN; //KICK MEE
 	self->priv->scale_fixed = TRUE;
 	self->priv->array = g_array_new (TRUE, TRUE, sizeof(gpointer));
+	self->priv->x_min = +G_MAXDOUBLE;
+	self->priv->x_max = -G_MAXDOUBLE;
+	self->priv->y_min = +G_MAXDOUBLE;
+	self->priv->y_max = -G_MAXDOUBLE;
+	self->priv->x_autorange = TRUE;
+	self->priv->y_autorange = TRUE;
 }
 
 
-
+/**
+ * create a new GoatPlot widget
+ */
 GoatPlot *
 goat_plot_new ()
 {
@@ -105,7 +127,10 @@ goat_plot_new ()
 }
 
 
-
+/**
+ * add a dataset to the plot
+ * @returns identifier to use for removal
+ */
 gint
 goat_plot_add_dataset (GoatPlot *plot, GoatDataset *dataset)
 {
@@ -120,6 +145,10 @@ goat_plot_add_dataset (GoatPlot *plot, GoatDataset *dataset)
 	return plot->priv->array->len - 1;
 }
 
+
+/**
+ * remove a dataset from the plot
+ */
 GoatDataset *
 goat_plot_remove_dataset (GoatPlot *plot, gint datasetid)
 {
@@ -153,10 +182,14 @@ get_unit_to_pixel_factor (int window, gdouble min, gdouble max, gdouble *unit_to
 }
 
 
-//FIXME draw on a surface so redraw is really really fast? Do some benchmarking (and check CPU load)
+//TODO draw on a surface so redraw is really really fast? Do some benchmarking (and check CPU load)
 /**
+ * @param plot
+ * @param cr the cairo context to draw on
+ * @param dataset which dateset to draw ontop of #cr
  * @param height the height of the drawable plotting area
- * @param height the width of the drawable plotting area
+ * @param width the width of the drawable plotting area
+ * @returns TRUE if drawing was successful (zer0 length is also TRUE), otherwise FALSE
  */
 static gboolean
 draw_dataset (GoatPlot *plot, cairo_t *cr,
@@ -167,7 +200,7 @@ draw_dataset (GoatPlot *plot, cairo_t *cr,
 {
 	g_return_val_if_fail (plot, FALSE);
 	if (goat_dataset_get_length(dataset) <= 0) {
-		return FALSE;
+		return TRUE;
 	}
 
 	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (plot);
@@ -263,7 +296,6 @@ draw_dataset (GoatPlot *plot, cairo_t *cr,
 		// TODO spline/linear interconnect here
 		switch (goat_dataset_get_style (dataset)) {
 		case GOAT_DATASET_STYLE_TRIANGLE:
-			g_warning ("spacken!");
 		    cairo_move_to(cr, x+diameter/2., y-diameter/2.);
 		    cairo_line_to(cr, x-diameter/2., y-diameter/2.);
 		    cairo_line_to(cr, x+0., y+diameter/2.);
@@ -279,14 +311,20 @@ draw_dataset (GoatPlot *plot, cairo_t *cr,
 			           diameter / 2.,
 			           0., 2 * M_PI);
 			break;
+		case GOAT_DATASET_STYLE_CROSS:
+			cairo_move_to (cr, x+diameter/2., y+diameter / 2.);
+		    cairo_line_to (cr, x-diameter/2., y-diameter/2.);
+			cairo_move_to (cr, x-diameter/2., y+diameter / 2.);
+		    cairo_line_to (cr, x+diameter/2., y-diameter/2.);
+			break;
 
 		case GOAT_DATASET_STYLE_UNKNOWN:
 			g_warning ("psst .. I have no clue what to do...");
 			return FALSE;
 		default:
 			{
-			gint gds = (gint)goat_dataset_get_style(dataset);
-			g_warning ("DatasetStyle enum out of bounds %i", gds);
+				gint gds = (gint)goat_dataset_get_style(dataset);
+				g_warning ("DatasetStyle enum out of bounds %i", gds);
 			}
 			return FALSE;
 		}
@@ -306,8 +344,6 @@ draw (GtkWidget *widget, cairo_t *cr)
 	GtkAllocation allocation; //==gint x,y,width,height
 	GtkBorder padding = {18, 18, 18, 18}; // left, right, top, bottom
 	gint i;
-	gdouble x_min, x_max;
-	gdouble y_min, y_max;
 	gdouble x_nil_pixel;
 	gdouble y_nil_pixel;
 	gdouble x_unit_to_pixel;
@@ -345,19 +381,35 @@ draw (GtkWidget *widget, cairo_t *cr)
 		const gint height = allocation.height - padding.top - padding.bottom;
 
 		// draw the actual data
-		//FIXME this only works for one dataset, find a way to fix it
-		for (i=0; i<priv->array->len; i++) {
-			dataset = g_array_index (priv->array, GoatDataset *, i);
-			goat_dataset_get_extrema (dataset, &x_min, &x_max, &y_min, &y_max);
+		if (priv->x_autorange || priv->y_autorange) {
+			for (i=0; i<priv->array->len; i++) {
+				dataset = g_array_index (priv->array, GoatDataset *, i);
+				gdouble x_min, x_max, y_min, y_max;
+				goat_dataset_get_extrema (dataset,
+				                          &x_min, &x_max,
+				                          &y_min, &y_max);
+				if (priv->x_min > x_min)
+					priv->x_min = x_min;
+				if (priv->y_min > y_min)
+					priv->y_min = y_min;
+				if (priv->x_max < x_max)
+					priv->x_max = x_max;
+				if (priv->y_max < y_max)
+					priv->y_max = y_max;
+			}
+			// TODO add some fixup if x_min is very close to x_max
+			// TODO add some additional padding for niceness :)
 		}
-		if (get_unit_to_pixel_factor (width, x_min, x_max, &x_unit_to_pixel)) {
+		g_printf ("x range %lf %lf\n", priv->x_min, priv->x_max);
+		g_printf ("y range %lf %lf\n", priv->y_min, priv->y_max);
+		if (get_unit_to_pixel_factor (width, priv->x_min, priv->x_max, &x_unit_to_pixel)) {
 			g_warning ("Bad x range. This is too boring to plot.");
 		}
-		if (get_unit_to_pixel_factor (height, y_min, y_max, &y_unit_to_pixel)) {
+		if (get_unit_to_pixel_factor (height, priv->y_min, priv->y_max, &y_unit_to_pixel)) {
 			g_warning ("Bad y range. This is too boring to plot.");
 		}
-		x_nil_pixel = -x_min * x_unit_to_pixel;
-		y_nil_pixel = -y_min * y_unit_to_pixel;
+		x_nil_pixel = priv->x_min * -x_unit_to_pixel;
+		y_nil_pixel = priv->y_min * -y_unit_to_pixel;
 
 		draw_background (plot, cr, &allocation, &padding,
 		                 x_nil_pixel, y_nil_pixel,
@@ -374,8 +426,8 @@ draw (GtkWidget *widget, cairo_t *cr)
 			dataset = g_array_index (priv->array, GoatDataset *, i);
 			draw_dataset (plot, cr, dataset,
 			              height, width,
-			              x_min, x_max, x_nil_pixel, x_unit_to_pixel,
-			              y_min, y_max, y_nil_pixel, y_unit_to_pixel);
+			              priv->x_min, priv->x_max, x_nil_pixel, x_unit_to_pixel,
+			              priv->y_min, priv->y_max, y_nil_pixel, y_unit_to_pixel);
 		}
 		cairo_restore (cr);
 
@@ -401,8 +453,84 @@ get_prefered_height (GtkWidget *widget, int *minimal, int *natural)
 
 
 
+void
+goat_plot_set_range_x_auto (GoatPlot *plot)
+{
+	g_return_if_fail (plot);
+	g_return_if_fail (GOAT_IS_PLOT (plot));
+
+	plot->priv->x_min = G_MAXDOUBLE;
+	plot->priv->x_max = -G_MAXDOUBLE;
+	plot->priv->x_autorange = TRUE;
+}
+
+void
+goat_plot_set_range_y_auto (GoatPlot *plot)
+{
+	g_return_if_fail (plot);
+	g_return_if_fail (GOAT_IS_PLOT (plot));
 
 
+	plot->priv->y_min = G_MAXDOUBLE;
+	plot->priv->y_max = -G_MAXDOUBLE;
+	plot->priv->y_autorange = TRUE;
+}
+
+void
+goat_plot_set_range_x (GoatPlot *plot, gdouble min_x, gdouble max_x)
+{
+	g_return_if_fail (min_x < max_x);
+	g_return_if_fail (plot);
+	g_return_if_fail (GOAT_IS_PLOT (plot));
+
+	plot->priv->x_autorange = FALSE;
+	plot->priv->x_min = min_x;
+	plot->priv->x_max = max_x;
+}
+
+void
+goat_plot_set_range_y (GoatPlot *plot, gdouble min_y, gdouble max_y)
+{
+	g_return_if_fail (min_y < max_y);
+	g_return_if_fail (plot);
+	g_return_if_fail (GOAT_IS_PLOT (plot));
+
+	plot->priv->y_autorange = FALSE;
+	plot->priv->y_min = min_y;
+	plot->priv->y_max = max_y;
+}
+
+void
+goat_plot_set_ticks_x (GoatPlot *plot, gdouble major, gint minors_per_major)
+{
+	g_return_if_fail (major>0.);
+	g_return_if_fail (plot);
+	g_return_if_fail (GOAT_IS_PLOT (plot));
+
+	GoatPlotPrivate *priv;
+
+	priv = GOAT_PLOT_GET_PRIVATE (plot);
+
+	priv->major_delta_x = major;
+	priv->minors_per_major_x = minors_per_major;
+}
+
+
+void
+goat_plot_set_ticks_y (GoatPlot *plot, gdouble major, gint minors_per_major)
+{
+	g_return_if_fail (major>0.);
+	g_return_if_fail (plot);
+	g_return_if_fail (GOAT_IS_PLOT (plot));
+
+	GoatPlotPrivate *priv;
+
+	priv = GOAT_PLOT_GET_PRIVATE (plot);
+
+	priv->major_delta_y = major;
+	priv->minors_per_major_y = minors_per_major;
+
+}
 
 
 

@@ -115,6 +115,11 @@ goat_dataset_init (GoatDataset *self)
 	self->priv->style = GOAT_DATASET_STYLE_SQUARE;
 }
 
+
+
+/**
+ * create a new dataset from a GList containing GoatPair values
+ */
 GoatDataset *
 goat_dataset_new (GList *list)
 {
@@ -123,6 +128,10 @@ goat_dataset_new (GList *list)
 	                     NULL);
 }
 
+/**
+ * return the number of items contained in the dataset
+ * @param dataset
+ */
 gint
 goat_dataset_get_length (GoatDataset *dataset)
 {
@@ -132,7 +141,10 @@ goat_dataset_get_length (GoatDataset *dataset)
 	return priv->count = (gint)g_list_length (priv->list);
 }
 
-
+/**
+ * @param dataset
+ * @returns node style of #dataset
+ */
 GoatDatasetStyle
 goat_dataset_get_style (GoatDataset *dataset)
 {
@@ -142,7 +154,10 @@ goat_dataset_get_style (GoatDataset *dataset)
 }
 
 
-
+/**
+ * @param dataset
+ * @param oxq node style to use for drawing of #dataset
+ */
 void
 goat_dataset_set_style (GoatDataset *dataset, GoatDatasetStyle oxq)
 {
@@ -152,6 +167,11 @@ goat_dataset_set_style (GoatDataset *dataset, GoatDatasetStyle oxq)
 }
 
 
+/**
+ * initilialize the iterator #iter for #dataset
+ * @param iter
+ * @param dataset
+ */
 void
 goat_dataset_iter_init (GoatDatasetIter *iter, GoatDataset *dataset)
 {
@@ -159,7 +179,13 @@ goat_dataset_iter_init (GoatDatasetIter *iter, GoatDataset *dataset)
 	iter->state = priv->list;
 }
 
-
+/**
+ * advance the iterator by one element
+ * @param iter
+ * @param x [out] x data if available
+ * @param y [out] y data if available
+ * @returns FALSE if no more data was available, otherwise TRUE
+ */
 gboolean
 goat_dataset_iter_next (GoatDatasetIter *iter, double *x, double *y)
 {
@@ -177,7 +203,14 @@ goat_dataset_iter_next (GoatDatasetIter *iter, double *x, double *y)
 
 
 
-//FIXME add some caching
+//TODO add some caching
+/**
+ * @param dataset
+ * @param xmin [out]
+ * @param xmax [out]
+ * @param ymin [out]
+ * @param ymax [out]
+ */
 gboolean
 goat_dataset_get_extrema (GoatDataset *dataset,
                           double *xmin, double *xmax,
