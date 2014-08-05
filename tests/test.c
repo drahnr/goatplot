@@ -38,12 +38,12 @@ main (int argc, char *argv[])
 #if TEST_MULTIPLE
 		pair = g_new (GoatPair, 1);
 		pair->x = i;
-		pair->y = sin(2*M_PI/64*i);
+		pair->y = sin(2*M_PI/64*i)*25;
 		list2 = g_list_prepend (list2, pair);
 
 		pair = g_new (GoatPair, 1);
 		pair->x = i*15.f;
-		pair->y = sin(2*M_PI/256*i+M_PI/2);
+		pair->y = sin(2*M_PI/64*i+M_PI/2)*55;
 		list3 = g_list_prepend (list3, pair);
 #endif
 	}
