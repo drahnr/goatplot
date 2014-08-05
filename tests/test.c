@@ -6,8 +6,30 @@
 
 void destroy(GtkWidget *widget, gpointer data)
 {
-	g_print ("exiting test-simple...\n");
+	g_print ("\n\n>>>>> creating screenshot...\n");
+	{
+		cairo_surface_t *surface;
+		cairo_t *cr;
+		GtkAllocation allocation;
+
+		gtk_widget_get_allocation (widget, &allocation);
+		surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, allocation.height, allocation.width);
+		g_assert (surface);
+		cr = cairo_create (surface);
+		gtk_widget_draw (GTK_WIDGET (widget), cr);
+		g_assert (cairo_surface_write_to_png (surface, "../../screenshot.png") == CAIRO_STATUS_SUCCESS);
+		cairo_surface_destroy (surface);
+		cairo_destroy (cr);
+	}
+	g_print ("\n\n>>>>> exiting test-simple...\n");
     gtk_main_quit();
+}
+
+gboolean
+self_destruct (GtkWidget *widget)
+{
+	destroy (widget, NULL);
+	return G_SOURCE_REMOVE;
 }
 
 #define TEST_MULTIPLE 1
@@ -69,6 +91,8 @@ main (int argc, char *argv[])
 	gtk_container_add (GTK_CONTAINER (window), GTK_WIDGET (plot));
 	gtk_widget_show_all (window);
 	g_signal_connect (G_OBJECT (window), "delete-event", G_CALLBACK (destroy), NULL);
+
+	g_timeout_add (1000, (GSourceFunc)self_destruct, GTK_WIDGET (window));
 
 	gtk_main ();
 
