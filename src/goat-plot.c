@@ -19,7 +19,7 @@
  */
 
 #include "goat-plot.h"
-#include "goat-plot-internal.h"
+
 #include "goat-dataset.h"
 #include <math.h>
 
@@ -45,23 +45,36 @@ struct _GoatPlotPrivate
 	gboolean x_autorange;
 	gboolean y_autorange;
 
-	// ticks
+	// ticks probably move into GoatTicks/Scale object
 	gdouble major_delta_x;
 	gint minors_per_major_x;
+
 	gdouble major_delta_y;
 	gint minors_per_major_y;
+
+	GdkRGBA color_major_x;
+	GdkRGBA color_major_y;
+
+	GdkRGBA color_minor_x;
+	GdkRGBA color_minor_y;
+
+	gint width_minor_x;
+	gint width_major_x;
+	gint width_minor_y;
+	gint width_major_y;
 
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (GoatPlot, goat_plot, GTK_TYPE_DRAWING_AREA);
 
+#include "goat-plot-internal.h"
 
 static void
 goat_plot_finalize (GObject *object)
 {
 	GoatPlot *plot = GOAT_PLOT (object);
-	GoatPlotPrivate *priv = plot->priv;
-	gint i = priv->array->len;
+	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (plot);
+	gint register i = priv->array->len;
 	while (--i >= 0) {
 		g_object_unref (g_array_index (priv->array, GoatDataset*, i));
 	}
@@ -114,6 +127,28 @@ goat_plot_init (GoatPlot *self)
 	self->priv->y_max = -G_MAXDOUBLE;
 	self->priv->x_autorange = TRUE;
 	self->priv->y_autorange = TRUE;
+	self->priv->color_major_x.red = 0.8;
+	self->priv->color_major_x.green = 0.;
+	self->priv->color_major_x.blue = 0.;
+	self->priv->color_major_x.alpha = 1.;
+
+	self->priv->color_minor_x.red = 0.;
+	self->priv->color_minor_x.green = 0.;
+	self->priv->color_minor_x.blue = 0.;
+	self->priv->color_minor_x.alpha = 1.;
+
+	self->priv->color_major_y = self->priv->color_major_x;
+	self->priv->color_minor_y = self->priv->color_minor_x;
+
+	self->priv->width_minor_x = 5;
+	self->priv->width_major_x = 10;
+	self->priv->width_minor_y = 5;
+	self->priv->width_major_y = 10;
+
+	self->priv->minors_per_major_x = 5;
+	self->priv->minors_per_major_y = 5;
+	self->priv->major_delta_x = 50.;
+	self->priv->major_delta_y = 50.;
 }
 
 
@@ -179,6 +214,37 @@ get_unit_to_pixel_factor (int window, gdouble min, gdouble max, gdouble *unit_to
 		*unit_to_pixel = (double)window/delta;
 	}
 	return TRUE;
+}
+
+/**
+ * UNUSED
+ * may be useful when ScaleTicks get factored into their own objects
+ */
+gboolean
+goat_plot_get_x_unit_to_pixel (GoatPlot *plot, gdouble *unit_to_pixel)
+{
+	GtkAllocation allocation;
+	const GtkBorder padding = {18, 18, 18, 18}; // left, right, top, bottom
+	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (plot);
+	gtk_widget_get_allocation (GTK_WIDGET (plot), &allocation);
+	const gint register width = allocation.width - padding.left - padding.right;
+	return get_unit_to_pixel_factor (width, priv->x_min, priv->x_max, unit_to_pixel);
+}
+
+
+/**
+ * UNUSED
+ * may be useful when SacleTicks get factored into their own objects
+ */
+gboolean
+goat_plot_get_y_unit_to_pixel (GoatPlot *plot, gdouble *unit_to_pixel)
+{
+	GtkAllocation allocation;
+	const GtkBorder padding = {18, 18, 18, 18}; // left, right, top, bottom
+	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (plot);
+	gtk_widget_get_allocation (GTK_WIDGET (plot), &allocation);
+	const gint register height = allocation.height - padding.top - padding.bottom;
+	return get_unit_to_pixel_factor (height, priv->y_min, priv->y_max, unit_to_pixel);
 }
 
 
@@ -256,7 +322,7 @@ draw_dataset (GoatPlot *plot, cairo_t *cr,
 	goat_dataset_iter_init (&dit, dataset);
 
 	// draw points
-	const double diameter = 8.;
+	const double register diameter = 8.;
 	cairo_set_source_rgba (cr, g_random_double_range (0.1,0.9),
 	                           g_random_double_range (0.1,0.9),
 	                           g_random_double_range (0.1,0.9), 1.);
@@ -335,6 +401,7 @@ draw_dataset (GoatPlot *plot, cairo_t *cr,
 }
 
 
+
 static gboolean
 draw (GtkWidget *widget, cairo_t *cr)
 {
@@ -388,32 +455,39 @@ draw (GtkWidget *widget, cairo_t *cr)
 				goat_dataset_get_extrema (dataset,
 				                          &x_min, &x_max,
 				                          &y_min, &y_max);
-				if (priv->x_min > x_min && priv->x_autorange)
-					priv->x_min = x_min;
-				if (priv->y_min > y_min && priv->y_autorange)
-					priv->y_min = y_min;
-				if (priv->x_max < x_max && priv->x_autorange)
-					priv->x_max = x_max;
-				if (priv->y_max < y_max && priv->y_autorange)
-					priv->y_max = y_max;
+				if (priv->x_autorange) {
+					if (priv->x_min > x_min)
+						priv->x_min = x_min;
+					if (priv->x_max < x_max)
+						priv->x_max = x_max;
+				}
+				if (priv->y_autorange) {
+					if (priv->y_min > y_min)
+						priv->y_min = y_min;
+					if (priv->y_max < y_max)
+						priv->y_max = y_max;
+				}
 			}
 			// TODO add some fixup if x_min is very close to x_max
 			// TODO add some additional padding for niceness :)
 		}
 		g_printf ("x range %lf %lf\n", priv->x_min, priv->x_max);
 		g_printf ("y range %lf %lf\n", priv->y_min, priv->y_max);
+
 		if (get_unit_to_pixel_factor (width, priv->x_min, priv->x_max, &x_unit_to_pixel)) {
 			g_warning ("Bad x range. This is too boring to plot.");
 		}
 		if (get_unit_to_pixel_factor (height, priv->y_min, priv->y_max, &y_unit_to_pixel)) {
 			g_warning ("Bad y range. This is too boring to plot.");
 		}
+
 		x_nil_pixel = priv->x_min * -x_unit_to_pixel;
 		y_nil_pixel = priv->y_min * -y_unit_to_pixel;
 
 		draw_background (plot, cr, &allocation, &padding,
 		                 x_nil_pixel, y_nil_pixel,
 		                 x_unit_to_pixel, y_unit_to_pixel);
+
 		draw_scales (plot, cr, &allocation, &padding,
 		             x_nil_pixel, y_nil_pixel,
 		             x_unit_to_pixel, y_unit_to_pixel);

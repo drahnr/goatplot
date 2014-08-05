@@ -35,14 +35,18 @@ draw_scale_horizontal (GoatPlot *plot,
                        gdouble x_nil,
                        gdouble x_factor,
                        GoatBorderPosition toporbottom,
-                       gboolean grid,
-                       int step_minor, int step_major,
-                       int width_minor, int width_major,
-                       GdkRGBA color_minor, GdkRGBA color_major)
+                       gboolean grid)
 {
+	g_assert (x_factor != 0.);
+	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (plot);
+	const double step_minor = (priv->major_delta_x / priv->minors_per_major_x);
 	const int register start = (left-x_nil)/step_minor/x_factor;
 	const int register end = (right-x_nil)/step_minor/x_factor;
 	int register i;
+	const gint width_major = priv->width_major_x;
+	const gint width_minor = priv->width_minor_x;
+	GdkRGBA color_minor = priv->color_minor_y;
+	GdkRGBA color_major = priv->color_major_y;
 
 	g_print ("[] right %i   left %i   x_nil %lf\n", right, left, x_nil);
 	g_print (">>> start=%i end=%i  %lf x_factor\n", start, end, x_factor);
@@ -50,7 +54,7 @@ draw_scale_horizontal (GoatPlot *plot,
 
 	if (toporbottom == GOAT_BORDER_BOTTOM) {
 		for (i=start; i<=end; i++) {
-			gboolean majorstip = (i*step_minor % step_major == 0);
+			gboolean majorstip = (i % priv->minors_per_major_x == 0);
 			const double register x = x_nil+left+step_minor*x_factor*i;
 			cairo_move_to (cr, x, top);
 			if (majorstip) {
@@ -68,7 +72,7 @@ draw_scale_horizontal (GoatPlot *plot,
 		GdkRGBA color_grid_major = {0.9, 0.9, 0.9, 1.};
 		GdkRGBA color_grid_minor = {0.95, 0.95, 0.95, 1.};
 		for (i=start; i<=end; i++) {
-			gboolean majorstip = (i*step_minor % step_major == 0);
+			gboolean majorstip = (i % priv->minors_per_major_x == 0);
 			const double register x = x_nil+left+step_minor*x_factor*i;
 			cairo_move_to (cr, x, top);
 			cairo_line_to (cr, x, bottom);
@@ -83,7 +87,7 @@ draw_scale_horizontal (GoatPlot *plot,
 
 	if (toporbottom == GOAT_BORDER_TOP) {
 		for (i=start; i<=end; i++) {
-			gboolean majorstip = (i*step_minor % step_major == 0);
+			gboolean majorstip = (i % priv->minors_per_major_x == 0);
 			const double register x = x_nil+left+step_minor*x_factor*i;
 			cairo_move_to (cr, x, bottom);
 			if (majorstip) {
@@ -110,14 +114,17 @@ draw_scale_vertical (GoatPlot *plot,
                   double y_nil,
                   gdouble y_factor,
 		          GoatBorderPosition leftorright,
-                  gboolean grid,
-                  int step_minor, int step_major,
-                  int width_minor, int width_major,
-                  GdkRGBA color_minor, GdkRGBA color_major)
+                  gboolean grid)
 {
+	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (plot);
+	const double step_minor = (priv->major_delta_y / priv->minors_per_major_y);
 	const int register start = (top-y_nil)/step_minor/y_factor;
 	const int register end = (bottom-y_nil)/step_minor/y_factor;
 	int register i;
+	const gint width_major = priv->width_major_x;
+	const gint width_minor = priv->width_minor_x;
+	GdkRGBA color_minor = priv->color_minor_x;
+	GdkRGBA color_major = priv->color_major_x;
 
 	g_print ("[] bottom %i   top %i   x_nil %lf\n", bottom, top, y_nil);
 	g_print ("> start=%i end=%i         %lf y_factor\n", start, end,y_factor);
@@ -125,7 +132,7 @@ draw_scale_vertical (GoatPlot *plot,
 
 	if (leftorright == GOAT_BORDER_LEFT) {
 		for (i=start; i<=end; i++) {
-			const gboolean register majorstip = (i*step_minor % step_major == 0);
+			const gboolean register majorstip = (i % priv->minors_per_major_y == 0);
 			const double register y = y_nil+top+step_minor*y_factor*i;
 			cairo_move_to (cr, left, y);
 			if (majorstip) {
@@ -144,7 +151,7 @@ draw_scale_vertical (GoatPlot *plot,
 		GdkRGBA color_grid_major = {0.9, 0.9, 0.9, 1.};
 		GdkRGBA color_grid_minor = {0.95, 0.95, 0.95, 1.};
 		for (i=start; i<=end; i++) {
-			const gboolean register majorstip = (i*step_minor % step_major == 0);
+			const gboolean register majorstip = (i % priv->minors_per_major_y == 0);
 			const double register y = y_nil+top+step_minor*y_factor*i;
 			cairo_move_to (cr, left, y);
 			cairo_line_to (cr, right, y);
@@ -159,7 +166,7 @@ draw_scale_vertical (GoatPlot *plot,
 
 	if (leftorright == GOAT_BORDER_RIGHT) {
 		for (i=start; i<=end; i++) {
-			const gboolean register majorstip = (i*step_minor % step_major == 0);
+			const gboolean register majorstip = (i % priv->minors_per_major_y == 0);
 			const double register y = y_nil+top+step_minor*y_factor*i;
 			cairo_move_to (cr, left, y);
 			if (majorstip) {
@@ -202,8 +209,8 @@ draw_scales (GoatPlot *plot,
              GtkBorder *padding,
              gdouble x_nil,
              gdouble y_nil,
-             gdouble x_factor,
-             gdouble y_factor)
+             gdouble x_unit_to_pixel,
+             gdouble y_unit_to_pixel)
 {
 	int top,left,right,bottom;
 
@@ -212,25 +219,16 @@ draw_scales (GoatPlot *plot,
 	bottom = allocation->height - padding->bottom - padding->top;
 	right = allocation->width - padding->right - padding->left;
 
-	GdkRGBA color_major = {0.8, 0., 0., 1.};
-	GdkRGBA color_minor = {0., 0., 0., 1.};
-//	GdkRGBA color_grid_major = {0.9, 0.9, 0.9, 1.};
-//	GdkRGBA color_grid_minor = {0.95, 0.95, 0.95, 1.};
-
 	draw_scale_horizontal (plot, cr,
 	                       left, right, top, bottom,
-	                       x_nil, x_factor,
+	                       x_nil, x_unit_to_pixel,
 	                       GOAT_BORDER_TOP,
-	                       TRUE, 1, 5,
-	                       6, 12,
-	                       color_minor, color_major);
+	                       TRUE);
 	draw_scale_vertical (plot, cr,
                          left, right, top, bottom,
-	                     y_nil, y_factor,
+	                     y_nil, y_unit_to_pixel,
 	                     GOAT_BORDER_LEFT,
-	                     TRUE, 10, 50,
-	                     6, 12,
-	                     color_minor, color_major);
+	                     TRUE);
 	return TRUE;
 }
 
