@@ -224,7 +224,7 @@ gboolean
 goat_plot_get_x_unit_to_pixel (GoatPlot *plot, gdouble *unit_to_pixel)
 {
 	GtkAllocation allocation;
-	const GtkBorder padding = {18, 18, 18, 18}; // left, right, top, bottom
+	const GtkBorder padding = {25, 25, 25, 25}; // left, right, top, bottom
 	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (plot);
 	gtk_widget_get_allocation (GTK_WIDGET (plot), &allocation);
 	const gint register width = allocation.width - padding.left - padding.right;
@@ -240,7 +240,7 @@ gboolean
 goat_plot_get_y_unit_to_pixel (GoatPlot *plot, gdouble *unit_to_pixel)
 {
 	GtkAllocation allocation;
-	const GtkBorder padding = {18, 18, 18, 18}; // left, right, top, bottom
+	const GtkBorder padding = {25, 25, 25, 25}; // left, right, top, bottom
 	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (plot);
 	gtk_widget_get_allocation (GTK_WIDGET (plot), &allocation);
 	const gint register height = allocation.height - padding.top - padding.bottom;
@@ -409,7 +409,7 @@ draw (GtkWidget *widget, cairo_t *cr)
 	GoatDataset *dataset;
 	GoatPlotPrivate *priv;
 	GtkAllocation allocation; //==gint x,y,width,height
-	GtkBorder padding = {18, 18, 18, 18}; // left, right, top, bottom
+	GtkBorder padding = {25, 25, 25, 25}; // left, right, top, bottom
 	gint i;
 	gdouble x_nil_pixel;
 	gdouble y_nil_pixel;

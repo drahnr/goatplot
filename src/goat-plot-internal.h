@@ -24,6 +24,35 @@ typedef enum {
 } GoatBorderPosition;
 
 
+
+static void
+draw_num (GoatPlot *plot, cairo_t *cr, double x, double y,double d)
+{
+	cairo_save (cr);
+
+	gchar *text = g_strdup_printf ("%.2lf", d);
+	g_assert (text);
+	PangoLayout *lay = pango_cairo_create_layout (cr);
+	PangoFontDescription *fontdesc = pango_font_description_new();
+	pango_font_description_set_size (fontdesc, 8  * PANGO_SCALE);
+	pango_layout_set_font_description (lay, fontdesc);
+	pango_layout_set_text (lay, text, -1);
+
+
+	PangoRectangle logrect;
+	pango_layout_get_pixel_extents (lay, NULL, &logrect);
+	g_print ("logrect//// x=%i y=%i w=%i h=%i\n", logrect.x, logrect.y, logrect.width, logrect.height);
+	g_print ("x=%lf   y=%lf\n\n", x, y);
+	cairo_move_to (cr, x - (double)(logrect.width)*0.5, y);
+	cairo_scale (cr, 1., -1.);
+
+	pango_cairo_show_layout (cr, lay);
+	g_object_unref (lay);
+	g_free (text);
+	pango_font_description_free (fontdesc);
+	cairo_restore (cr);
+}
+
 /**
  * @param x_nil in pixel
  * @param x_factor convert unit to pixel
@@ -65,6 +94,8 @@ draw_scale_horizontal (GoatPlot *plot,
 				goat_set_source (cr, &color_minor);
 			}
 			cairo_stroke (cr);
+
+			draw_num (plot, cr, x, top-width_minor-12, step_minor * i);
 		}
 	}
 
@@ -98,6 +129,8 @@ draw_scale_horizontal (GoatPlot *plot,
 				goat_set_source (cr, &color_minor);
 			}
 			cairo_stroke (cr);
+
+			draw_num (plot, cr, x, bottom+width_minor+12, step_minor * i);
 		}
 	}
 	return TRUE;
