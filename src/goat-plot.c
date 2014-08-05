@@ -388,13 +388,13 @@ draw (GtkWidget *widget, cairo_t *cr)
 				goat_dataset_get_extrema (dataset,
 				                          &x_min, &x_max,
 				                          &y_min, &y_max);
-				if (priv->x_min > x_min)
+				if (priv->x_min > x_min && priv->x_autorange)
 					priv->x_min = x_min;
-				if (priv->y_min > y_min)
+				if (priv->y_min > y_min && priv->y_autorange)
 					priv->y_min = y_min;
-				if (priv->x_max < x_max)
+				if (priv->x_max < x_max && priv->x_autorange)
 					priv->x_max = x_max;
-				if (priv->y_max < y_max)
+				if (priv->y_max < y_max && priv->y_autorange)
 					priv->y_max = y_max;
 			}
 			// TODO add some fixup if x_min is very close to x_max

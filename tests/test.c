@@ -65,6 +65,7 @@ main (int argc, char *argv[])
 	goat_plot_add_dataset (plot, dataset);
 #endif
 
+	goat_plot_set_range_x (plot, -44., +30.);
 	gtk_container_add (GTK_CONTAINER (window), GTK_WIDGET (plot));
 	gtk_widget_show_all (window);
 	g_signal_connect (G_OBJECT (window), "delete-event", G_CALLBACK (destroy), NULL);
