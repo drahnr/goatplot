@@ -4,6 +4,8 @@ Plotting library for Gtk+ 3.x using cairo.
 
 #### Status
 
-It is somewhat building and a really dumb example is shot in form of a testcase after each build.
+It does work for some cases but still leaves many features to be desired, not to mention that a huge refactor is required.
 
-![A very early screen shot.](/screenshot.png)
+[![Build Status](https://travis-ci.org/drahnr/goatplot.png?branch=master)](https://travis-ci.org/drahnr/goatplot)
+
+![widget screenshot from the testbinary](/screenshot.png)
