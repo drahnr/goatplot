@@ -22,6 +22,7 @@
 
 #include "goat-dataset.h"
 #include <math.h>
+#include <glib/gprintf.h>
 
 static gboolean draw (GtkWidget *widget, cairo_t *cr);
 static void get_prefered_width (GtkWidget *widget, int *minimal, int *natural);
@@ -270,6 +271,7 @@ draw_dataset (GoatPlot *plot, cairo_t *cr,
 	}
 
 	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (plot);
+	(void)priv;
 #if 0
 	// find max and apply the extra scale if necessary
 	switch (priv->scale_y) {
