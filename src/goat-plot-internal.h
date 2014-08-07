@@ -26,7 +26,7 @@ typedef enum {
 
 
 static void
-draw_num (GoatPlot *plot, cairo_t *cr, double x, double y,double d)
+draw_num (GoatPlot *plot, cairo_t *cr, double x, double y, double d, GoatBorderPosition penalty)
 {
 	cairo_save (cr);
 
@@ -43,7 +43,28 @@ draw_num (GoatPlot *plot, cairo_t *cr, double x, double y,double d)
 	pango_layout_get_pixel_extents (lay, NULL, &logrect);
 	g_print ("logrect//// x=%i y=%i w=%i h=%i\n", logrect.x, logrect.y, logrect.width, logrect.height);
 	g_print ("x=%lf   y=%lf\n\n", x, y);
-	cairo_move_to (cr, x - (double)(logrect.width)*0.5, y);
+	double modifierx, modifiery;
+	switch (penalty) {
+	case GOAT_BORDER_BOTTOM:
+		modifierx = (double)(logrect.width)/1.;
+		modifiery = (double)(logrect.height);
+		break;
+	case GOAT_BORDER_LEFT:
+		modifierx = (double)(logrect.width)/-1.;
+		modifiery = (double)(logrect.height)/2.;
+		break;
+	case GOAT_BORDER_RIGHT:
+		modifierx = (double)(logrect.width);
+		modifiery = (double)(logrect.height)/2.;
+		break;
+	case GOAT_BORDER_TOP:
+		modifierx = (double)(logrect.width)/-2.;
+		modifiery = (double)(logrect.height);
+		break;
+	}
+	cairo_move_to (cr,
+	               x + modifierx,
+	               y + modifiery);
 	cairo_scale (cr, 1., -1.);
 
 	pango_cairo_show_layout (cr, lay);
@@ -95,7 +116,8 @@ draw_scale_horizontal (GoatPlot *plot,
 			}
 			cairo_stroke (cr);
 
-			draw_num (plot, cr, x, top-width_minor-12, step_minor * i);
+			const double off = majorstip ? width_major : width_minor;
+			draw_num (plot, cr, x, top-off, step_minor * i, toporbottom);
 		}
 	}
 
@@ -130,7 +152,8 @@ draw_scale_horizontal (GoatPlot *plot,
 			}
 			cairo_stroke (cr);
 
-			draw_num (plot, cr, x, bottom+width_minor+12, step_minor * i);
+			const double off = majorstip ? width_major : width_minor;
+			draw_num (plot, cr, x, bottom+off, step_minor * i, toporbottom);
 		}
 	}
 	return TRUE;
@@ -176,6 +199,9 @@ draw_scale_vertical (GoatPlot *plot,
 				goat_set_source (cr, &color_minor);
 			}
 			cairo_stroke (cr);
+
+			const double off = majorstip ? width_major : width_minor;
+			draw_num (plot, cr, left-off, y, step_minor * i, leftorright);
 		}
 	}
 
@@ -210,6 +236,10 @@ draw_scale_vertical (GoatPlot *plot,
 				goat_set_source (cr, &color_minor);
 			}
 			cairo_stroke (cr);
+
+			const double off = majorstip ? width_major : width_minor;
+			draw_num (plot, cr, right+off, y, step_minor * i, leftorright);
+
 		}
 	}
 	return TRUE;
