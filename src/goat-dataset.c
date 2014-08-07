@@ -33,7 +33,7 @@ struct _GoatDatasetPrivate
 	GoatDatasetStyle style;
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE (GoatDataset, goat_dataset, G_TYPE_OBJECT);
+G_DEFINE_TYPE (GoatDataset, goat_dataset, G_TYPE_OBJECT);
 
 static void
 goat_dataset_finalize (GObject *object)
@@ -88,6 +88,8 @@ goat_dataset_get_gproperty (GObject *object, guint prop_id, GValue *value, GPara
 static void
 goat_dataset_class_init (GoatDatasetClass *klass)
 {
+	g_type_class_add_private (klass, sizeof(GoatDatasetPrivate));
+
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	object_class->finalize = goat_dataset_finalize;

@@ -66,7 +66,7 @@ struct _GoatPlotPrivate
 
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE (GoatPlot, goat_plot, GTK_TYPE_DRAWING_AREA);
+G_DEFINE_TYPE (GoatPlot, goat_plot, GTK_TYPE_DRAWING_AREA);
 
 #include "goat-plot-internal.h"
 
@@ -87,11 +87,14 @@ goat_plot_finalize (GObject *object)
 static void
 goat_plot_class_init (GoatPlotClass *klass)
 {
+	g_type_class_add_private (klass, sizeof(GoatPlotPrivate));
+
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = goat_plot_finalize;
 
 	GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
 	widget_class->draw = draw;
+
 #if 0
 	widget_class->button_press_event = goat_plot_button_press_event;
 	widget_class->button_release_event = goat_plot_button_release_event;
