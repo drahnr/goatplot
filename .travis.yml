@@ -1,0 +1,7 @@
+language: c
+before_install: sudo apt-get update
+install: sudo apt-get -q -y install intltool libgtk-3-dev
+compiler:
+  - gcc
+  - clang
+script: ./waf configure --prefix=/usr debug -j4
