@@ -1,5 +1,7 @@
 ## goatplot
 
+[![Join the chat at https://gitter.im/drahnr/goatplot](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/drahnr/goatplot?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Plotting library for Gtk+ 3.x using cairo.
 
 #### Status
