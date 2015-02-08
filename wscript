@@ -64,19 +64,6 @@ def pre(ctx):
 def build(bld):
 	bld.add_pre_fun(pre)
 
-	if bld.cmd != 'install' and bld.cmd != 'uninstall':
-		if not bld.variant:
-			bld.variant = 'debug'
-			logs.warn ('Defaulting to \'debug\' build variant')
-			logs.warn ('Do "waf debug" or "waf release" to avoid this warning')
-		if os.geteuid()==0:
-			logs.fatal ('Do not run "' + ctx.cmd + '" as root, just don\'t!. Aborting.')
-	else:
-		if not os.geteuid()==0:
-			logs.warn ('You most likely need root privileges to install or uninstall '+APPNAME+' properly.')
-
-
-
 	shlib = bld.shlib(
 		features = ['c', 'glib2'],
 		target = APPNAME,
