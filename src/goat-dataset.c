@@ -2,7 +2,7 @@
  * goat-dataset.c
  * This file is part of GoatPlot
  *
- * Copyright (C) 2014 - Bernhard Schuster <schuster.bernhard@gmail.com>
+ * Copyright (C) 2014,2016 - Bernhard Schuster <bernhard@ahoi.io>
  *
  * GoatPlot is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,9 @@
 
 #include "goat-dataset.h"
 #include <gtk/gtk.h>
+#include <math.h>
+
+static void update_extrema_cache(GoatDataset *dataset);
 
 #define GOAT_DATASET_GET_PRIVATE(object)(G_TYPE_INSTANCE_GET_PRIVATE((object), GOAT_TYPE_DATASET, GoatDatasetPrivate))
 
@@ -29,6 +32,10 @@ struct _GoatDatasetPrivate
 {
 	GList *list;
 	gint count;
+	double x_min;
+	double y_min;
+	double x_max;
+	double y_max;
 
 	GoatDatasetStyle style;
 };
@@ -59,7 +66,9 @@ goat_dataset_set_gproperty (GObject *object, guint prop_id, const GValue *value,
 		priv->count = g_value_get_int (value);
 		break;
 	case PROP_LIST:
+		g_list_free_full(priv->list, g_free);
 		priv->list = g_value_get_pointer (value);
+		update_extrema_cache(dataset);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (dataset, prop_id, spec);
@@ -114,6 +123,10 @@ goat_dataset_init (GoatDataset *self)
 	self->priv = GOAT_DATASET_GET_PRIVATE (self);
 	self->priv->list = NULL;
 	self->priv->count = -1;
+	self->priv->x_min = +G_MAXDOUBLE;
+	self->priv->y_min = +G_MAXDOUBLE;
+	self->priv->x_max = -G_MAXDOUBLE;
+	self->priv->y_max = -G_MAXDOUBLE;
 	self->priv->style = GOAT_DATASET_STYLE_SQUARE;
 }
 
@@ -192,6 +205,9 @@ gboolean
 goat_dataset_iter_next (GoatDatasetIter *iter, double *x, double *y)
 {
 	GList *i = iter->state;
+	if (i==NULL) {
+		return FALSE;
+	}
 	GoatPair *pair = i->data;
 	if (G_LIKELY (pair)) {
 		if (G_LIKELY (x))
@@ -218,6 +234,28 @@ goat_dataset_get_extrema (GoatDataset *dataset,
                           double *xmin, double *xmax,
                           double *ymin, double *ymax)
 {
+	if (dataset->priv->list != NULL) {
+		if (xmin)
+			*xmin = dataset->priv->x_min;
+		if (xmax)
+			*xmax = dataset->priv->x_max;
+		if (ymin)
+			*ymin = dataset->priv->y_min;
+		if (ymax)
+			*ymax = dataset->priv->y_max;
+		return TRUE;
+	}
+	dataset->priv->list = NULL;
+	dataset->priv->count = -1;
+	dataset->priv->x_min = +G_MAXDOUBLE;
+	dataset->priv->y_min = +G_MAXDOUBLE;
+	dataset->priv->x_max = -G_MAXDOUBLE;
+	dataset->priv->y_max = -G_MAXDOUBLE;
+	return FALSE;
+}
+
+static void
+update_extrema_cache(GoatDataset *dataset) {
 	GoatDatasetIter iter;
 	double x, y;
 	double register x_min, y_min;
@@ -230,21 +268,49 @@ goat_dataset_get_extrema (GoatDataset *dataset,
 		while (goat_dataset_iter_next (&iter, &x, &y)) {
 			if (x<x_min) {
 				x_min = x;
-			} else if (x>x_max) {
+			}
+			if (x>x_max) {
 				x_max = x;
 			}
 			if (y<y_min) {
 				y_min = y;
-			} else if (y>y_max) {
+			}
+			if (y>y_max) {
 				y_max = y;
 			}
 		}
-	} else {
-		return FALSE;
+		dataset->priv->x_min = x_min;
+		dataset->priv->x_max = x_max;
+		dataset->priv->y_min = y_min;
+		dataset->priv->y_max = y_max;
 	}
-	*xmin = x_min;
-	*xmax = x_max;
-	*ymin = y_min;
-	*ymax = y_max;
-	return TRUE;
+}
+
+void
+goat_dataset_append(GoatDataset *dataset, double x, double y) {
+	GoatPair *pair = g_new0(GoatPair, 1);
+	pair->x = x;
+	pair->y = y;
+	if (dataset->priv->count < 0) {
+		dataset->priv->count = g_list_length(dataset->priv->list);
+	}
+	dataset->priv->count++;
+	if (dataset->priv->x_min > x) dataset->priv->x_min = x;
+	if (dataset->priv->y_min > y) dataset->priv->y_min = y;
+	if (dataset->priv->x_max < x) dataset->priv->x_max = x;
+	if (dataset->priv->y_max < y) dataset->priv->y_max = y;
+	dataset->priv->list = g_list_append(dataset->priv->list, pair);
+	g_print("total items of %i with bounds [x%lf x%lf y%lf y%lf]\n",
+	        dataset->priv->count,
+	        dataset->priv->x_min,
+	        dataset->priv->x_max,
+	        dataset->priv->y_min,
+	        dataset->priv->y_max);
+}
+
+void
+goat_dataset_clear(GoatDataset *dataset) {
+	g_object_set(dataset,
+	             "list", NULL,
+	             NULL);
 }

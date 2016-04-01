@@ -35,7 +35,8 @@ static gboolean scroll_event (GtkWidget *widget, GdkEventScroll *event);
 struct _GoatPlotPrivate
 {
 	GArray *array; // array of GoatDataset pointers
-	GoatPlotScaleType scale_x, scale_y; //remove this, its the users duty to prescale data properly FIXME
+	//remove this, its the users duty to prescale data properly FIXME
+	GoatPlotScaleType scale_x, scale_y;
 	// FIXME GoatPlotGridType gridtype [LOG, EXP, LIN=DEFAULT]
 	gboolean scale_fixed;
 
@@ -203,7 +204,7 @@ goat_plot_remove_dataset (GoatPlot *plot, gint datasetid)
 
 
 /**
- * @param window window height or width, or if fixed scale, us a const for that
+ * @param window window height or width, or if fixed scale, use a const for that
  * @param min in units
  * @param max in units
  * @param unit_to_pixel [out]
@@ -212,12 +213,12 @@ gboolean
 get_unit_to_pixel_factor (int window, gdouble min, gdouble max, gdouble *unit_to_pixel)
 {
 	gdouble delta = max - min;
-	if (delta==0.) { //yes really equal
-		return FALSE;
-	} else {
+	if (delta > 0.) {
 		*unit_to_pixel = (double)window/delta;
+		return TRUE;
 	}
-	return TRUE;
+	*unit_to_pixel = 1.;
+	return FALSE;
 }
 
 /**
@@ -252,11 +253,12 @@ goat_plot_get_y_unit_to_pixel (GoatPlot *plot, gdouble *unit_to_pixel)
 }
 
 
-//TODO draw on a surface so redraw is really really fast? Do some benchmarking (and check CPU load)
+//TODO draw on a surface so redraw is really really fast?
+//TODO Do some benchmarking (and check CPU load)
 /**
  * @param plot
  * @param cr the cairo context to draw on
- * @param dataset which dateset to draw ontop of #cr
+ * @param dataset which dataset to draw ontop of #cr
  * @param height the height of the drawable plotting area
  * @param width the width of the drawable plotting area
  * @returns TRUE if drawing was successful (zer0 length is also TRUE), otherwise FALSE
@@ -454,6 +456,14 @@ draw (GtkWidget *widget, cairo_t *cr)
 
 		// draw the actual data
 		if (priv->x_autorange || priv->y_autorange) {
+			if (priv->x_autorange) {
+				priv->x_min = +G_MAXDOUBLE;
+				priv->x_max = -G_MAXDOUBLE;
+			}
+			if (priv->y_autorange) {
+				priv->y_min = +G_MAXDOUBLE;
+				priv->y_max = -G_MAXDOUBLE;
+			}
 			for (i=0; i<priv->array->len; i++) {
 				dataset = g_array_index (priv->array, GoatDataset *, i);
 				gdouble x_min, x_max, y_min, y_max;
@@ -479,11 +489,14 @@ draw (GtkWidget *widget, cairo_t *cr)
 		g_printf ("x range %lf %lf\n", priv->x_min, priv->x_max);
 		g_printf ("y range %lf %lf\n", priv->y_min, priv->y_max);
 
-		if (get_unit_to_pixel_factor (width, priv->x_min, priv->x_max, &x_unit_to_pixel)) {
+		gboolean draw = TRUE;
+		if (!get_unit_to_pixel_factor (width, priv->x_min, priv->x_max, &x_unit_to_pixel)) {
 			g_warning ("Bad x range. This is too boring to plot.");
+			draw = FALSE;
 		}
-		if (get_unit_to_pixel_factor (height, priv->y_min, priv->y_max, &y_unit_to_pixel)) {
+		if (!get_unit_to_pixel_factor (height, priv->y_min, priv->y_max, &y_unit_to_pixel)) {
 			g_warning ("Bad y range. This is too boring to plot.");
+			draw = FALSE;
 		}
 
 		x_nil_pixel = priv->x_min * -x_unit_to_pixel;
@@ -493,20 +506,24 @@ draw (GtkWidget *widget, cairo_t *cr)
 		                 x_nil_pixel, y_nil_pixel,
 		                 x_unit_to_pixel, y_unit_to_pixel);
 
-		draw_scales (plot, cr, &allocation, &padding,
-		             x_nil_pixel, y_nil_pixel,
-		             x_unit_to_pixel, y_unit_to_pixel);
+		if (draw) {
+			draw_scales (plot, cr, &allocation, &padding,
+				         x_nil_pixel, y_nil_pixel,
+				         x_unit_to_pixel, y_unit_to_pixel);
+		}
 
 		clip_drawable_area (plot, cr, &allocation, &padding);
 
-		draw_nil_lines (plot, cr, width, height, x_nil_pixel, y_nil_pixel);
+		if (draw) {
+			draw_nil_lines (plot, cr, width, height, x_nil_pixel, y_nil_pixel);
 
-		for (i=0; i<priv->array->len; i++) {
-			dataset = g_array_index (priv->array, GoatDataset *, i);
-			draw_dataset (plot, cr, dataset,
-			              height, width,
-			              priv->x_min, priv->x_max, x_nil_pixel, x_unit_to_pixel,
-			              priv->y_min, priv->y_max, y_nil_pixel, y_unit_to_pixel);
+			for (i=0; i<priv->array->len; i++) {
+				dataset = g_array_index (priv->array, GoatDataset *, i);
+				draw_dataset (plot, cr, dataset,
+					          height, width,
+					          priv->x_min, priv->x_max, x_nil_pixel, x_unit_to_pixel,
+					          priv->y_min, priv->y_max, y_nil_pixel, y_unit_to_pixel);
+			}
 		}
 		cairo_restore (cr);
 

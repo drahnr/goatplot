@@ -105,6 +105,9 @@ goat_dataset_get_extrema (GoatDataset *dataset,
                           double *xmin, double *xmax,
                           double *ymin, double *ymax);
 
+void
+goat_dataset_append(GoatDataset *dataset, double x, double y);
+
 G_END_DECLS
 
 #endif /* __GOAT_DATASET_H__ */

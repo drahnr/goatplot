@@ -16,7 +16,7 @@ def options(ctx):
 	ctx.load('unites', tooldir='.wafcustom')
 
 def configure(ctx):
-	ctx.load('compiler_c gnu_dirs glib2 intltool')
+	ctx.load('compiler_c gnu_dirs glib2')
 	ctx.load('unites', tooldir='.wafcustom')
 
 	ctx.env.APPNAME = APPNAME
@@ -64,9 +64,10 @@ def pre(ctx):
 def build(bld):
 	bld.add_pre_fun(pre)
 
-	shlib = bld.shlib(
+
+	objects = bld.objects(
 		features = ['c', 'glib2'],
-		target = APPNAME,
+		target = 'objects',
 		source = bld.path.ant_glob(['src/*.c'], excl='*/main.c'),
 		includes = ['src/'],
 		export_includes = ['src/'],
@@ -74,15 +75,36 @@ def build(bld):
 		install_path = "${LIBDIR}"
 	)
 
-	for item in shlib.includes:
-		logs.debug(item)
-	test = bld.program(
-		features = ['c', 'glib2', 'unites'],
-		target = 'test-simple',
-		source = ['tests/test.c'],
+	shlib = bld.shlib(
+		features = ['c', 'glib2'],
+		target = APPNAME,
+		source = [],
 		includes = ['src/'],
 		export_includes = ['src/'],
-		use = APPNAME,
+		use = 'objects',
+		uselib = 'M GOBJECT GLIB GTK3',
+		install_path = "${LIBDIR}"
+	)
+
+#	for item in shlib.includes:
+#		logs.debug(item)
+	test_screenshot = bld.program(
+		features = ['c', 'glib2', 'unites'],
+		target = 'test-screenshot',
+		source = ['tests/screenshot.c'],
+		includes = ['src/'],
+		export_includes = ['src/'],
+		use = 'objects',
+		uselib = 'M GOBJECT GLIB GTK3'
+	)
+
+	test_dynamic = bld.program(
+		features = ['c', 'glib2', 'unites'],
+		target = 'test-dynamic',
+		source = ['tests/dynamic.c'],
+		includes = ['src/'],
+		export_includes = ['src/'],
+		use = 'objects',
 		uselib = 'M GOBJECT GLIB GTK3'
 	)
 
