@@ -17,12 +17,13 @@ dynamic_add (Both *both)
 	static uint16_t idx = 0;
 	idx++;
 	double x = idx * 0.1;
-	double y = cos(x + 0.5 * M_PI);
+	double y = cos(x + 0.5 * M_PI) * (sqrt(0.01 * idx * idx * idx));
 	goat_dataset_append(both->dataset, x, y);
-	if (idx < 100) {
+	if (idx < 200) {
 		gtk_widget_queue_draw(GTK_WIDGET(both->plot));
 		return G_SOURCE_CONTINUE;
 	}
+	g_timeout_add(2000, (GSourceFunc)gtk_main_quit, NULL);
 	return G_SOURCE_REMOVE;
 }
 
