@@ -26,7 +26,7 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 The development files for the GoatPlot Gtk+ widget
 
 %prep
-%setup -q -n goatplot-0.0.2
+%setup -q -n goatplot-%{name}
 
 %build
 ./waf configure --prefix=%{_prefix} --destdir=%{buildroot} build --notests
@@ -43,11 +43,10 @@ rm -rf %{buildroot}
 
 %files
 %doc LICENSE README.md
-%{_libdir}/libgoatplot.so.*
+%{_libdir}/libgoatplot.so
 
 %files devel
 %{_includedir}/libgoatplot
-%{_libdir}/libgoatplot.so
 %{_libdir}/pkgconfig/goatplot.pc
 %{_datadir}/glade/catalogs/libgoatplot.xml
 
