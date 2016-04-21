@@ -46,9 +46,9 @@ rm -rf %{buildroot}
 %{_libdir}/libgoatplot.so
 
 %files devel
-%{_includedir}/libgoatplot
+%{_includedir}/goatplot
 %{_libdir}/pkgconfig/goatplot.pc
-%{_datadir}/glade/catalogs/libgoatplot.xml
+%{_datadir}/glade/catalogs/goatplot.xml
 
 %changelog
 * Thu Apr 21 2016 Bernhard Schuster <bernhard@ahoi.io> - 0.0.2-1
