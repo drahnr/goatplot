@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # encoding: utf-8
 
 VERSION = '0.0.1'
@@ -11,57 +11,62 @@ import os
 from waflib import Logs as logs
 from waflib import Utils as utils
 
-def options(ctx):
-	ctx.load('compiler_c gnu_dirs glib2')
-	ctx.load('unites', tooldir='.wafcustom')
+recurse = ['catalog']
 
-def configure(ctx):
-	ctx.load('compiler_c gnu_dirs glib2')
-	ctx.load('unites', tooldir='.wafcustom')
+def options(opt):
+	opt.recurse(recurse)
+	opt.load('compiler_c gnu_dirs glib2')
+	opt.load('unites', tooldir='.wafcustom')
 
-	ctx.env.APPNAME = APPNAME
-	ctx.env.version = VERSION
+def configure(cfg):
+	cfg.recurse(recurse)
+	cfg.load('compiler_c gnu_dirs glib2')
+	cfg.load('unites', tooldir='.wafcustom')
 
-	ctx.define('VERSION', VERSION)
-	ctx.define('GETTEXT_PACKAGE', APPNAME)
+	cfg.env.APPNAME = APPNAME
+	cfg.env.version = VERSION
+
+	cfg.define('VERSION', VERSION)
+	cfg.define('GETTEXT_PACKAGE', APPNAME)
 
 
-	ctx.check_cc(lib='m', uselib_store='M', mandatory=True)
+	cfg.check_cc(lib='m', uselib_store='M', mandatory=True)
 
-	ctx.check_cfg(atleast_pkgconfig_version='0.26')
-	ctx.check_cfg(package='glib-2.0', uselib_store='GLIB', args=['glib-2.0 >= 2.24', '--cflags', '--libs'], mandatory=True)
-	ctx.check_cfg(package='gobject-2.0', uselib_store='GOBJECT', args=['--cflags', '--libs'], mandatory=True)
-	ctx.check_cfg(package='gtk+-3.0', uselib_store='GTK3', args=['--cflags', '--libs'], mandatory=True)
+	cfg.check_cfg(atleast_pkgconfig_version='0.26')
+	cfg.check_cfg(package='glib-2.0', uselib_store='GLIB', args=['glib-2.0 >= 2.24', '--cflags', '--libs'], mandatory=True)
+	cfg.check_cfg(package='gobject-2.0', uselib_store='GOBJECT', args=['--cflags', '--libs'], mandatory=True)
+	cfg.check_cfg(package='gtk+-3.0', uselib_store='GTK3', args=['--cflags', '--libs'], mandatory=True)
 
-	ctx.check_large_file(mandatory=False)
-	ctx.check_endianness(mandatory=False)
-	ctx.check_inline(mandatory=False)
+	cfg.check_large_file(mandatory=False)
+	cfg.check_endianness(mandatory=False)
+	cfg.check_inline(mandatory=False)
 
 	# -ggdb vs -g -- http://stackoverflow.com/questions/668962
-	ctx.setenv('debug', env=ctx.env.derive())
-	ctx.env.CFLAGS = ['-ggdb', '-Wall']
-	ctx.define('DEBUG',1)
+	cfg.setenv('debug', env=cfg.env.derive())
+	cfg.env.CFLAGS = ['-ggdb', '-Wall']
+	cfg.define('DEBUG',1)
 
-	ctx.setenv('release', env=ctx.env.derive())
-	ctx.env.CFLAGS = ['-O2', '-Wall']
-	ctx.define('RELEASE',1)
-
-
-def dist(ctx):
-	ctx.base_name = APPNAME+'-'+VERSION
-	ctx.algo = 'tar.xz'
-	ctx.excl = ['.*', '*~','./build','*.'+ctx.algo],
-	ctx.files = ctx.path.ant_glob('**/wscript')
+	cfg.setenv('release', env=cfg.env.derive())
+	cfg.env.CFLAGS = ['-O2', '-Wall']
+	cfg.define('RELEASE',1)
 
 
+def dist(bld):
+	bld.base_name = APPNAME+'-'+VERSION
+	bld.algo = 'tar.xz'
+	bld.excl = ['.*', '*~','./build','*.'+bld.algo],
+	bld.files = bld.path.ant_glob('**/wscript')
 
-def pre(ctx):
-	if ctx.cmd != 'install':
-		logs.info ('Variant: \'' + ctx.variant + '\'')
+
+
+def pre(bld):
+	if bld.cmd != 'install':
+		logs.info ('Variant: \'' + bld.variant + '\'')
 
 
 
 def build(bld):
+	bld.recurse(recurse)
 	bld.add_pre_fun(pre)
 
 

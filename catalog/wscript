@@ -1,0 +1,16 @@
+#! /usr/bin/env python3
+# encoding: utf-8
+
+def options(opt):
+	opt.load('gnu_dirs glib2')
+
+def configure(cfg):
+	cfg.load('gnu_dirs glib2')
+	cfg.find_program('xmllint', var='XMLLINT')
+
+def build(bld):
+	bld.load('gnu_dirs glib2')
+	bld(rule="${XMLLINT} --dtdvalid ${DATADIR}/glade/catalogs/glade-catalog.dtd ${SRC} > /dev/null",
+	    source='libgoatplot.xml',
+	    install_path='${DATADIR}/glade/catalogs/libgoatplot.xml')
+

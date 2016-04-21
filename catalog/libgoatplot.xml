@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<glade-catalog name="libgoatplot" library="libgoatplot" depends="gtk+">
+
+  <glade-widget-classes>
+    <glade-widget-class name="GoatPlot" generic-name="goatplot" title="GoatPlot"/>
+  </glade-widget-classes>
+
+  <glade-widget-group name="GoatPlot" title="GoatPlot">
+    <glade-widget-class-ref name="GoatPlot"/>
+  </glade-widget-group>
+
+</glade-catalog>
