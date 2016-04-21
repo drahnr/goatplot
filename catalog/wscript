@@ -18,5 +18,5 @@ def build(bld):
 			source='libgoatplot.xml',
 			install_path='${DATADIR}/glade/catalogs')
 	else:
-		bld.install_files('libgoatplot.xml', '${DATADIR}/glade/catalogs/')
+		bld.install_files('${DATADIR}/glade/catalogs/', 'libgoatplot.xml')
 
