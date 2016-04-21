@@ -26,13 +26,13 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 The development files for the GoatPlot Gtk+ widget
 
 %prep
-%setup -q -n goatplot-%{name}
+%setup -q -n goatplot-%{version}
 
 %build
-./waf configure --prefix=%{_prefix} --destdir=%{buildroot} build --notests
+./waf configure --prefix=%{_prefix} --destdir=%{buildroot} build --notests --no-glade-dtd-check
 
 %install
-./waf --prefix=%{_prefix} --destdir=%{buildroot} install
+./waf --prefix=%{_prefix} --destdir=%{buildroot} install --notests --no-glade-dtd-check
 
 %clean
 rm -rf %{buildroot}
