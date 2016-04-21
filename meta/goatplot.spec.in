@@ -32,7 +32,7 @@ The development files for the GoatPlot Gtk+ widget
 ./waf configure --prefix=%{_prefix} --destdir=%{buildroot} build --notests
 
 %install
-./waf --prefix=%{_prefix} --destdir="%{buildroot} install
+./waf --prefix=%{_prefix} --destdir=%{buildroot} install
 
 %clean
 rm -rf %{buildroot}
