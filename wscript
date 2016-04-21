@@ -100,7 +100,8 @@ def build(bld):
 		includes = ['src/'],
 		export_includes = ['src/'],
 		use = 'objects',
-		uselib = 'M GOBJECT GLIB GTK3'
+		uselib = 'M GOBJECT GLIB GTK3',
+		install_path = None
 	)
 
 	test_dynamic = bld.program(
@@ -110,7 +111,8 @@ def build(bld):
 		includes = ['src/'],
 		export_includes = ['src/'],
 		use = 'objects',
-		uselib = 'M GOBJECT GLIB GTK3'
+		uselib = 'M GOBJECT GLIB GTK3',
+		install_path = None
 	)
 
 
