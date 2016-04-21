@@ -10,6 +10,6 @@ def configure(cfg):
 def build(bld):
 	bld.load('gnu_dirs')
 
-	bld(features='subst', source='goatplot.pc.in', target='goatplot.pc', VERSION=bld.env.VERSION)
-	bld(features='subst', source='goatplot.spec.in', target='goatplot.spec', VERSION=bld.env.VERSION)
+	bld(features='subst', source='goatplot.pc.in', target='goatplot.pc', install_path='${LIBDIR}/pkgconfig/', VERSION=bld.env.VERSION)
+	bld(features='subst', source='goatplot.spec.in', target='goatplot.spec', install_path=None, VERSION=bld.env.VERSION)
 	
