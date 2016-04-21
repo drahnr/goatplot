@@ -1,0 +1,15 @@
+#! /usr/bin/env python3
+# encoding: utf-8
+
+def options(opt):
+	opt.load('gnu_dirs')
+
+def configure(cfg):
+	cfg.load('gnu_dirs')
+
+def build(bld):
+	bld.load('gnu_dirs')
+
+	bld(features='subst', source='goatplot.pc.in', target='goatplot.pc', VERSION=bld.env.VERSION)
+	bld(features='subst', source='goatplot.spec.in', target='goatplot.spec', VERSION=bld.env.VERSION)
+	

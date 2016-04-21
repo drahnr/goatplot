@@ -1,8 +1,8 @@
 #! /usr/bin/env python3
 # encoding: utf-8
 
-VERSION = '0.0.1'
-APPNAME = 'goatplot'
+VERSION = '0.0.2'
+LIBNAME = 'goatplot'
 
 top = '.'
 out = 'build'
@@ -11,7 +11,7 @@ import os
 from waflib import Logs as logs
 from waflib import Utils as utils
 
-recurse = ['catalog']
+recurse = ['catalog','meta']
 
 def options(opt):
 	opt.recurse(recurse)
@@ -19,15 +19,15 @@ def options(opt):
 	opt.load('unites', tooldir='.wafcustom')
 
 def configure(cfg):
+	cfg.env.LIBNAME = LIBNAME
+	cfg.env.VERSION = VERSION
+
 	cfg.recurse(recurse)
 	cfg.load('compiler_c gnu_dirs glib2')
 	cfg.load('unites', tooldir='.wafcustom')
 
-	cfg.env.APPNAME = APPNAME
-	cfg.env.version = VERSION
-
 	cfg.define('VERSION', VERSION)
-	cfg.define('GETTEXT_PACKAGE', APPNAME)
+	cfg.define('GETTEXT_PACKAGE', LIBNAME)
 
 
 	cfg.check_cc(lib='m', uselib_store='M', mandatory=True)
@@ -52,7 +52,7 @@ def configure(cfg):
 
 
 def dist(bld):
-	bld.base_name = APPNAME+'-'+VERSION
+	bld.base_name = LIBNAME+'-'+VERSION
 	bld.algo = 'tar.xz'
 	bld.excl = ['.*', '*~','./build','*.'+bld.algo],
 	bld.files = bld.path.ant_glob('**/wscript')
@@ -76,17 +76,16 @@ def build(bld):
 		source = bld.path.ant_glob(['src/*.c'], excl='*/main.c'),
 		includes = ['src/'],
 		export_includes = ['src/'],
-		uselib = 'M GOBJECT GLIB GTK3',
-		install_path = "${LIBDIR}"
+		uselib = 'M GOBJECT GLIB GTK3'
 	)
 
+#FIXME how to create a share lib without sources
 	shlib = bld.shlib(
 		features = ['c', 'glib2'],
-		target = APPNAME,
-		source = [],
+		target = LIBNAME,
+		source = bld.path.ant_glob(['src/*.c']),
 		includes = ['src/'],
 		export_includes = ['src/'],
-		use = 'objects',
 		uselib = 'M GOBJECT GLIB GTK3',
 		install_path = "${LIBDIR}"
 	)
