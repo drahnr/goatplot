@@ -2,15 +2,19 @@
 # encoding: utf-8
 
 def options(opt):
-	opt.load('gnu_dirs glib2')
+	opt.load('gnu_dirs')
+	opt.add_option('--no-glade-dtd-check', action='store_true', dest='no_glade_dtd_check', default=False, help='skip the dtd check for the glade file')
+	opt.add_option('--glade-dtd-check', action='store_false', dest='no_glade_dtd_check', help='force the dtd check for the glade file')
 
 def configure(cfg):
-	cfg.load('gnu_dirs glib2')
-	cfg.find_program('xmllint', var='XMLLINT')
+	cfg.load('gnu_dirs')
+	if not cfg.options.no_glade_dtd_check:
+		cfg.find_program('xmllint', var='XMLLINT')
 
 def build(bld):
-	bld.load('gnu_dirs glib2')
-	bld(rule="${XMLLINT} --dtdvalid ${DATADIR}/glade/catalogs/glade-catalog.dtd ${SRC} > /dev/null",
-	    source='libgoatplot.xml',
-	    install_path='${DATADIR}/glade/catalogs/libgoatplot.xml')
+	bld.load('gnu_dirs')
+	if not bld.options.no_glade_dtd_check:
+		bld(rule="${XMLLINT} --dtdvalid ${DATADIR}/glade/catalogs/glade-catalog.dtd ${SRC} > /dev/null",
+			source='libgoatplot.xml',
+			install_path='${DATADIR}/glade/catalogs/libgoatplot.xml')
 
