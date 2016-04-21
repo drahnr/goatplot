@@ -89,7 +89,7 @@ def build(bld):
 		uselib = 'M GOBJECT GLIB GTK3',
 		install_path = "${LIBDIR}"
 	)
-	bld.install_files(bld.path.ant_glob(['src/*.c']), '${INCLUDEDIR}')
+	bld.install_files('${INCLUDEDIR}', bld.path.ant_glob(['src/*.h'], excl=['src/*-internal.h']))
 
 #	for item in shlib.includes:
 #		logs.debug(item)
