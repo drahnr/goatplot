@@ -15,8 +15,8 @@ def build(bld):
 	bld.load('gnu_dirs')
 	if not bld.options.no_glade_dtd_check:
 		bld(rule="${XMLLINT} --dtdvalid ${DATADIR}/glade/catalogs/glade-catalog.dtd ${SRC} > /dev/null",
-			source='libgoatplot.xml',
+			source='goatplot.xml',
 			install_path='${DATADIR}/glade/catalogs')
 	else:
-		bld.install_files('${DATADIR}/glade/catalogs/', 'libgoatplot.xml')
+		bld.install_files('${DATADIR}/glade/catalogs/', 'goatplot.xml')
 
