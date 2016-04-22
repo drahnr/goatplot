@@ -16,7 +16,15 @@ It does work for some cases but still leaves many features to be desired, not to
 
 To build the library and the demo just do
 ```bash
-waf configure debug -j2
+./waf configure debug -j2
 ```
+
+For automated building i.e. in order to create a RPM package use
+```
+./waf configure --prefix=/usr build install --destdir=/tmp --notests --no-glade-dtd-check
+```
+as can be found in `./meta/*`.
+
+Note the use of `build` instead of `release`/`debug`, which does not inject any additional `CFLAGS` but only uses those from the environment.
 
 Note: The demo will launch, a screenshot is created, the demo closes, this is expected behaviour and the demo can be launched again manually.
