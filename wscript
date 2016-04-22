@@ -75,15 +75,16 @@ def build(bld):
 		target = 'objects',
 		source = bld.path.ant_glob(['src/*.c'], excl='*/main.c'),
 		includes = ['src/'],
+		cflags = ['-fPIC'],
 		export_includes = ['src/'],
 		uselib = 'M GOBJECT GLIB GTK3'
 	)
 
-#FIXME how to create a share lib without sources
 	shlib = bld.shlib(
-		features = ['c', 'glib2'],
+		features = ['c', 'cshlib', 'glib2'],
 		target = LIBNAME,
-		source = bld.path.ant_glob(['src/*.c']),
+		source = [],
+		use = 'objects',
 		includes = ['src/'],
 		export_includes = ['src/'],
 		uselib = 'M GOBJECT GLIB GTK3',
