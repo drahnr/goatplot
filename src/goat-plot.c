@@ -333,6 +333,8 @@ draw_dataset (GoatPlot *plot, cairo_t *cr,
 	cairo_set_source_rgba (cr, g_random_double_range (0.1,0.9),
 	                           g_random_double_range (0.1,0.9),
 	                           g_random_double_range (0.1,0.9), 1.);
+	gboolean first_point = TRUE;	// True if this point is first point
+	gboolean cairo_draw_filled = TRUE;	// Set to true to call cairo_fill
 	while (goat_dataset_iter_next (&dit, &x, &y)) {
 	#if 0
 		switch (priv->scale_x) {
@@ -390,6 +392,15 @@ draw_dataset (GoatPlot *plot, cairo_t *cr,
 			cairo_move_to (cr, x-diameter/2., y+diameter / 2.);
 		    cairo_line_to (cr, x+diameter/2., y-diameter/2.);
 			break;
+		case GOAT_DATASET_STYLE_LINE:
+			if(first_point) {
+				first_point	= FALSE;
+				cairo_draw_filled = FALSE;	// call cairo_stroke for LINE style
+				cairo_move_to (cr, x, y);	// start line
+			} else {
+				cairo_line_to (cr, x, y);
+			}
+			break;
 
 		case GOAT_DATASET_STYLE_UNKNOWN:
 			g_warning ("psst .. I have no clue what to do...");
@@ -402,7 +413,11 @@ draw_dataset (GoatPlot *plot, cairo_t *cr,
 			return FALSE;
 		}
 	}
-	cairo_fill (cr);
+	if(cairo_draw_filled) {
+		cairo_fill (cr);
+	} else {
+		cairo_stroke (cr);
+	}
 
 	return TRUE;
 }
