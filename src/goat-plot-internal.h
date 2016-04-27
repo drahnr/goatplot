@@ -246,9 +246,6 @@ draw_scale_vertical (GoatPlot *plot,
 }
 
 
-
-
-
 gboolean
 draw_nil_lines (GoatPlot *plot, cairo_t *cr,
                 int width, int height,
@@ -277,8 +274,8 @@ draw_scales (GoatPlot *plot,
 {
 	int top,left,right,bottom;
 
-	top = allocation->x;
-	left = allocation->y;
+	top = 0;
+	left = 0;
 	bottom = allocation->height - padding->bottom - padding->top;
 	right = allocation->width - padding->right - padding->left;
 
@@ -296,7 +293,6 @@ draw_scales (GoatPlot *plot,
 }
 
 
-
 gboolean
 draw_background (GoatPlot *plot,
                  cairo_t *cr,
@@ -309,8 +305,10 @@ draw_background (GoatPlot *plot,
 {
 	int top, bottom, left, right;
 
-	top = allocation->x;
-	left = allocation->y;
+	// NOT allocation.x/.y!
+	// we are right where we need to be
+	top = 0;
+	left = 0;
 	bottom = allocation->height - padding->bottom - padding->top;
 	right = allocation->width - padding->right - padding->left;
 
@@ -328,6 +326,7 @@ draw_background (GoatPlot *plot,
 	return TRUE;
 }
 
+
 gboolean
 clip_drawable_area (GoatPlot *plot,
                  cairo_t *cr,
@@ -336,8 +335,8 @@ clip_drawable_area (GoatPlot *plot,
 {
 	int top, bottom, left, right;
 
-	top = allocation->x;
-	left = allocation->y;
+	top = 0;
+	left = 0;
 	bottom = allocation->height - padding->bottom - padding->top;
 	right = allocation->width - padding->right - padding->left;
 

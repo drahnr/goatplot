@@ -221,37 +221,6 @@ get_unit_to_pixel_factor (int window, gdouble min, gdouble max, gdouble *unit_to
 	return FALSE;
 }
 
-/**
- * UNUSED
- * may be useful when ScaleTicks get factored into their own objects
- */
-gboolean
-goat_plot_get_x_unit_to_pixel (GoatPlot *plot, gdouble *unit_to_pixel)
-{
-	GtkAllocation allocation;
-	const GtkBorder padding = {25, 25, 25, 25}; // left, right, top, bottom
-	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (plot);
-	gtk_widget_get_allocation (GTK_WIDGET (plot), &allocation);
-	const gint register width = allocation.width - padding.left - padding.right;
-	return get_unit_to_pixel_factor (width, priv->x_min, priv->x_max, unit_to_pixel);
-}
-
-
-/**
- * UNUSED
- * may be useful when SacleTicks get factored into their own objects
- */
-gboolean
-goat_plot_get_y_unit_to_pixel (GoatPlot *plot, gdouble *unit_to_pixel)
-{
-	GtkAllocation allocation;
-	const GtkBorder padding = {25, 25, 25, 25}; // left, right, top, bottom
-	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (plot);
-	gtk_widget_get_allocation (GTK_WIDGET (plot), &allocation);
-	const gint register height = allocation.height - padding.top - padding.bottom;
-	return get_unit_to_pixel_factor (height, priv->y_min, priv->y_max, unit_to_pixel);
-}
-
 
 //TODO draw on a surface so redraw is really really fast?
 //TODO Do some benchmarking (and check CPU load)
@@ -415,8 +384,11 @@ draw (GtkWidget *widget, cairo_t *cr)
 	GoatPlot *plot;
 	GoatDataset *dataset;
 	GoatPlotPrivate *priv;
-	GtkAllocation allocation; //==gint x,y,width,height
-	GtkBorder padding = {25, 25, 25, 25}; // left, right, top, bottom
+	GtkAllocation allocation; //==gint x,y,width,heightynamically
+	// TODO this needs to be done dynamically
+	// TODO based on the style context and where the scales are
+	// TODO https://github.com/drahnr/goatplot/issues/8
+	GtkBorder padding = {50, 50, 50, 50}; // left, right, top, bottom
 	gint i;
 	gdouble x_nil_pixel;
 	gdouble y_nil_pixel;
@@ -439,11 +411,9 @@ draw (GtkWidget *widget, cairo_t *cr)
 		g_print ("padding left,right,top,bottom %i %i %i %i\n",
 		         padding.left, padding.right, padding.top, padding.bottom);
 #endif
-
 		// translate origin to plot graphs to (0,0) of our plot
-
-		cairo_translate (cr, allocation.x + padding.left,
-		                     allocation.height + allocation.y - padding.bottom);
+		cairo_translate (cr, padding.left,
+		                     allocation.height - padding.bottom);
 
 		// make it plot naturally +up, -down
 		cairo_scale (cr, 1., -1.);
@@ -629,10 +599,10 @@ goat_plot_set_ticks_y (GoatPlot *plot, gdouble major, gint minors_per_major)
 }
 
 
-
-
-
-
+/**
+ * TODO handle zooming and scrolling
+ * https://github.com/drahnr/goatplot/issues/9
+ */
 static gboolean
 scroll_event (GtkWidget *widget, GdkEventScroll *event)
 {
@@ -641,9 +611,10 @@ scroll_event (GtkWidget *widget, GdkEventScroll *event)
 }
 
 
-
-
-
+/**
+ * TODO handle envents
+ * https://github.com/drahnr/goatplot/issues/9
+ */
 static gboolean
 event (GtkWidget *widget, GdkEvent *event)
 {
