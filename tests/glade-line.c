@@ -25,6 +25,7 @@ gboolean dynamic_add(Both *both)
 	double y = 0;
 
 	if(idx > 100) {
+		g_timeout_add(2000, (GSourceFunc)gtk_main_quit, NULL);
 		return 0;
 	}
 	g_print("whatsoever callback\n");
@@ -48,7 +49,7 @@ int main(int argc, char *argv[])
 
 	plot = goat_plot_new();
 
-	if((builder = gtk_builder_new_from_file("test.glade")) ==
+	if((builder = gtk_builder_new_from_file("glade-line.glade")) ==
 			NULL) {
 		fprintf(stderr, "gtk_builder_new failed\n");
 		exit(-1);
@@ -60,7 +61,8 @@ int main(int argc, char *argv[])
 		exit(-1);
 	};
 
-	if((plot = GOAT_PLOT(gtk_builder_get_object(builder, "GoatPlot"))) ==
+	if((plot =
+			GOAT_PLOT(gtk_builder_get_object(builder, "GoatPlot"))) ==
 			NULL) {
 		fprintf(stderr, "gtk_builder_get_object GoatPlot failed\n");
 		exit (-1);
