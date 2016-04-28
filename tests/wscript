@@ -3,22 +3,21 @@
 
 def options(opt):
 	opt.load('compiler_c gnu_dirs glib2')
-	opt.load('unites', tooldir='.wafcustom')
 
 def configure(cfg):
 	cfg.load('compiler_c gnu_dirs glib2')
-	cfg.load('unites', tooldir='.wafcustom')
-
 
 def build(bld):
 	bld.load('compiler_c gnu_dirs glib2')
-	bld.load('unites', tooldir='.wafcustom')
+
+	includes = ['../src']
+
 	test_screenshot = bld.program(
-		features = ['c', 'glib2', 'unites'],
+		features = ['c', 'glib2'],
 		target = 'test-screenshot',
 		source = ['screenshot.c'],
-		includes = ['src/'],
-		export_includes = ['src/'],
+		includes = includes,
+		export_includes = includes,
 		use = 'objects',
 		uselib = 'M GOBJECT GLIB GTK3',
 		install_path = None
@@ -28,8 +27,8 @@ def build(bld):
 		features = ['c', 'glib2'],
 		target = 'test-dynamic',
 		source = ['dynamic.c'],
-		includes = ['src/'],
-		export_includes = ['src/'],
+		includes = includes,
+		export_includes = includes,
 		use = 'objects',
 		uselib = 'M GOBJECT GLIB GTK3',
 		install_path = None
@@ -39,8 +38,8 @@ def build(bld):
 	    features = ['c', 'glib2'],
 	    target = 'test-glade-line',
 	    source = ['glade-line.c'],
-	    includes = ['src/'],
-	    export_includes = ['src/'],
+	    includes = includes,
+	    export_includes = includes,
 	    use = 'objects',
 	    uselib = 'M GOBJECT GLIB GTK3',
 	    install_path = None
