@@ -117,7 +117,7 @@ def build(bld):
 	)
 
 	test_glade = bld.program(
-	    features = ['c', 'glib2', 'unites'],
+	    features = ['c', 'glib2'],
 	    target = 'test-glade-line',
 	    source = ['tests/glade-line.c'],
 	    includes = ['src/'],
