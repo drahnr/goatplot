@@ -11,7 +11,7 @@ import os
 from waflib import Logs as logs
 from waflib import Utils as utils
 
-recurse = ['catalog','meta']
+recurse = ['catalog','meta','tests']
 
 def options(opt):
 	opt.recurse(recurse)
@@ -66,6 +66,7 @@ def pre(bld):
 
 
 def build(bld):
+	bld.load('compiler_c gnu_dirs glib2')
 	bld.recurse(recurse)
 	bld.add_pre_fun(pre)
 
@@ -91,41 +92,6 @@ def build(bld):
 		install_path = "${LIBDIR}"
 	)
 	bld.install_files('${INCLUDEDIR}/goatplot/', bld.path.ant_glob(['src/*.h'], excl=['src/*-internal.h']))
-
-#	for item in shlib.includes:
-#		logs.debug(item)
-	test_screenshot = bld.program(
-		features = ['c', 'glib2', 'unites'],
-		target = 'test-screenshot',
-		source = ['tests/screenshot.c'],
-		includes = ['src/'],
-		export_includes = ['src/'],
-		use = 'objects',
-		uselib = 'M GOBJECT GLIB GTK3',
-		install_path = None
-	)
-
-	test_dynamic = bld.program(
-		features = ['c', 'glib2', 'unites'],
-		target = 'test-dynamic',
-		source = ['tests/dynamic.c'],
-		includes = ['src/'],
-		export_includes = ['src/'],
-		use = 'objects',
-		uselib = 'M GOBJECT GLIB GTK3',
-		install_path = None
-	)
-
-	test_glade = bld.program(
-	    features = ['c', 'glib2'],
-	    target = 'test-glade-line',
-	    source = ['tests/glade-line.c'],
-	    includes = ['src/'],
-	    export_includes = ['src/'],
-	    use = 'objects',
-	    uselib = 'M GOBJECT GLIB GTK3',
-	    install_path = None
-	)
 
 
 from waflib.Build import BuildContext
