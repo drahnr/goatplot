@@ -3,17 +3,20 @@
 
 def options(opt):
 	opt.load('compiler_c gnu_dirs glib2')
+	opt.load('unites', tooldir='.wafcustom')
 
 def configure(cfg):
 	cfg.load('compiler_c gnu_dirs glib2')
+	cfg.load('unites', tooldir='.wafcustom')
 
 def build(bld):
 	bld.load('compiler_c gnu_dirs glib2')
+	bld.load('unites', tooldir='.wafcustom')
 
 	includes = ['../src']
 
 	test_screenshot = bld.program(
-		features = ['c', 'glib2'],
+		features = ['c', 'glib2', 'unites'],
 		target = 'test-screenshot',
 		source = ['screenshot.c'],
 		includes = includes,
@@ -24,7 +27,7 @@ def build(bld):
 	)
 
 	test_dynamic = bld.program(
-		features = ['c', 'glib2'],
+		features = ['c', 'glib2', 'unites'],
 		target = 'test-dynamic',
 		source = ['dynamic.c'],
 		includes = includes,
@@ -35,7 +38,7 @@ def build(bld):
 	)
 
 	test_glade = bld.program(
-	    features = ['c', 'glib2'],
+	    features = ['c', 'glib2', 'unites'],
 	    target = 'test-glade-line',
 	    source = ['glade-line.c'],
 	    includes = includes,

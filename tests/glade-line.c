@@ -6,6 +6,7 @@
  * @brief	file contents
  */
 
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -49,7 +50,8 @@ int main(int argc, char *argv[])
 
 	plot = goat_plot_new();
 
-	if((builder = gtk_builder_new_from_file("../tests/glade-line.glade")) ==
+
+	if((builder = gtk_builder_new_from_file("../../tests/glade-line.glade")) ==
 			NULL) {
 		fprintf(stderr, "gtk_builder_new failed\n");
 		exit(-1);

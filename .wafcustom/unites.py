@@ -41,9 +41,8 @@ from waflib import Utils, Task, Logs, Options, Errors, Context
 @feature('unites')
 @after_method('apply_link')
 def make_test(self):
-	"""Create the unit test task. There can be only one unit test task by task generator."""
-	if getattr(self, 'link_task', None):
-		tsk = self.create_task('unites', self.link_task.outputs)
+	"""Create the unit test task. There can be only one unit test task per task generator."""
+	self.create_task('unites', self.link_task.outputs)
 
 
 class unites(Task.Task):
@@ -74,13 +73,8 @@ class unites(Task.Task):
 		filename = self.inputs[0].abspath()
 
 
-		self.generator.bld.logger = Logs.make_logger(os.path.join(self.generator.bld.out_dir, "test.log"), 'unites_logger')
 
 		self.ut_exec = getattr(self.generator, 'ut_exec', [filename])
-
-		if getattr(self.generator, 'ut_fun', None):
-				# FIXME waf 1.8 - add a return statement here?
-			self.generator.ut_fun(self)
 
 		try:
 			fu = getattr(self.generator.bld, 'all_test_paths')
@@ -115,11 +109,6 @@ class unites(Task.Task):
 			self.ut_exec = (testcmd % self.ut_exec[0]).split(' ')
 
 		#overwrite the default logger to prevent duplicate logging
-		def to_log(x):
-			pass
-
-		self.generator.bld.start_msg("Running test \'%s\'" % (testname))
-
 		proc = Utils.subprocess.Popen(self.ut_exec,\
 		                              cwd=cwd,\
 		                              env=fu,\
@@ -128,22 +117,16 @@ class unites(Task.Task):
 
 		(out, err) = proc.communicate()
 
-		if proc.returncode==0:
-			self.generator.bld.end_msg ("passed", 'GREEN');
-		else:
-			msg = []
-			if out:
-				msg.append('stdout:%s%s' % (os.linesep, out.decode('utf-8')))
-			if err:
-				msg.append('stderr:%s%s' % (os.linesep, err.decode('utf-8')))
-			msg = os.linesep.join(msg)
+		msg = []
+		if out:
+			msg.append('stdout:%s%s' % (os.linesep, out.decode('utf-8')))
+		if err:
+			msg.append('stderr:%s%s' % (os.linesep, err.decode('utf-8')))
+		msg = os.linesep.join(msg)
+		Logs.debug(msg)
 
-
-			if (getattr(Options.options, 'permissive_tests', False)):
-				self.generator.bld.end_msg ("FAIL", 'YELLOW');
-			else:
-				self.generator.bld.end_msg ("FAIL", 'RED');
-				raise Errors.WafError('Test \'%s\' failed' % (testname))
+		if proc.returncode!=0:
+			raise Errors.WafError('Test \'%s\' failed' % (testname))
 
 
 def options(opt):
