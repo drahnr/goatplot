@@ -116,6 +116,17 @@ def build(bld):
 		install_path = None
 	)
 
+        test_glade = bld.program(
+                features = ['c', 'glib2', 'unites'],
+                target = 'test-glade-line',
+                source = ['tests/glade-line.c'],
+                includes = ['src/'],
+                export_includes = ['src/'],
+                use = 'objects',
+                uselib = 'M GOBJECT GLIB GTK3',
+                install_path = None
+        )
+
 
 from waflib.Build import BuildContext
 
