@@ -60,6 +60,9 @@ struct _GoatPlotPrivate
 	GdkRGBA color_minor_x;
 	GdkRGBA color_minor_y;
 
+	GdkRGBA color_background;
+	GdkRGBA color_border;
+
 	gint width_minor_x;
 	gint width_major_x;
 	gint width_minor_y;
@@ -141,6 +144,16 @@ goat_plot_init (GoatPlot *self)
 	self->priv->color_minor_x.green = 0.;
 	self->priv->color_minor_x.blue = 0.;
 	self->priv->color_minor_x.alpha = 1.;
+
+	self->priv->color_background.red = 1.;
+	self->priv->color_background.green = 1.;
+	self->priv->color_background.blue = 1.;
+	self->priv->color_background.alpha = 1.;
+
+	self->priv->color_border.red = 0.;
+	self->priv->color_border.green = 0.;
+	self->priv->color_border.blue = 0.;
+	self->priv->color_border.alpha = 1.;
 
 	self->priv->color_major_y = self->priv->color_major_x;
 	self->priv->color_minor_y = self->priv->color_minor_x;
@@ -489,7 +502,8 @@ draw (GtkWidget *widget, cairo_t *cr)
 
 		draw_background (plot, cr, &allocation, &padding,
 		                 x_nil_pixel, y_nil_pixel,
-		                 x_unit_to_pixel, y_unit_to_pixel);
+		                 x_unit_to_pixel, y_unit_to_pixel,
+						 &priv->color_background, &priv->color_border);
 
 		if (draw) {
 			draw_scales (plot, cr, &allocation, &padding,
@@ -610,7 +624,32 @@ goat_plot_set_ticks_y (GoatPlot *plot, gdouble major, gint minors_per_major)
 
 	priv->major_delta_y = major;
 	priv->minors_per_major_y = minors_per_major;
+}
 
+void
+goat_plot_set_background_color(GoatPlot *plot, GdkRGBA *color)
+{
+	g_return_if_fail (plot);
+	g_return_if_fail (GOAT_IS_PLOT (plot));
+
+	GoatPlotPrivate *priv;
+
+	priv = GOAT_PLOT_GET_PRIVATE (plot);
+
+	priv->color_background = *color;
+}
+
+void
+goat_plot_set_border_color(GoatPlot *plot, GdkRGBA *color)
+{
+	g_return_if_fail (plot);
+	g_return_if_fail (GOAT_IS_PLOT (plot));
+
+	GoatPlotPrivate *priv;
+
+	priv = GOAT_PLOT_GET_PRIVATE (plot);
+
+	priv->color_border = *color;
 }
 
 

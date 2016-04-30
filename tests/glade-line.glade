@@ -25,7 +25,7 @@
         </child>
         <child>
           <object class="GoatPlot" id="GoatPlot">
-            <property name="width_request">500</property>
+            <property name="width_request">400</property>
             <property name="height_request">400</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>

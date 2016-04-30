@@ -301,7 +301,9 @@ draw_background (GoatPlot *plot,
                  gdouble x_nil,
                  gdouble y_nil,
                  gdouble x_factor,
-                 gdouble y_factor)
+                 gdouble y_factor,
+				 GdkRGBA *color_background,
+				 GdkRGBA *color_border)
 {
 	int top, bottom, left, right;
 
@@ -314,12 +316,14 @@ draw_background (GoatPlot *plot,
 
 
 	cairo_rectangle (cr, left, top, right-left, bottom-top);
-	cairo_set_source_rgba (cr, 1., 1., 1., 1.);
+	cairo_set_source_rgba (cr, color_background->red, color_background->green,
+			color_background->blue, color_background->alpha);
 	cairo_fill (cr);
 
 
 	cairo_rectangle (cr, left, top, right-left, bottom-top);
-	cairo_set_source_rgba (cr, 0., 0., 0., 1.);
+	cairo_set_source_rgba (cr, color_border->red, color_border->green,
+			color_border->blue, color_border->alpha);
 	cairo_set_line_width (cr, 1.);
 	cairo_stroke (cr);
 
