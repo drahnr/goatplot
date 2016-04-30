@@ -20,8 +20,9 @@
 
 
 
-#include "goat-dataset.h"
 #include <gtk/gtk.h>
+#include <gdk/gdk.h>
+#include "goat-dataset.h"
 #include <math.h>
 
 static void update_extrema_cache(GoatDataset *dataset);
@@ -36,6 +37,7 @@ struct _GoatDatasetPrivate
 	double y_min;
 	double x_max;
 	double y_max;
+	GdkRGBA	color;
 
 	GoatDatasetStyle style;
 };
@@ -127,6 +129,7 @@ goat_dataset_init (GoatDataset *self)
 	self->priv->y_min = +G_MAXDOUBLE;
 	self->priv->x_max = -G_MAXDOUBLE;
 	self->priv->y_max = -G_MAXDOUBLE;
+	gdk_rgba_parse(&self->priv->color, "blue");
 	self->priv->style = GOAT_DATASET_STYLE_SQUARE;
 }
 
@@ -313,4 +316,30 @@ goat_dataset_clear(GoatDataset *dataset) {
 	g_object_set(dataset,
 	             "list", NULL,
 	             NULL);
+}
+
+void
+goat_dataset_set_color (GoatDataset *dataset, GdkRGBA *color)
+{
+	GoatDatasetPrivate *priv;
+
+	g_return_if_fail (dataset);
+	g_return_if_fail (color);
+
+	priv = GOAT_DATASET_GET_PRIVATE (dataset);
+
+	priv->color = *color;
+}
+
+void
+goat_dataset_get_color (GoatDataset *dataset, GdkRGBA *color)
+{
+	GoatDatasetPrivate *priv;
+
+	g_return_if_fail (dataset);
+	g_return_if_fail (color);
+
+	priv = GOAT_DATASET_GET_PRIVATE (dataset);
+
+	*color = priv->color;
 }
