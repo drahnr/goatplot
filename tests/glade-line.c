@@ -48,9 +48,7 @@ int main(int argc, char *argv[])
 
 	gtk_init(&argc, &argv);
 
-	plot = goat_plot_new();
-
-
+#if GTK_MAJOR_VERSION >= 3 && GTK_MINOR_VERSION >= 10
 	if((builder = gtk_builder_new_from_file("../../tests/glade-line.glade")) ==
 			NULL) {
 		fprintf(stderr, "gtk_builder_new failed\n");
@@ -88,7 +86,9 @@ int main(int argc, char *argv[])
 	g_timeout_add (20, (GSourceFunc)dynamic_add, &both);
 
 	gtk_main();
-
+#else
+#warning "GTK version too old for glade-line test!"
+#endif
 	return EXIT_SUCCESS;
 }
 
