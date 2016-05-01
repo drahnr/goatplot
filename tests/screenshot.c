@@ -17,7 +17,7 @@ void destroy(GtkWidget *widget, gpointer data)
 		g_assert (surface);
 		cr = cairo_create (surface);
 		gtk_widget_draw (GTK_WIDGET (widget), cr);
-		g_assert (cairo_surface_write_to_png (surface, "../../screenshot.png") == CAIRO_STATUS_SUCCESS);
+		g_assert (cairo_surface_write_to_png (surface, "./screenshot.png") == CAIRO_STATUS_SUCCESS);
 		cairo_surface_destroy (surface);
 		cairo_destroy (cr);
 	}
