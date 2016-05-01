@@ -2,7 +2,7 @@
 # encoding: utf-8
 # Carlos Rafael Giani, 2006
 # Thomas Nagy, 2010
-# Bernhard Schuster, 2014
+# Bernhard Schuster, 2014-2016
 
 """
 Unit testing system for C/C++/D providing test execution:
@@ -24,14 +24,6 @@ The tests are declared by adding the **test** feature to programs::
 When the build is executed, the program 'test' will be built and executed without arguments.
 The success/failure is detected by looking at the return code. The status and the standard output/error
 are stored on the build context.
-
-The results can be displayed by registering a callback function. Here is how to call
-the predefined callback::
-
-	def build(bld):
-		bld(features='c cprogram unites', source='main.c', target='app')
-		from waflib.Tools import unites
-		bld.add_post_fun(unites.summary)
 """
 
 import os, sys
@@ -42,7 +34,8 @@ from waflib import Utils, Task, Logs, Options, Errors, Context
 @after_method('apply_link')
 def make_test(self):
 	"""Create the unit test task. There can be only one unit test task per task generator."""
-	self.create_task('unites', self.link_task.outputs)
+	if getattr(self, 'link_task', None):
+		self.create_task('unites', self.link_task.outputs)
 
 
 class unites(Task.Task):
@@ -50,11 +43,11 @@ class unites(Task.Task):
 	Execute a unit test
 	"""
 	color = 'PINK'
-	after = ['vnum', 'inst']
+	after = ['vnum','inst']
 	vars = []
 	def runnable_status(self):
 		"""
-		Always execute the task if ``waf --notests`` was not used
+		Always execute the task if ``waf --no-tests`` was not used
 		"""
 		if getattr(Options.options, 'no_tests', False):
 			return Task.SKIP_ME
@@ -125,8 +118,7 @@ class unites(Task.Task):
 		msg = os.linesep.join(msg)
 		Logs.debug(msg)
 
-		if proc.returncode!=0:
-			raise Errors.WafError('Test \'%s\' failed' % (testname))
+		return proc.returncode
 
 
 def options(opt):
@@ -134,7 +126,7 @@ def options(opt):
 	Provide the ``permissive``, ``--notests`` and ``--testcmd`` command-line options.
 	"""
 	opt.add_option('--permissive-tests', action='store_true', default=False, help='Do not force exit if tests fail', dest='permissive_tests')
-	opt.add_option('--notests', action='store_true', default=False, help='Exec no unit tests', dest='no_tests')
+	opt.add_option('--no-tests', action='store_true', default=False, help='Exec no unit tests', dest='no_tests')
 	opt.add_option('--testcmd', action='store', default=False,
 	 help = 'Run the unit tests using the test-cmd string'
 	 ' example "--test-cmd="valgrind --error-exitcode=1'
