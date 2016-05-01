@@ -2,15 +2,15 @@
 # encoding: utf-8
 
 def options(opt):
-	opt.load('compiler_c gnu_dirs glib2')
+	opt.load('compiler_c glib2')
 	opt.load('unites', tooldir='.wafcustom')
 
 def configure(cfg):
-	cfg.load('compiler_c gnu_dirs glib2')
+	cfg.load('compiler_c glib2')
 	cfg.load('unites', tooldir='.wafcustom')
 
 def build(bld):
-	bld.load('compiler_c gnu_dirs glib2')
+	bld.load('compiler_c glib2')
 	bld.load('unites', tooldir='.wafcustom')
 
 	includes = ['../src']

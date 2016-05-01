@@ -92,7 +92,7 @@ main (int argc, char *argv[])
 	gtk_widget_show_all (window);
 	g_signal_connect (G_OBJECT (window), "delete-event", G_CALLBACK (destroy), NULL);
 
-	g_timeout_add (2000, (GSourceFunc)self_destruct, GTK_WIDGET (window));
+	g_timeout_add (1000, (GSourceFunc)self_destruct, GTK_WIDGET (window));
 
 	gtk_main ();
 

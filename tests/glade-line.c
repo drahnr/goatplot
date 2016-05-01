@@ -26,7 +26,7 @@ gboolean dynamic_add(Both *both)
 	double y = 0;
 
 	if(idx > 100) {
-		g_timeout_add(2000, (GSourceFunc)gtk_main_quit, NULL);
+		g_timeout_add(500, (GSourceFunc)gtk_main_quit, NULL);
 		return 0;
 	}
 	g_print("whatsoever callback\n");
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 
 	both.plot = plot;
 	both.dataset = dataset;
-	g_timeout_add (50, (GSourceFunc)dynamic_add, &both);
+	g_timeout_add (20, (GSourceFunc)dynamic_add, &both);
 
 	gtk_main();
 
