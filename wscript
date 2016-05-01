@@ -11,7 +11,7 @@ import os
 from waflib import Logs as logs
 from waflib import Utils as utils
 
-recurse = ['catalog','meta','tests']
+recurse = ['catalog','meta','tests', 'src']
 
 def options(opt):
 	opt.recurse(recurse)
@@ -69,30 +69,6 @@ def build(bld):
 	bld.load('compiler_c gnu_dirs glib2')
 	bld.recurse(recurse)
 	bld.add_pre_fun(pre)
-
-
-	objects = bld.objects(
-		features = ['c', 'glib2'],
-		target = 'objects',
-		source = bld.path.ant_glob(['src/*.c'], excl='*/main.c'),
-		includes = ['src/'],
-		cflags = ['-fPIC'],
-		export_includes = ['src/'],
-		uselib = 'M GOBJECT GLIB GTK3'
-	)
-
-	shlib = bld.shlib(
-		features = ['c', 'cshlib', 'glib2'],
-		target = LIBNAME,
-		source = [],
-		use = 'objects',
-		includes = ['src/'],
-		export_includes = ['src/'],
-		uselib = 'M GOBJECT GLIB GTK3',
-		install_path = "${LIBDIR}"
-	)
-	bld.install_files('${INCLUDEDIR}/goatplot/', bld.path.ant_glob(['src/*.h'], excl=['src/*-internal.h']))
-
 
 from waflib.Build import BuildContext
 
