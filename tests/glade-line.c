@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <gtk/gtk.h>
+#include <gdk/gdk.h>
 #include <goat-plot.h>
 #include <math.h>
 
@@ -45,6 +46,7 @@ int main(int argc, char *argv[])
 	GoatPlot *plot;
 	GoatDataset *dataset;
 	Both both;
+	GdkRGBA	datasetColor;
 
 	gtk_init(&argc, &argv);
 
@@ -76,6 +78,8 @@ int main(int argc, char *argv[])
 
 	dataset = goat_dataset_new(NULL);
 	goat_dataset_set_style(dataset, GOAT_DATASET_STYLE_LINE);
+	gdk_rgba_parse(&datasetColor, "cyan");
+	goat_dataset_set_color(dataset, &datasetColor);
 	goat_plot_add_dataset(plot, dataset);
 
 	goat_plot_set_range_x(plot, 0.0, 10.0);

@@ -4,3 +4,4 @@ build/*
 *.lock
 *.pyc
 .waf-*
+screenshot.png

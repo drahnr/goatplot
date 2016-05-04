@@ -109,6 +109,12 @@ goat_dataset_get_extrema (GoatDataset *dataset,
 void
 goat_dataset_append(GoatDataset *dataset, double x, double y);
 
+void
+goat_dataset_get_color (GoatDataset *dataset, GdkRGBA *color);
+
+void
+goat_dataset_set_color (GoatDataset *dataset, GdkRGBA *color);
+
 G_END_DECLS
 
 #endif /* __GOAT_DATASET_H__ */

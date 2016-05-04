@@ -294,14 +294,15 @@ draw_dataset (GoatPlot *plot, cairo_t *cr,
 
 	gdouble x,y;
 	GoatDatasetIter dit;
+	GdkRGBA color;
 
 	goat_dataset_iter_init (&dit, dataset);
+	goat_dataset_get_color(dataset, &color);
 
 	// draw points
 	const double register diameter = 8.;
-	cairo_set_source_rgba (cr, g_random_double_range (0.1,0.9),
-	                           g_random_double_range (0.1,0.9),
-	                           g_random_double_range (0.1,0.9), 1.);
+	cairo_set_source_rgba (cr, color.red, color.green, color.blue,
+			color.alpha);
 	gboolean first_point = TRUE;	// True if this point is first point
 	gboolean cairo_draw_filled = TRUE;	// Set to true to call cairo_fill
 	while (goat_dataset_iter_next (&dit, &x, &y)) {
