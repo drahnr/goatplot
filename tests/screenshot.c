@@ -1,4 +1,5 @@
 #include <gtk/gtk.h>
+#include <gdk/gdk.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -39,6 +40,7 @@ main (int argc, char *argv[])
 	GtkWidget *window;
 	GoatPlot *plot;
 	int i;
+	GdkRGBA color;
 
 	gtk_init (&argc, &argv);
 
@@ -74,16 +76,22 @@ main (int argc, char *argv[])
 	dataset = goat_dataset_new (list1);
 	goat_dataset_set_style (dataset, GOAT_DATASET_STYLE_TRIANGLE);
 	g_assert (goat_dataset_get_length (dataset) > 0);
+	gdk_rgba_parse(&color, "royalblue");
+	goat_dataset_set_color(dataset, &color);
 	goat_plot_add_dataset (plot, dataset);
 #if TEST_MULTIPLE
 	dataset = goat_dataset_new (list2);
 	goat_dataset_set_style (dataset, GOAT_DATASET_STYLE_POINT);
 	g_assert (goat_dataset_get_length (dataset) > 0);
+	gdk_rgba_parse(&color, "green");
+	goat_dataset_set_color(dataset, &color);
 	goat_plot_add_dataset (plot, dataset);
 
 	dataset = goat_dataset_new (list3);
 	goat_dataset_set_style (dataset, GOAT_DATASET_STYLE_SQUARE);
 	g_assert (goat_dataset_get_length (dataset) > 0);
+	gdk_rgba_parse(&color, "goldenrod");
+	goat_dataset_set_color(dataset, &color);
 	goat_plot_add_dataset (plot, dataset);
 #endif
 
