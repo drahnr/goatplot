@@ -23,7 +23,7 @@ dynamic_add (Both *both)
 		gtk_widget_queue_draw(GTK_WIDGET(both->plot));
 		return G_SOURCE_CONTINUE;
 	}
-	g_timeout_add(2000, (GSourceFunc)gtk_main_quit, NULL);
+	g_timeout_add(500, (GSourceFunc)gtk_main_quit, NULL);
 	return G_SOURCE_REMOVE;
 }
 
@@ -52,7 +52,7 @@ main (int argc, char *argv[])
 	Both both;
 	both.plot = plot;
 	both.dataset = dataset;
-	g_timeout_add (50, (GSourceFunc)dynamic_add, &both);
+	g_timeout_add (20, (GSourceFunc)dynamic_add, &both);
 
 	gtk_main ();
 

@@ -17,7 +17,7 @@ void destroy(GtkWidget *widget, gpointer data)
 		g_assert (surface);
 		cr = cairo_create (surface);
 		gtk_widget_draw (GTK_WIDGET (widget), cr);
-		g_assert (cairo_surface_write_to_png (surface, "../../screenshot.png") == CAIRO_STATUS_SUCCESS);
+		g_assert (cairo_surface_write_to_png (surface, "./screenshot.png") == CAIRO_STATUS_SUCCESS);
 		cairo_surface_destroy (surface);
 		cairo_destroy (cr);
 	}
@@ -92,7 +92,7 @@ main (int argc, char *argv[])
 	gtk_widget_show_all (window);
 	g_signal_connect (G_OBJECT (window), "delete-event", G_CALLBACK (destroy), NULL);
 
-	g_timeout_add (2000, (GSourceFunc)self_destruct, GTK_WIDGET (window));
+	g_timeout_add (1000, (GSourceFunc)self_destruct, GTK_WIDGET (window));
 
 	gtk_main ();
 
