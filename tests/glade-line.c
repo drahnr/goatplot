@@ -32,8 +32,8 @@ gboolean dynamic_add(Both *both)
 	g_print("whatsoever callback\n");
 	idx++;
 	x = idx * 0.1;
-	y = cos(x + 0.5 * M_PI) * (sqrt(0.01 * idx * idx * idx));
-	goat_dataset_append(both->dataset, x, y);
+	y = cos(x + 0.5 * M_PI) * (sqrt(0.005 * idx * idx * idx));
+	goat_dataset_append(both->dataset, x * 10., y);
 	gtk_widget_queue_draw(GTK_WIDGET(both->plot));
 	return 1;
 }
@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
 	GoatPlot *plot;
 	GoatDataset *dataset;
 	Both both;
+	GdkRGBA	color;
 
 	gtk_init(&argc, &argv);
 
@@ -78,8 +79,14 @@ int main(int argc, char *argv[])
 	goat_dataset_set_style(dataset, GOAT_DATASET_STYLE_LINE);
 	goat_plot_add_dataset(plot, dataset);
 
-	goat_plot_set_range_x(plot, 0.0, 10.0);
-	goat_plot_set_range_y(plot, -100.0, 100.0);
+	goat_plot_set_range_x(plot, 0.0, 100.0);
+	goat_plot_set_range_y(plot, -50.0, 50.0);
+
+	color.red = 0.;
+	color.green = 0.;
+	color.blue = 0.;
+	color.alpha = 1.;
+	goat_plot_set_background_color(plot, &color);
 
 	both.plot = plot;
 	both.dataset = dataset;
