@@ -631,6 +631,7 @@ goat_plot_set_background_color(GoatPlot *plot, GdkRGBA *color)
 {
 	g_return_if_fail (plot);
 	g_return_if_fail (GOAT_IS_PLOT (plot));
+	g_return_if_fail (color != NULL);
 
 	GoatPlotPrivate *priv;
 
