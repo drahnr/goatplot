@@ -314,8 +314,7 @@ draw_dataset (GoatPlot *plot, cairo_t *cr,
 
 	// draw points
 	const double register diameter = 8.;
-	cairo_set_source_rgba (cr, color.red, color.green, color.blue,
-			color.alpha);
+	gdk_cairo_set_source_rgba (cr, &color);
 	gboolean first_point = TRUE;	// True if this point is first point
 	gboolean cairo_draw_filled = TRUE;	// Set to true to call cairo_fill
 	while (goat_dataset_iter_next (&dit, &x, &y)) {
@@ -504,7 +503,8 @@ draw (GtkWidget *widget, cairo_t *cr)
 		draw_background (plot, cr, &allocation, &padding,
 		                 x_nil_pixel, y_nil_pixel,
 		                 x_unit_to_pixel, y_unit_to_pixel,
-						 &priv->color_background, &priv->color_border);
+		                 &priv->color_background,
+		                 &priv->color_border);
 
 		if (draw) {
 			draw_scales (plot, cr, &allocation, &padding,

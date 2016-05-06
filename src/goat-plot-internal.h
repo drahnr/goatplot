@@ -3,13 +3,6 @@
 #include <gdk/gdk.h>
 #include <math.h>
 
-static inline void
-goat_set_source (cairo_t *cr, GdkRGBA *rgba)
-{
-	cairo_set_source_rgba (cr, rgba->red, rgba->green, rgba->blue, rgba->alpha);
-}
-
-
 typedef enum {
 	GOAT_DIRECTION_UNKNOWN = 0,
 	GOAT_DIRECTION_HORIZONTAL,
@@ -109,10 +102,10 @@ draw_scale_horizontal (GoatPlot *plot,
 			cairo_move_to (cr, x, top);
 			if (majorstip) {
 				cairo_line_to (cr, x, top-width_major);
-				goat_set_source (cr, &color_major);
+				gdk_cairo_set_source_rgba (cr, &color_major);
 			} else {
 				cairo_line_to (cr, x, top-width_minor);
-				goat_set_source (cr, &color_minor);
+				gdk_cairo_set_source_rgba (cr, &color_minor);
 			}
 			cairo_stroke (cr);
 
@@ -130,9 +123,9 @@ draw_scale_horizontal (GoatPlot *plot,
 			cairo_move_to (cr, x, top);
 			cairo_line_to (cr, x, bottom);
 			if (majorstip) {
-				goat_set_source (cr, &color_grid_major);
+				gdk_cairo_set_source_rgba (cr, &color_grid_major);
 			} else {
-				goat_set_source (cr, &color_grid_minor);
+				gdk_cairo_set_source_rgba (cr, &color_grid_minor);
 			}
 			cairo_stroke (cr);
 		}
@@ -145,10 +138,10 @@ draw_scale_horizontal (GoatPlot *plot,
 			cairo_move_to (cr, x, bottom);
 			if (majorstip) {
 				cairo_line_to (cr, x, bottom+width_major);
-				goat_set_source (cr, &color_major);
+				gdk_cairo_set_source_rgba (cr, &color_major);
 			} else {
 				cairo_line_to (cr, x, bottom+width_minor);
-				goat_set_source (cr, &color_minor);
+				gdk_cairo_set_source_rgba (cr, &color_minor);
 			}
 			cairo_stroke (cr);
 
@@ -193,10 +186,10 @@ draw_scale_vertical (GoatPlot *plot,
 			cairo_move_to (cr, left, y);
 			if (majorstip) {
 				cairo_line_to (cr, left-width_major, y);
-				goat_set_source (cr, &color_major);
+				gdk_cairo_set_source_rgba (cr, &color_major);
 			} else {
 				cairo_line_to (cr, left-width_minor, y);
-				goat_set_source (cr, &color_minor);
+				gdk_cairo_set_source_rgba (cr, &color_minor);
 			}
 			cairo_stroke (cr);
 
@@ -215,9 +208,9 @@ draw_scale_vertical (GoatPlot *plot,
 			cairo_move_to (cr, left, y);
 			cairo_line_to (cr, right, y);
 			if (majorstip) {
-				goat_set_source (cr, &color_grid_major);
+				gdk_cairo_set_source_rgba (cr, &color_grid_major);
 			} else {
-				goat_set_source (cr, &color_grid_minor);
+				gdk_cairo_set_source_rgba (cr, &color_grid_minor);
 			}
 			cairo_stroke (cr);
 		}
@@ -230,10 +223,10 @@ draw_scale_vertical (GoatPlot *plot,
 			cairo_move_to (cr, left, y);
 			if (majorstip) {
 				cairo_line_to (cr, left-width_major, y);
-				goat_set_source (cr, &color_major);
+				gdk_cairo_set_source_rgba (cr, &color_major);
 			} else {
 				cairo_line_to (cr, left-width_minor, y);
-				goat_set_source (cr, &color_minor);
+				gdk_cairo_set_source_rgba (cr, &color_minor);
 			}
 			cairo_stroke (cr);
 
@@ -301,7 +294,9 @@ draw_background (GoatPlot *plot,
                  gdouble x_nil,
                  gdouble y_nil,
                  gdouble x_factor,
-                 gdouble y_factor)
+                 gdouble y_factor,
+                 GdkRGBA* color_background,
+                 GdkRGBA* color_border)
 {
 	int top, bottom, left, right;
 
@@ -314,12 +309,12 @@ draw_background (GoatPlot *plot,
 
 
 	cairo_rectangle (cr, left, top, right-left, bottom-top);
-	cairo_set_source_rgba (cr, 1., 1., 1., 1.);
+	gdk_cairo_set_source_rgba (cr, color_background);
 	cairo_fill (cr);
 
 
 	cairo_rectangle (cr, left, top, right-left, bottom-top);
-	cairo_set_source_rgba (cr, 0., 0., 0., 1.);
+	gdk_cairo_set_source_rgba (cr, color_border);
 	cairo_set_line_width (cr, 1.);
 	cairo_stroke (cr);
 
