@@ -36,38 +36,9 @@ struct _GoatPlotPrivate
 {
 	GArray *array; // array of GoatDataset pointers
 	//remove this, its the users duty to prescale data properly FIXME
-	GoatPlotScaleType scale_x, scale_y;
-	// FIXME GoatPlotGridType gridtype [LOG, EXP, LIN=DEFAULT]
-	gboolean scale_fixed;
 
-	// visible area of datasets
-	gdouble x_min, x_max;
-	gdouble y_min, y_max;
-	// automatically choose x_min, ... y_max according to the datasets
-	gboolean x_autorange;
-	gboolean y_autorange;
-
-	// ticks probably move into GoatTicks/Scale object
-	gdouble major_delta_x;
-	gint minors_per_major_x;
-
-	gdouble major_delta_y;
-	gint minors_per_major_y;
-
-	GdkRGBA color_major_x;
-	GdkRGBA color_major_y;
-
-	GdkRGBA color_minor_x;
-	GdkRGBA color_minor_y;
-
-	GdkRGBA color_background;
-	GdkRGBA color_border;
-
-	gint width_minor_x;
-	gint width_major_x;
-	gint width_minor_y;
-	gint width_major_y;
-
+	GoatScale* scale_x;
+	GoatScale* scale_y;
 };
 
 G_DEFINE_TYPE (GoatPlot, goat_plot, GTK_TYPE_DRAWING_AREA);
@@ -125,48 +96,6 @@ goat_plot_init (GoatPlot *self)
 	gtk_widget_set_can_focus (widget, TRUE);
 	gtk_widget_grab_focus (widget);
 
-	self->priv->scale_x = GOAT_PLOT_SCALE_LIN; //KICKE MEE
-	self->priv->scale_y = GOAT_PLOT_SCALE_LIN; //KICK MEE
-	self->priv->scale_fixed = TRUE;
-	self->priv->array = g_array_new (TRUE, TRUE, sizeof(gpointer));
-	self->priv->x_min = +G_MAXDOUBLE;
-	self->priv->x_max = -G_MAXDOUBLE;
-	self->priv->y_min = +G_MAXDOUBLE;
-	self->priv->y_max = -G_MAXDOUBLE;
-	self->priv->x_autorange = TRUE;
-	self->priv->y_autorange = TRUE;
-	self->priv->color_major_x.red = 0.8;
-	self->priv->color_major_x.green = 0.;
-	self->priv->color_major_x.blue = 0.;
-	self->priv->color_major_x.alpha = 1.;
-
-	self->priv->color_minor_x.red = 0.;
-	self->priv->color_minor_x.green = 0.;
-	self->priv->color_minor_x.blue = 0.;
-	self->priv->color_minor_x.alpha = 1.;
-
-	self->priv->color_background.red = 1.;
-	self->priv->color_background.green = 1.;
-	self->priv->color_background.blue = 1.;
-	self->priv->color_background.alpha = 1.;
-
-	self->priv->color_border.red = 0.;
-	self->priv->color_border.green = 0.;
-	self->priv->color_border.blue = 0.;
-	self->priv->color_border.alpha = 1.;
-
-	self->priv->color_major_y = self->priv->color_major_x;
-	self->priv->color_minor_y = self->priv->color_minor_x;
-
-	self->priv->width_minor_x = 5;
-	self->priv->width_major_x = 10;
-	self->priv->width_minor_y = 5;
-	self->priv->width_major_y = 10;
-
-	self->priv->minors_per_major_x = 5;
-	self->priv->minors_per_major_y = 5;
-	self->priv->major_delta_x = 50.;
-	self->priv->major_delta_y = 50.;
 }
 
 
@@ -174,9 +103,9 @@ goat_plot_init (GoatPlot *self)
  * create a new GoatPlot widget
  */
 GoatPlot *
-goat_plot_new ()
+goat_plot_new (GoatScale* x, GoatScale* y)
 {
-	return GOAT_PLOT (gtk_widget_new (GOAT_TYPE_PLOT, NULL));
+	return GOAT_PLOT (gtk_widget_new (GOAT_TYPE_PLOT, "scale_x", x, "scale_y", y, NULL));
 }
 
 
@@ -452,53 +381,57 @@ draw (GtkWidget *widget, cairo_t *cr)
 		const gint width = allocation.width - padding.left - padding.right;
 		const gint height = allocation.height - padding.top - padding.bottom;
 
+		gdouble ref_x_min = +G_MAXDOUBLE;
+		gdouble ref_x_max = -G_MAXDOUBLE;
+		gdouble ref_y_min = +G_MAXDOUBLE;
+		gdouble ref_y_max = -G_MAXDOUBLE;
+		goat_scale_get_range(priv->scale_x, &ref_x_min, &ref_x_max);
+		goat_scale_get_range(priv->scale_y, &ref_y_min, &ref_y_max);
+
 		// draw the actual data
-		if (priv->x_autorange || priv->y_autorange) {
-			if (priv->x_autorange) {
-				priv->x_min = +G_MAXDOUBLE;
-				priv->x_max = -G_MAXDOUBLE;
-			}
-			if (priv->y_autorange) {
-				priv->y_min = +G_MAXDOUBLE;
-				priv->y_max = -G_MAXDOUBLE;
-			}
+		if (goat_scale_is_autorange(scale_x) || goat_scale_is_autorange(scale_y)) {
+
 			for (i=0; i<priv->array->len; i++) {
 				dataset = g_array_index (priv->array, GoatDataset *, i);
 				gdouble x_min, x_max, y_min, y_max;
 				goat_dataset_get_extrema (dataset,
 				                          &x_min, &x_max,
 				                          &y_min, &y_max);
-				if (priv->x_autorange) {
-					if (priv->x_min > x_min)
-						priv->x_min = x_min;
-					if (priv->x_max < x_max)
-						priv->x_max = x_max;
+				if (goat_scale_is_autorange(scale_x)) {
+					if (ref_x_min > x_min)
+						ref_x_min = x_min;
+					if (ref_x_max < x_max)
+						ref_x_max = x_max;
 				}
-				if (priv->y_autorange) {
-					if (priv->y_min > y_min)
-						priv->y_min = y_min;
-					if (priv->y_max < y_max)
-						priv->y_max = y_max;
+				if (goat_scale_is_autorange(scale_y)) {
+					if (ref_y_min > y_min)
+						ref_y_min = y_min;
+					if (ref_y_max < y_max)
+						ref_y_max = y_max;
 				}
 			}
+
+			goat_scale_update_range(priv->scale_x, ref_x_min, ref_x_max);
+			goat_scale_update_range(priv->scale_y, ref_y_min, ref_y_max);
+
+			g_printf ("x range %lf %lf\n", ref_x_min, ref_x_max);
+			g_printf ("y range %lf %lf\n", ref_y_min, ref_y_max);
+
 			// TODO add some fixup if x_min is very close to x_max
 			// TODO add some additional padding for niceness :)
 		}
-		g_printf ("x range %lf %lf\n", priv->x_min, priv->x_max);
-		g_printf ("y range %lf %lf\n", priv->y_min, priv->y_max);
-
 		gboolean draw = TRUE;
-		if (!get_unit_to_pixel_factor (width, priv->x_min, priv->x_max, &x_unit_to_pixel)) {
+		if (!get_unit_to_pixel_factor (width, ref_x_min, ref_x_max, &x_unit_to_pixel)) {
 			g_warning ("Bad x range. This is too boring to plot.");
 			draw = FALSE;
 		}
-		if (!get_unit_to_pixel_factor (height, priv->y_min, priv->y_max, &y_unit_to_pixel)) {
+		if (!get_unit_to_pixel_factor (height, ref_y_min, ref_y_max, &y_unit_to_pixel)) {
 			g_warning ("Bad y range. This is too boring to plot.");
 			draw = FALSE;
 		}
 
-		x_nil_pixel = priv->x_min * -x_unit_to_pixel;
-		y_nil_pixel = priv->y_min * -y_unit_to_pixel;
+		x_nil_pixel = ref_x_min * -x_unit_to_pixel;
+		y_nil_pixel = ref_y_min * -y_unit_to_pixel;
 
 		draw_background (plot, cr, &allocation, &padding,
 		                 x_nil_pixel, y_nil_pixel,
@@ -521,8 +454,8 @@ draw (GtkWidget *widget, cairo_t *cr)
 				dataset = g_array_index (priv->array, GoatDataset *, i);
 				draw_dataset (plot, cr, dataset,
 					          height, width,
-					          priv->x_min, priv->x_max, x_nil_pixel, x_unit_to_pixel,
-					          priv->y_min, priv->y_max, y_nil_pixel, y_unit_to_pixel);
+					          ref_x_min, ref_x_max, x_nil_pixel, x_unit_to_pixel,
+					          ref_y_min, ref_y_max, y_nil_pixel, y_unit_to_pixel);
 			}
 		}
 		cairo_restore (cr);
@@ -544,87 +477,6 @@ get_prefered_height (GtkWidget *widget, int *minimal, int *natural)
 {
 	*minimal = 200;
 	*natural = 350;
-}
-
-
-
-
-void
-goat_plot_set_range_x_auto (GoatPlot *plot)
-{
-	g_return_if_fail (plot);
-	g_return_if_fail (GOAT_IS_PLOT (plot));
-
-	plot->priv->x_min = G_MAXDOUBLE;
-	plot->priv->x_max = -G_MAXDOUBLE;
-	plot->priv->x_autorange = TRUE;
-}
-
-void
-goat_plot_set_range_y_auto (GoatPlot *plot)
-{
-	g_return_if_fail (plot);
-	g_return_if_fail (GOAT_IS_PLOT (plot));
-
-
-	plot->priv->y_min = G_MAXDOUBLE;
-	plot->priv->y_max = -G_MAXDOUBLE;
-	plot->priv->y_autorange = TRUE;
-}
-
-void
-goat_plot_set_range_x (GoatPlot *plot, gdouble min_x, gdouble max_x)
-{
-	g_return_if_fail (min_x < max_x);
-	g_return_if_fail (plot);
-	g_return_if_fail (GOAT_IS_PLOT (plot));
-
-	plot->priv->x_autorange = FALSE;
-	plot->priv->x_min = min_x;
-	plot->priv->x_max = max_x;
-}
-
-void
-goat_plot_set_range_y (GoatPlot *plot, gdouble min_y, gdouble max_y)
-{
-	g_return_if_fail (min_y < max_y);
-	g_return_if_fail (plot);
-	g_return_if_fail (GOAT_IS_PLOT (plot));
-
-	plot->priv->y_autorange = FALSE;
-	plot->priv->y_min = min_y;
-	plot->priv->y_max = max_y;
-}
-
-void
-goat_plot_set_ticks_x (GoatPlot *plot, gdouble major, gint minors_per_major)
-{
-	g_return_if_fail (major>0.);
-	g_return_if_fail (plot);
-	g_return_if_fail (GOAT_IS_PLOT (plot));
-
-	GoatPlotPrivate *priv;
-
-	priv = GOAT_PLOT_GET_PRIVATE (plot);
-
-	priv->major_delta_x = major;
-	priv->minors_per_major_x = minors_per_major;
-}
-
-
-void
-goat_plot_set_ticks_y (GoatPlot *plot, gdouble major, gint minors_per_major)
-{
-	g_return_if_fail (major>0.);
-	g_return_if_fail (plot);
-	g_return_if_fail (GOAT_IS_PLOT (plot));
-
-	GoatPlotPrivate *priv;
-
-	priv = GOAT_PLOT_GET_PRIVATE (plot);
-
-	priv->major_delta_y = major;
-	priv->minors_per_major_y = minors_per_major;
 }
 
 void
@@ -654,7 +506,6 @@ goat_plot_set_border_color(GoatPlot *plot, GdkRGBA *color)
 
 	priv->color_border = *color;
 }
-
 
 /**
  * TODO handle zooming and scrolling

@@ -38,6 +38,13 @@ GoatScale *goat_scale_new (void);
 
 void goat_scale_draw (GoatScale *gs, cairo_t *cr);
 
+void goat_scale_get_range(GoatScale *scale, gdoube *min, gdoube *max);
+void goat_scale_set_range_auto (GoatScale *scale);
+void goat_scale_set_range (GoatScale *scale, gdouble min, gdouble max);
+void goat_scale_update_range (GoatScale *scale, gdouble min, gdouble max);
+
+void goat_scale_set_ticks (GoatScale *scale, gdouble major, gint minors_per_major);
+
 
 G_END_DECLS
 

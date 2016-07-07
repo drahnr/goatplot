@@ -4,6 +4,7 @@
 #include <gtk/gtk.h>
 
 typedef enum {
+	GOAT_ORIENTATION_UNKNOWN = 0,
 	GOAT_ORIENTATION_VERTICAL = 1,
 	GOAT_ORIENTATION_HORIZONTAL = 2
 } GoatOrientation;
@@ -11,7 +12,6 @@ typedef enum {
 #define GOAT_TYPE_ORIENTATION (goat_orientation_get_type ())
 GType
 goat_orientation_get_type (void);
-
 
 
 
