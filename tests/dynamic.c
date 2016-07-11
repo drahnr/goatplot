@@ -37,7 +37,7 @@ main (int argc, char *argv[])
 	gtk_init (&argc, &argv);
 
 	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-	plot = goat_plot_new ();
+	plot = goat_plot_new (NULL,NULL); // FIXME
 
 	GoatDataset *dataset;
 

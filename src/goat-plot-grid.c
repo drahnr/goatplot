@@ -1,11 +1,11 @@
 #include "goat-plot-grid.h"
 #include "goat-plot-enum.h"
-#include "goat-plot-scale.h"
+#include "goat-scale.h"
 
-#define GOAT_GRID_GET_PRIVATE(object)(G_TYPE_INSTANCE_GET_PRIVATE((object), GOAT_TYPE_GRID, GoatGridPrivate))
+#define GOAT_GRID_GET_PRIVATE(object)                                                              \
+	(G_TYPE_INSTANCE_GET_PRIVATE ((object), GOAT_TYPE_GRID, GoatGridPrivate))
 
-struct _GoatGridPrivate
-{
+struct _GoatGridPrivate {
 	GoatScale *scale_x; // includes scale type
 	GoatScale *scale_y;
 	GdkRGBA col_bg;
@@ -19,14 +19,12 @@ struct _GoatGridPrivate
 
 G_DEFINE_TYPE (GoatGrid, goat_grid, G_TYPE_OBJECT)
 
-static void
-goat_grid_finalize (GObject *object)
+static void goat_grid_finalize (GObject *object)
 {
 	G_OBJECT_CLASS (goat_grid_parent_class)->finalize (object);
 }
 
-static void
-goat_grid_class_init (GoatGridClass *klass)
+static void goat_grid_class_init (GoatGridClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
@@ -35,14 +33,6 @@ goat_grid_class_init (GoatGridClass *klass)
 	g_type_class_add_private (object_class, sizeof (GoatGridPrivate));
 }
 
-static void
-goat_grid_init (GoatGrid *self)
-{
-	self->priv = GOAT_GRID_GET_PRIVATE (self);
-}
+static void goat_grid_init (GoatGrid *self) { self->priv = GOAT_GRID_GET_PRIVATE (self); }
 
-GoatGrid *
-goat_grid_new ()
-{
-	return g_object_new (GOAT_TYPE_GRID, NULL);
-}
+GoatGrid *goat_grid_new () { return g_object_new (GOAT_TYPE_GRID, NULL); }
