@@ -33,7 +33,7 @@ struct _GoatScaleClass {
 };
 
 GType goat_scale_get_type (void) G_GNUC_CONST;
-GoatScale *goat_scale_new (void);
+GoatScale *goat_scale_new (GoatPosition position, GoatOrientation orientation);
 
 gboolean goat_scale_draw (GoatScale *scale, cairo_t *cr, int left, int right, int top, int bottom,
                           double nil, gdouble factor, GoatPosition where, gboolean grid);
@@ -44,6 +44,7 @@ void goat_scale_set_range (GoatScale *scale, gdouble min, gdouble max);
 void goat_scale_update_range (GoatScale *scale, gdouble min, gdouble max);
 gboolean goat_scale_is_auto_range (GoatScale *scale);
 void goat_scale_set_ticks (GoatScale *scale, gdouble major, gint minors_per_major);
+void goat_scale_set_label (GoatScale *plot, gchar *label);
 
 G_END_DECLS
 

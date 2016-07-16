@@ -18,7 +18,7 @@
  * along with GoatPlot. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <goat-plot.h>
+#include "goat-plot.h"
 
 #include <goat-dataset.h>
 #include <math.h>
@@ -62,12 +62,72 @@ static void goat_plot_finalize (GObject *object)
 	G_OBJECT_CLASS (goat_plot_parent_class)->finalize (object);
 }
 
+enum {
+	PROP_0,
+
+	PROP_SCALE_X,
+	PROP_SCALE_Y,
+
+	N_PROPERTIES
+};
+
+static GParamSpec *obj_properties[N_PROPERTIES] = {
+    NULL,
+};
+
+static void goat_plot_set_gproperty (GObject *object, guint prop_id, const GValue *value,
+                                     GParamSpec *spec)
+{
+	GoatPlot *dataset = GOAT_PLOT (object);
+	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (dataset);
+
+	switch (prop_id) {
+	case PROP_SCALE_X:
+		priv->scale_x = g_value_get_pointer (value);
+		break;
+	case PROP_SCALE_Y:
+		priv->scale_y = g_value_get_pointer (value);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (dataset, prop_id, spec);
+	}
+}
+
+static void goat_plot_get_gproperty (GObject *object, guint prop_id, GValue *value,
+                                     GParamSpec *spec)
+{
+	GoatPlot *dataset = GOAT_PLOT (object);
+	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (dataset);
+
+	switch (prop_id) {
+	case PROP_SCALE_X:
+		g_value_set_pointer (value, priv->scale_x);
+		break;
+	case PROP_SCALE_Y:
+		g_value_set_pointer (value, priv->scale_y);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (dataset, prop_id, spec);
+	}
+}
+
 static void goat_plot_class_init (GoatPlotClass *klass)
 {
 	g_type_class_add_private (klass, sizeof (GoatPlotPrivate));
 
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	object_class->finalize = goat_plot_finalize;
+
+	object_class->set_property = goat_plot_set_gproperty;
+	object_class->get_property = goat_plot_get_gproperty;
+
+	obj_properties[PROP_SCALE_X] =
+	    g_param_spec_pointer ("scale_x", "GoatPlot::scale_x", "scale x", G_PARAM_READWRITE);
+
+	obj_properties[PROP_SCALE_Y] =
+	    g_param_spec_pointer ("scale_y", "GoatPlot::scale_y", "scale y", G_PARAM_READWRITE);
+
+	g_object_class_install_properties (object_class, N_PROPERTIES, obj_properties);
 
 	GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
 	widget_class->draw = draw;
@@ -90,6 +150,8 @@ static void goat_plot_init (GoatPlot *self)
 
 	self->priv = GOAT_PLOT_GET_PRIVATE (self);
 
+	self->priv->array = g_array_new (FALSE, TRUE, sizeof (void *));
+
 	gtk_widget_add_events (widget, GDK_SCROLL_MASK);
 	g_assert ((gtk_widget_get_events (widget) & GDK_SCROLL_MASK) != 0);
 
@@ -97,7 +159,6 @@ static void goat_plot_init (GoatPlot *self)
 	gtk_widget_set_can_focus (widget, TRUE);
 	gtk_widget_grab_focus (widget);
 }
-
 
 /**
  * create a new GoatPlot widget
@@ -107,6 +168,21 @@ GoatPlot *goat_plot_new (GoatScale *x, GoatScale *y)
 	return GOAT_PLOT (gtk_widget_new (GOAT_TYPE_PLOT, "scale_x", x, "scale_y", y, NULL));
 }
 
+/**
+ *
+ */
+void goat_plot_set_scale_x (GoatPlot *plot, GoatScale *scale)
+{
+	g_object_set (G_OBJECT (plot), "scale_x", scale);
+}
+
+/**
+ *
+ */
+void goat_plot_set_scale_y (GoatPlot *plot, GoatScale *scale)
+{
+	g_object_set (G_OBJECT (plot), "scale_y", scale);
+}
 
 /**
  * add a dataset to the plot
@@ -125,7 +201,6 @@ gint goat_plot_add_dataset (GoatPlot *plot, GoatDataset *dataset)
 	return plot->priv->array->len - 1;
 }
 
-
 /**
  * remove a dataset from the plot
  */
@@ -140,7 +215,6 @@ GoatDataset *goat_plot_remove_dataset (GoatPlot *plot, gint datasetid)
 	}
 	return dataset;
 }
-
 
 /**
  * @param window window height or width, or if fixed scale, use a const for that
@@ -159,7 +233,6 @@ gboolean get_unit_to_pixel_factor (int window, gdouble min, gdouble max, gdouble
 	return FALSE;
 }
 
-
 // TODO draw on a surface so redraw is really really fast?
 // TODO Do some benchmarking (and check CPU load)
 /**
@@ -168,7 +241,8 @@ gboolean get_unit_to_pixel_factor (int window, gdouble min, gdouble max, gdouble
  * @param dataset which dataset to draw ontop of #cr
  * @param height the height of the drawable plotting area
  * @param width the width of the drawable plotting area
- * @returns TRUE if drawing was successful (zer0 length is also TRUE), otherwise FALSE
+ * @returns TRUE if drawing was successful (zer0 length is also TRUE), otherwise
+ * FALSE
  */
 static gboolean draw_dataset (GoatPlot *plot, cairo_t *cr, GoatDataset *dataset, gint height,
                               gint width, gdouble x_min, gdouble x_max, gdouble x_nil_pixel,
@@ -226,7 +300,6 @@ static gboolean draw_dataset (GoatPlot *plot, cairo_t *cr, GoatDataset *dataset,
 		break;
 	}
 #endif
-
 
 	gdouble x, y;
 	GoatDatasetIter dit;
@@ -321,8 +394,6 @@ static gboolean draw_dataset (GoatPlot *plot, cairo_t *cr, GoatDataset *dataset,
 
 	return TRUE;
 }
-
-
 
 static gboolean draw (GtkWidget *widget, cairo_t *cr)
 {
@@ -491,7 +562,6 @@ static gboolean scroll_event (GtkWidget *widget, GdkEventScroll *event)
 	g_print ("scroll event\n");
 	return FALSE;
 }
-
 
 /**
  * TODO handle envents

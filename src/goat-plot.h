@@ -62,12 +62,8 @@ void goat_plot_set_fixed_y_size (GoatPlot *plot, gdouble min_y, gdouble max_y);
 void goat_plot_set_dynamic_x_size (GoatPlot *plot, gboolean dyn);
 void goat_plot_set_dynamic_y_size (GoatPlot *plot, gboolean dyn);
 void goat_plot_set_grid_visible (GoatPlot *plot, gboolean visible);
-void goat_plot_set_xlabel (GoatPlot *plot, gchar *xlabel);
-void goat_plot_set_ylabel (GoatPlot *plot, gchar *ylabel);
-void goat_plot_set_range_x (GoatPlot *plot, gdouble min_x, gdouble max_x);
-void goat_plot_set_range_y (GoatPlot *plot, gdouble min_y, gdouble max_y);
-void goat_plot_set_ticks_x (GoatPlot *plot, gdouble major, gint minors_per_major);
-void goat_plot_set_ticks_y (GoatPlot *plot, gdouble major, gint minors_per_major);
+void goat_plot_set_scale_x (GoatPlot *plot, GoatScale *scale_x);
+void goat_plot_set_scale_y (GoatPlot *plot, GoatScale *scale_y);
 G_END_DECLS
 
 #endif /* __GOAT_PLOT_H__ */

@@ -5,7 +5,6 @@
 #define GOAT_SCALE_GET_PRIVATE(object)                                                             \
 	(G_TYPE_INSTANCE_GET_PRIVATE ((object), GOAT_TYPE_SCALE, GoatScalePrivate));
 
-
 struct _GoatScalePrivate {
 	gboolean scale_fixed;
 
@@ -98,21 +97,14 @@ static void goat_scale_class_init (GoatScaleClass *klass)
 	object_class->set_property = goat_scale_set_property;
 	object_class->get_property = goat_scale_get_property;
 
-	obj_properties[PROP_ORIENTATION] =
-	    g_param_spec_enum ("orientation", "Set orientation property",
-	                       "Set the orientation ot vertical of horizontal", GOAT_TYPE_ORIENTATION,
-	                       GOAT_ORIENTATION_HORIZONTAL, G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
-	obj_properties[PROP_POSITION] =
-	    g_param_spec_enum ("position", "Set position property",
-	                       "Set the position to left,right,top or bottom in regard to the graph",
-	                       GOAT_TYPE_ORIENTATION, GOAT_ORIENTATION_HORIZONTAL,
-	                       G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
-	obj_properties[PROP_POSITION] =
-	    g_param_spec_enum ("position", "Set position property",
-	                       "Set the position to left,right,top or bottom in regard to the graph",
-	                       GOAT_TYPE_ORIENTATION, GOAT_ORIENTATION_HORIZONTAL,
-	                       G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+	obj_properties[PROP_ORIENTATION] = g_param_spec_enum (
+	    "orientation", "Set orientation property", "Set the orientation ot vertical of horizontal",
+	    GOAT_TYPE_ORIENTATION, GOAT_ORIENTATION_HORIZONTAL, G_PARAM_READWRITE);
+	obj_properties[PROP_POSITION] = g_param_spec_enum (
+	    "position", "Set position property", "Set the position to left,right,top or bottom",
+	    GOAT_TYPE_POSITION, GOAT_POSITION_LEFT, G_PARAM_READWRITE);
 
+	g_object_class_install_properties (object_class, N_PROPERTIES, obj_properties);
 
 	object_class->finalize = goat_scale_finalize;
 
@@ -121,8 +113,10 @@ static void goat_scale_class_init (GoatScaleClass *klass)
 
 static void goat_scale_init (GoatScale *self) { self->priv = GOAT_SCALE_GET_PRIVATE (self); }
 
-GoatScale *goat_scale_new () { return g_object_new (GOAT_TYPE_SCALE, NULL); }
-
+GoatScale *goat_scale_new (GoatPosition position, GoatOrientation orientation)
+{
+	return g_object_new (GOAT_TYPE_SCALE, "orientation", orientation, "position", position, NULL);
+}
 
 void goat_scale_set_range_auto (GoatScale *scale)
 {

@@ -15,8 +15,6 @@ GType goat_orientation_get_type (void)
 	return t;
 }
 
-
-
 GType goat_position_get_type (void)
 {
 	static GType t = 0;
@@ -34,7 +32,6 @@ GType goat_position_get_type (void)
 
 	return t;
 }
-
 
 GType goat_heading_get_type (void)
 {

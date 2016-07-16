@@ -1,43 +1,52 @@
-#!/ usr / bin / env python3
-#encoding : utf - 8
+#! /usr/bin/env python3
+# encoding: utf-8
 
-def options (opt)
-    : opt.load ('compiler_c gnu_dirs glib2')
+def options(opt):
+	opt.load('compiler_c gnu_dirs glib2')
 
-          def configure (cfg)
-    : cfg.load ('compiler_c gnu_dirs glib2')
+def configure(cfg):
+	cfg.load('compiler_c gnu_dirs glib2')
 
-          cfg.check_cc (lib = 'm', uselib_store = 'M', mandatory = True)
+	cfg.check_cc(lib='m', uselib_store='M', mandatory=True)
 
-              cfg.check_cfg (atleast_pkgconfig_version = '0.26') cfg
-                  .check_cfg (package = 'glib-2.0', uselib_store = 'GLIB',
-                              args = [ 'glib-2.0 >= 2.24', '--cflags', '--libs' ],
-                              mandatory = True) cfg.check_cfg (package = 'gobject-2.0',
-                                                               uselib_store = 'GOBJECT',
-                                                               args = [ '--cflags', '--libs' ],
-                                                               mandatory = True) cfg
-                  .check_cfg (package = 'gtk+-3.0', uselib_store = 'GTK3',
-                              args = [ '--cflags', '--libs' ], mandatory = True)
+	cfg.check_cfg(atleast_pkgconfig_version='0.26')
+	cfg.check_cfg(package='glib-2.0', uselib_store='GLIB', args=['glib-2.0 >= 2.24', '--cflags', '--libs'], mandatory=True)
+	cfg.check_cfg(package='gobject-2.0', uselib_store='GOBJECT', args=['--cflags', '--libs'], mandatory=True)
+	cfg.check_cfg(package='gtk+-3.0', uselib_store='GTK3', args=['--cflags', '--libs'], mandatory=True)
 
-                      cfg.check_large_file (mandatory = False) cfg
-                  .check_endianness (mandatory = False) cfg.check_inline (mandatory = False)
+	cfg.check_large_file(mandatory=False)
+	cfg.check_endianness(mandatory=False)
+	cfg.check_inline(mandatory=False)
 
-#- ggdb vs - g -- http: //stackoverflow.com/questions/668962
-                      cfg.setenv ('debug', env = cfg.env.derive ()) cfg.env.CFLAGS =
-    [ '-ggdb', '-Wall' ] cfg.define ('DEBUG', 1)
+	# -ggdb vs -g -- http://stackoverflow.com/questions/668962
+	cfg.setenv('debug', env=cfg.env.derive())
+	cfg.env.CFLAGS = ['-ggdb', '-Wall']
+	cfg.define('DEBUG',1)
 
-        cfg.setenv ('release', env = cfg.env.derive ()) cfg.env.CFLAGS =
-        [ '-O2', '-Wall' ] cfg.define ('RELEASE', 1)
+	cfg.setenv('release', env=cfg.env.derive())
+	cfg.env.CFLAGS = ['-O2', '-Wall']
+	cfg.define('RELEASE',1)
 
-            def build (bld)
-    : objects = bld.objects (features = [ 'c', 'glib2' ], target = 'objects',
-                             source = bld.path.ant_glob (['*.c'], excl = 'main.c'),
-                             includes = ['.'], export_includes = ['.'], cflags = ['-fPIC'],
-                             uselib = 'M GOBJECT GLIB GTK3')
+def build(bld):
+	objects = bld.objects(
+		features = ['c', 'glib2'],
+		target = 'objects',
+		source = bld.path.ant_glob(['*.c'], excl='main.c'),
+		includes = ['.'],
+		export_includes = ['.'],
+		cflags = ['-fPIC'],
+		uselib = 'M GOBJECT GLIB GTK3'
+	)
 
-                    shlib =
-            bld.shlib (features = [ 'c', 'cshlib', 'glib2' ], target = bld.env.LIBNAME, source = [],
-                       use = 'objects', includes = ['.'], export_includes = ['.'],
-                       uselib = 'M GOBJECT GLIB GTK3', install_path = "${LIBDIR}") bld
-                .install_files ('${INCLUDEDIR}/goatplot/',
-                                bld.path.ant_glob (['*.h'], excl = ['*-internal.h']))
+	shlib = bld.shlib(
+		features = ['c', 'cshlib', 'glib2'],
+		target = bld.env.LIBNAME,
+		source = [],
+		use = 'objects',
+		includes = ['.'],
+		export_includes = ['.'],
+		uselib = 'M GOBJECT GLIB GTK3',
+		install_path = "${LIBDIR}"
+	)
+	bld.install_files('${INCLUDEDIR}/goatplot/', bld.path.ant_glob(['*.h'], excl=['*-internal.h']))
+

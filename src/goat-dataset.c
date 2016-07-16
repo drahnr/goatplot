@@ -18,8 +18,6 @@
  * along with GoatPlot. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include "goat-dataset.h"
@@ -51,10 +49,16 @@ static void goat_dataset_finalize (GObject *object)
 
 enum {
 	PROP_0,
+
 	PROP_LIST,
 	PROP_COUNT,
+
+	N_PROPERTIES
 };
 
+static GParamSpec *obj_properties[N_PROPERTIES] = {
+    NULL,
+};
 
 static void goat_dataset_set_gproperty (GObject *object, guint prop_id, const GValue *value,
                                         GParamSpec *spec)
@@ -94,7 +98,6 @@ static void goat_dataset_get_gproperty (GObject *object, guint prop_id, GValue *
 	}
 }
 
-
 static void goat_dataset_class_init (GoatDatasetClass *klass)
 {
 	g_type_class_add_private (klass, sizeof (GoatDatasetPrivate));
@@ -106,16 +109,13 @@ static void goat_dataset_class_init (GoatDatasetClass *klass)
 	object_class->set_property = goat_dataset_set_gproperty;
 	object_class->get_property = goat_dataset_get_gproperty;
 
+	obj_properties[PROP_LIST] = g_param_spec_pointer ("list", "GoatDataset::list", "the store data",
+	                                                  G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 
-	g_object_class_install_property (
-	    object_class, PROP_LIST,
-	    g_param_spec_pointer ("list", "GoatDataset::list", "the store data",
-	                          G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
+	obj_properties[PROP_COUNT] = g_param_spec_int (
+	    "count", "GoatDataset::count", "count of datapoints", -1, 10000, -1, G_PARAM_READABLE);
 
-	g_object_class_install_property (object_class, PROP_COUNT,
-	                                 g_param_spec_int ("count", "GoatDataset::count",
-	                                                   "count of datapoints", -1, 10000, -1,
-	                                                   G_PARAM_READABLE));
+	g_object_class_install_properties (object_class, N_PROPERTIES, obj_properties);
 }
 
 static void goat_dataset_init (GoatDataset *self)
@@ -130,8 +130,6 @@ static void goat_dataset_init (GoatDataset *self)
 	gdk_rgba_parse (&self->priv->color, "blue");
 	self->priv->style = GOAT_DATASET_STYLE_SQUARE;
 }
-
-
 
 /**
  * create a new dataset from a GList containing GoatPair values
@@ -164,7 +162,6 @@ GoatDatasetStyle goat_dataset_get_style (GoatDataset *dataset)
 	return dataset->priv->style;
 }
 
-
 /**
  * @param dataset
  * @param oxq node style to use for drawing of #dataset
@@ -175,7 +172,6 @@ void goat_dataset_set_style (GoatDataset *dataset, GoatDatasetStyle oxq)
 	g_return_if_fail (GOAT_IS_DATASET (dataset));
 	dataset->priv->style = oxq;
 }
-
 
 /**
  * initilialize the iterator #iter for #dataset
@@ -211,8 +207,6 @@ gboolean goat_dataset_iter_next (GoatDatasetIter *iter, double *x, double *y)
 	iter->state = i->next;
 	return (iter->state != NULL);
 }
-
-
 
 // TODO add some caching
 /**

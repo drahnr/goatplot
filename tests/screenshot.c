@@ -5,7 +5,7 @@
 
 #include "goat-plot.h"
 
-void destroy(GtkWidget *widget, gpointer data)
+void destroy (GtkWidget *widget, gpointer data)
 {
 	g_print ("\n\n>>>>> creating screenshot...\n");
 	{
@@ -14,7 +14,8 @@ void destroy(GtkWidget *widget, gpointer data)
 		GtkAllocation allocation;
 
 		gtk_widget_get_allocation (widget, &allocation);
-		surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, allocation.height, allocation.width);
+		surface =
+		    cairo_image_surface_create (CAIRO_FORMAT_ARGB32, allocation.height, allocation.width);
 		g_assert (surface);
 		cr = cairo_create (surface);
 		gtk_widget_draw (GTK_WIDGET (widget), cr);
@@ -23,51 +24,52 @@ void destroy(GtkWidget *widget, gpointer data)
 		cairo_destroy (cr);
 	}
 	g_print ("\n\n>>>>> exiting test-simple...\n");
-    gtk_main_quit();
+	gtk_main_quit ();
 }
 
-gboolean
-self_destruct (GtkWidget *widget)
+gboolean self_destruct (GtkWidget *widget)
 {
 	destroy (widget, NULL);
 	return G_SOURCE_REMOVE;
 }
 
 #define TEST_MULTIPLE 1
-int
-main (int argc, char *argv[])
+int main (int argc, char *argv[])
 {
 	GtkWidget *window;
 	GoatPlot *plot;
+	GoatScale *scale_x, *scale_y;
 	int i;
 	GdkRGBA color;
 
 	gtk_init (&argc, &argv);
 
 	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-	plot = goat_plot_new (NULL, NULL);
+	scale_x = goat_scale_new (GOAT_POSITION_BOTTOM, GOAT_ORIENTATION_HORIZONTAL);
+	scale_y = goat_scale_new (GOAT_POSITION_LEFT, GOAT_ORIENTATION_VERTICAL);
+	plot = goat_plot_new (scale_x, scale_y);
 
 	GList *list1 = NULL;
 #if TEST_MULTIPLE
 	GList *list2 = NULL;
 	GList *list3 = NULL;
 #endif
-	for (i=-10; i<20; i++) {
+	for (i = -10; i < 20; i++) {
 		GoatPair *pair;
 
 		pair = g_new (GoatPair, 1);
 		pair->x = i;
-		pair->y = (double)i*((double)i-16.)-4.;
+		pair->y = (double)i * ((double)i - 16.) - 4.;
 		list1 = g_list_prepend (list1, pair);
 #if TEST_MULTIPLE
 		pair = g_new (GoatPair, 1);
 		pair->x = i;
-		pair->y = sin(2*M_PI/64*i)*25;
+		pair->y = sin (2 * M_PI / 64 * i) * 25;
 		list2 = g_list_prepend (list2, pair);
 
 		pair = g_new (GoatPair, 1);
-		pair->x = i*15.f;
-		pair->y = sin(2*M_PI/64*i+M_PI/2)*55;
+		pair->x = i * 15.f;
+		pair->y = sin (2 * M_PI / 64 * i + M_PI / 2) * 55;
 		list3 = g_list_prepend (list3, pair);
 #endif
 	}
@@ -76,26 +78,26 @@ main (int argc, char *argv[])
 	dataset = goat_dataset_new (list1);
 	goat_dataset_set_style (dataset, GOAT_DATASET_STYLE_TRIANGLE);
 	g_assert (goat_dataset_get_length (dataset) > 0);
-	gdk_rgba_parse(&color, "royalblue");
-	goat_dataset_set_color(dataset, &color);
+	gdk_rgba_parse (&color, "royalblue");
+	goat_dataset_set_color (dataset, &color);
 	goat_plot_add_dataset (plot, dataset);
 #if TEST_MULTIPLE
 	dataset = goat_dataset_new (list2);
 	goat_dataset_set_style (dataset, GOAT_DATASET_STYLE_POINT);
 	g_assert (goat_dataset_get_length (dataset) > 0);
-	gdk_rgba_parse(&color, "green");
-	goat_dataset_set_color(dataset, &color);
+	gdk_rgba_parse (&color, "green");
+	goat_dataset_set_color (dataset, &color);
 	goat_plot_add_dataset (plot, dataset);
 
 	dataset = goat_dataset_new (list3);
 	goat_dataset_set_style (dataset, GOAT_DATASET_STYLE_SQUARE);
 	g_assert (goat_dataset_get_length (dataset) > 0);
-	gdk_rgba_parse(&color, "goldenrod");
-	goat_dataset_set_color(dataset, &color);
+	gdk_rgba_parse (&color, "goldenrod");
+	goat_dataset_set_color (dataset, &color);
 	goat_plot_add_dataset (plot, dataset);
 #endif
 
-	goat_plot_set_range_x (plot, -44., +30.);
+	goat_scale_set_range (scale_x, -44., +30.);
 	gtk_container_add (GTK_CONTAINER (window), GTK_WIDGET (plot));
 	gtk_widget_show_all (window);
 	g_signal_connect (G_OBJECT (window), "delete-event", G_CALLBACK (destroy), NULL);
