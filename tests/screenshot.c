@@ -46,7 +46,9 @@ int main (int argc, char *argv[])
 
 	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 	scale_x = goat_scale_new (GOAT_POSITION_BOTTOM, GOAT_ORIENTATION_HORIZONTAL);
+	goat_scale_set_range (scale_x, -44., +30.);
 	scale_y = goat_scale_new (GOAT_POSITION_LEFT, GOAT_ORIENTATION_VERTICAL);
+	goat_scale_set_range_auto (scale_y);
 	plot = goat_plot_new (scale_x, scale_y);
 
 	GList *list1 = NULL;
@@ -97,7 +99,6 @@ int main (int argc, char *argv[])
 	goat_plot_add_dataset (plot, dataset);
 #endif
 
-	goat_scale_set_range (scale_x, -44., +30.);
 	gtk_container_add (GTK_CONTAINER (window), GTK_WIDGET (plot));
 	gtk_widget_show_all (window);
 	g_signal_connect (G_OBJECT (window), "delete-event", G_CALLBACK (destroy), NULL);

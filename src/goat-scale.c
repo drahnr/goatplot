@@ -111,7 +111,23 @@ static void goat_scale_class_init (GoatScaleClass *klass)
 	g_type_class_add_private (object_class, sizeof (GoatScalePrivate));
 }
 
-static void goat_scale_init (GoatScale *self) { self->priv = GOAT_SCALE_GET_PRIVATE (self); }
+static void goat_scale_init (GoatScale *self)
+{
+	GoatScalePrivate *priv = self->priv = GOAT_SCALE_GET_PRIVATE (self);
+	goat_scale_set_range_auto(self);
+	priv->minors_per_major = 10;
+	priv->major_delta = 10.;
+	priv->width_minor = 5;
+	priv->width_major = 8;
+	priv->color_major.red = 0.8;
+	priv->color_major.green = 0.2;
+	priv->color_major.blue = 0.2;
+	priv->color_major.alpha = 1.0;
+	priv->color_minor.red = 0.4;
+	priv->color_minor.green = 0.4;
+	priv->color_minor.blue = 0.4;
+	priv->color_minor.alpha = 1.0;
+}
 
 GoatScale *goat_scale_new (GoatPosition position, GoatOrientation orientation)
 {
@@ -123,7 +139,7 @@ void goat_scale_set_range_auto (GoatScale *scale)
 	g_return_if_fail (scale);
 	g_return_if_fail (GOAT_IS_SCALE (scale));
 
-	scale->priv->min = G_MAXDOUBLE;
+	scale->priv->min = +G_MAXDOUBLE;
 	scale->priv->max = -G_MAXDOUBLE;
 	scale->priv->autorange = TRUE;
 }
@@ -185,18 +201,18 @@ void goat_scale_set_ticks (GoatScale *scale, gdouble major, gint minors_per_majo
 gboolean goat_scale_draw (GoatScale *scale, cairo_t *cr, int left, int right, int top, int bottom,
                           double nil, gdouble factor, GoatPosition where, gboolean grid)
 {
-	GoatScalePrivate *priv = goat_scale_get_instance_private (scale);
+	GoatScalePrivate *priv = GOAT_SCALE_GET_PRIVATE (scale);
 	const double step_minor = (priv->major_delta / priv->minors_per_major);
 	const int register start = (top - nil) / step_minor / factor;
 	const int register end = (bottom - nil) / step_minor / factor;
+	g_print ("[] bottom %i   top %i  _nil %lf\n", bottom, top, nil);
+	g_print ("> start=%i end=%i         %lf _factor\n", start, end, factor);
 	int register i;
 	const gint width_major = priv->width_major;
 	const gint width_minor = priv->width_minor;
 	GdkRGBA color_minor = priv->color_minor;
 	GdkRGBA color_major = priv->color_major;
 
-	g_print ("[] bottom %i   top %i  _nil %lf\n", bottom, top, nil);
-	g_print ("> start=%i end=%i         %lf _factor\n", start, end, factor);
 	cairo_set_line_width (cr, 1.);
 
 	for (i = start; i <= end; i++) {

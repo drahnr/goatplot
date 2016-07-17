@@ -32,9 +32,23 @@ gboolean draw_scales (GoatPlot *plot, cairo_t *cr, GtkAllocation *allocation, Gt
 	bottom = allocation->height - padding->bottom - padding->top;
 	right = allocation->width - padding->right - padding->left;
 
-	GoatPlotPrivate *priv = goat_plot_get_instance_private (plot);
+	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (plot);
+
+	g_assert (priv);
+	g_assert (priv->scale_x);
+	g_assert (GOAT_IS_SCALE (priv->scale_x));
+	g_assert (priv->scale_y);
+	g_assert (GOAT_IS_SCALE (priv->scale_y));
+
+
+	g_printf ("scale x : left=%i right=%i top=%i bottom=%i nil=%lf u2pix=%lf\n", left, right, top,
+	          bottom, x_nil, x_unit_to_pixel);
+
 	goat_scale_draw (priv->scale_x, cr, left, right, top, bottom, x_nil, x_unit_to_pixel,
 	                 GOAT_POSITION_TOP, TRUE);
+
+	g_printf ("scale y : left=%i right=%i top=%i bottom=%i nil=%lf u2pix=%lf\n", left, right, top,
+	          bottom, y_nil, y_unit_to_pixel);
 	goat_scale_draw (priv->scale_y, cr, left, right, top, bottom, y_nil, y_unit_to_pixel,
 	                 GOAT_POSITION_LEFT, TRUE);
 	return TRUE;

@@ -173,7 +173,7 @@ GoatPlot *goat_plot_new (GoatScale *x, GoatScale *y)
  */
 void goat_plot_set_scale_x (GoatPlot *plot, GoatScale *scale)
 {
-	g_object_set (G_OBJECT (plot), "scale_x", scale);
+	g_object_set (G_OBJECT (plot), "scale_x", scale, NULL);
 }
 
 /**
@@ -181,7 +181,7 @@ void goat_plot_set_scale_x (GoatPlot *plot, GoatScale *scale)
  */
 void goat_plot_set_scale_y (GoatPlot *plot, GoatScale *scale)
 {
-	g_object_set (G_OBJECT (plot), "scale_y", scale);
+	g_object_set (G_OBJECT (plot), "scale_y", scale, NULL);
 }
 
 /**
