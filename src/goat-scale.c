@@ -20,6 +20,9 @@ struct _GoatScalePrivate {
 	GdkRGBA color_major;
 	GdkRGBA color_minor;
 
+	GdkRGBA color_major_grid;
+	GdkRGBA color_minor_grid;
+
 	GdkRGBA color_background;
 	GdkRGBA color_border;
 
@@ -127,6 +130,10 @@ static void goat_scale_init (GoatScale *self)
 	priv->color_minor.green = 0.4;
 	priv->color_minor.blue = 0.4;
 	priv->color_minor.alpha = 1.0;
+	priv->color_minor_grid = priv->color_minor;
+	priv->color_minor_grid.alpha = 0.3;
+	priv->color_major_grid = priv->color_major;
+	priv->color_major_grid.alpha = 0.3;
 }
 
 GoatScale *goat_scale_new (GoatPosition position, GoatOrientation orientation)
@@ -212,6 +219,8 @@ gboolean goat_scale_draw (GoatScale *scale, cairo_t *cr, int left, int right, in
 	const gint width_minor = priv->width_minor;
 	GdkRGBA color_minor = priv->color_minor;
 	GdkRGBA color_major = priv->color_major;
+	GdkRGBA color_minor_grid = priv->color_minor_grid;
+	GdkRGBA color_major_grid = priv->color_major_grid;
 
 	cairo_set_line_width (cr, 1.);
 
@@ -219,7 +228,18 @@ gboolean goat_scale_draw (GoatScale *scale, cairo_t *cr, int left, int right, in
 		const gboolean register majorstip = (i % priv->minors_per_major == 0);
 		if (where == GOAT_POSITION_LEFT || where == GOAT_POSITION_RIGHT) {
 			const double register y = nil + top + step_minor * factor * i;
-			cairo_move_to (cr, left, y);
+		  	if (grid) {
+				cairo_move_to (cr, right, y);
+				if (majorstip) {
+					gdk_cairo_set_source_rgba (cr, &color_major_grid);
+				} else {
+					gdk_cairo_set_source_rgba (cr, &color_minor_grid);
+				}
+				cairo_line_to (cr, left, y);
+				cairo_stroke (cr);
+			} else {
+				cairo_move_to (cr, left, y);
+			}
 			if (majorstip) {
 				cairo_line_to (cr, left - width_major, y);
 				gdk_cairo_set_source_rgba (cr, &color_major);
@@ -236,7 +256,18 @@ gboolean goat_scale_draw (GoatScale *scale, cairo_t *cr, int left, int right, in
 		}
 		if (where == GOAT_POSITION_TOP || where == GOAT_POSITION_BOTTOM) {
 			const double register x = nil + left + step_minor * factor * i;
-			cairo_move_to (cr, x, top);
+		  	if (grid) {
+				cairo_move_to (cr, x, bottom);
+				if (majorstip) {
+					gdk_cairo_set_source_rgba (cr, &color_major_grid);
+				} else {
+					gdk_cairo_set_source_rgba (cr, &color_minor_grid);
+				}
+				cairo_line_to (cr, x, top);
+				cairo_stroke (cr);
+			} else {
+				cairo_move_to (cr, x, top);
+			}
 			if (majorstip) {
 				cairo_line_to (cr, x, top - width_major);
 				gdk_cairo_set_source_rgba (cr, &color_major);
