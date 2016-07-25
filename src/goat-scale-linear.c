@@ -115,7 +115,7 @@ static void goat_scale_linear_init (GoatScaleLinear *self)
 {
 	GoatScaleLinearPrivate *priv = self->priv = goat_scale_linear_get_instance_private (self);
 	goat_scale_set_range_auto (GOAT_SCALE (self));
-	priv->minors_per_major = 10;
+	priv->minors_per_major = 4;
 	priv->major_delta = 10.;
 	priv->width_minor = 5;
 	priv->width_major = 8;
@@ -180,7 +180,7 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 
 	for (i = start; i <= end; i++) {
 		const gboolean register majorstip = (i % priv->minors_per_major == 0);
-		if (where == GOAT_POSITION_LEFT || where == GOAT_POSITION_RIGHT) {
+		if (where == GOAT_POSITION_LEFT) {
 			const double register y = nil + top + step_minor * factor * i;
 			if (grid) {
 				cairo_move_to (cr, right, y);
@@ -191,9 +191,8 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 				}
 				cairo_line_to (cr, left, y);
 				cairo_stroke (cr);
-			} else {
-				cairo_move_to (cr, left, y);
 			}
+			cairo_move_to (cr, left, y);
 			if (majorstip) {
 				cairo_line_to (cr, left - width_major, y);
 				gdk_cairo_set_source_rgba (cr, &color_major);
@@ -204,11 +203,62 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 			cairo_stroke (cr);
 
 			const double off = majorstip ? width_major : width_minor;
-			const double register x = (where == GOAT_POSITION_LEFT) * (left - off) +
-			                          (where == GOAT_POSITION_RIGHT) * (right + off);
+			const double register x = left - off;
 			goat_util_draw_num (cr, x, y, step_minor * i, where);
 		}
-		if (where == GOAT_POSITION_TOP || where == GOAT_POSITION_BOTTOM) {
+		if (where == GOAT_POSITION_RIGHT) {
+			const double register y = nil + top + step_minor * factor * i;
+			if (grid) {
+				cairo_move_to (cr, left, y);
+				if (majorstip) {
+					gdk_cairo_set_source_rgba (cr, &color_major_grid);
+				} else {
+					gdk_cairo_set_source_rgba (cr, &color_minor_grid);
+				}
+				cairo_line_to (cr, right, y);
+				cairo_stroke (cr);
+			}
+			cairo_move_to (cr, left, y);
+			if (majorstip) {
+				cairo_line_to (cr, left + width_major, y);
+				gdk_cairo_set_source_rgba (cr, &color_major);
+			} else {
+				cairo_line_to (cr, right + width_minor, y);
+				gdk_cairo_set_source_rgba (cr, &color_minor);
+			}
+			cairo_stroke (cr);
+
+			const double off = majorstip ? width_major : width_minor;
+			const double register x = right + off;
+			goat_util_draw_num (cr, x, y, step_minor * i, where);
+		}
+		if (where == GOAT_POSITION_BOTTOM) {
+			const double register x = nil + left + step_minor * factor * i;
+			if (grid) {
+				cairo_move_to (cr, x, top);
+				if (majorstip) {
+					gdk_cairo_set_source_rgba (cr, &color_major_grid);
+				} else {
+					gdk_cairo_set_source_rgba (cr, &color_minor_grid);
+				}
+				cairo_line_to (cr, x, bottom);
+				cairo_stroke (cr);
+			}
+			cairo_move_to (cr, x, bottom);
+			if (majorstip) {
+				cairo_line_to (cr, x, bottom + width_major);
+				gdk_cairo_set_source_rgba (cr, &color_major);
+			} else {
+				cairo_line_to (cr, x, bottom + width_minor);
+				gdk_cairo_set_source_rgba (cr, &color_minor);
+			}
+			cairo_stroke (cr);
+
+			const double off = majorstip ? width_major : width_minor;
+			const double register y = bottom + off;
+			goat_util_draw_num (cr, x, y, step_minor * i, where);
+		}
+		if (where == GOAT_POSITION_TOP) {
 			const double register x = nil + left + step_minor * factor * i;
 			if (grid) {
 				cairo_move_to (cr, x, bottom);
@@ -219,9 +269,8 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 				}
 				cairo_line_to (cr, x, top);
 				cairo_stroke (cr);
-			} else {
-				cairo_move_to (cr, x, top);
 			}
+			cairo_move_to (cr, x, top);
 			if (majorstip) {
 				cairo_line_to (cr, x, top - width_major);
 				gdk_cairo_set_source_rgba (cr, &color_major);
@@ -232,8 +281,7 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 			cairo_stroke (cr);
 
 			const double off = majorstip ? width_major : width_minor;
-			const double register y = (where == GOAT_POSITION_TOP) * (top - off) +
-			                          (where == GOAT_POSITION_BOTTOM) * (bottom + off);
+			const double register y = top + off;
 			goat_util_draw_num (cr, x, y, step_minor * i, where);
 		}
 	}

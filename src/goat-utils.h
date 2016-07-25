@@ -28,20 +28,20 @@ void goat_util_draw_num (cairo_t *cr, double x, double y, double d, GoatPosition
 	double modifierx, modifiery;
 	switch (penalty) {
 	case GOAT_POSITION_BOTTOM:
-		modifierx = (double)(logrect.width) / 1.;
+		modifierx = (double)(logrect.width) * -0.5;
 		modifiery = (double)(logrect.height);
 		break;
 	case GOAT_POSITION_LEFT:
-		modifierx = (double)(logrect.width) / -1.;
-		modifiery = (double)(logrect.height) / 2.;
+		modifierx = (double)(logrect.width) * -1.0;
+		modifiery = (double)(logrect.height) * 0.5;
 		break;
 	case GOAT_POSITION_RIGHT:
 		modifierx = (double)(logrect.width);
-		modifiery = (double)(logrect.height) / 2.;
+		modifiery = (double)(logrect.height) * 0.5;
 		break;
 	case GOAT_POSITION_TOP:
-		modifierx = (double)(logrect.width) / -2.;
-		modifiery = (double)(logrect.height);
+		modifierx = (double)(logrect.width)* -0.5;
+		modifiery = (double)(logrect.height) * -1.;
 		break;
 	}
 	cairo_move_to (cr, x + modifierx, y + modifiery);
