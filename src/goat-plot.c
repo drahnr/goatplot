@@ -145,6 +145,7 @@ static void goat_plot_class_init (GoatPlotClass *klass)
 
 static void goat_plot_init (GoatPlot *self)
 {
+	gboolean assure;
 	GtkWidget *widget = GTK_WIDGET (self);
 	gtk_widget_set_has_window (widget, FALSE);
 
@@ -152,7 +153,10 @@ static void goat_plot_init (GoatPlot *self)
 
 	self->priv->array = g_array_new (FALSE, TRUE, sizeof (void *));
 
-	g_assert (gdk_rgba_parse (&(self->priv->color_background), "white"));
+	assure = gdk_rgba_parse (&(self->priv->color_background), "white");
+	g_assert (assure);
+	assure = gdk_rgba_parse (&(self->priv->color_border), "black");
+	g_assert (assure);
 
 	gtk_widget_add_events (widget, GDK_SCROLL_MASK);
 	g_assert ((gtk_widget_get_events (widget) & GDK_SCROLL_MASK) != 0);

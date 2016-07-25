@@ -153,6 +153,7 @@ void goat_scale_linear_set_ticks (GoatScaleLinear *scale, gdouble major, gint mi
 	priv->minors_per_major = minors_per_major;
 }
 
+
 /**
  * @param x/y-nil in pixel
  * @param x/y-factor convert unit to pixel
