@@ -20,10 +20,10 @@
 
 #include "goat-plot.h"
 
-#include <goat-dataset.h>
-#include <math.h>
 #include <glib/gprintf.h>
-#include <goat-scale.h>
+#include <goat-dataset.h>
+#include <goat-scale-linear.h>
+#include <math.h>
 
 static gboolean draw (GtkWidget *widget, cairo_t *cr);
 static void get_prefered_width (GtkWidget *widget, int *minimal, int *natural);
@@ -152,6 +152,8 @@ static void goat_plot_init (GoatPlot *self)
 
 	self->priv->array = g_array_new (FALSE, TRUE, sizeof (void *));
 
+	g_assert (gdk_rgba_parse (&(self->priv->color_background), "white"));
+
 	gtk_widget_add_events (widget, GDK_SCROLL_MASK);
 	g_assert ((gtk_widget_get_events (widget) & GDK_SCROLL_MASK) != 0);
 
@@ -256,50 +258,6 @@ static gboolean draw_dataset (GoatPlot *plot, cairo_t *cr, GoatDataset *dataset,
 
 	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (plot);
 	(void)priv;
-#if 0
-	// find max and apply the extra scale if necessary
-	switch (priv->scale_y) {
-	case GOAT_PLOT_SCALE_EXP:
-		y_min = exp(y_min);
-		break;
-	case GOAT_PLOT_SCALE_LOG:
-		y_min = log(y_min * (y_min < 0. ? -1 : +1));
-		break;
-	default:
-		break;
-	}
-	switch (priv->scale_y) {
-	case GOAT_PLOT_SCALE_EXP:
-		y_max = exp(y_max);
-		break;
-	case GOAT_PLOT_SCALE_LOG:
-		y_max = log(y_max * (y_max < 0. ? -1 : +1));
-		break;
-	default:
-		break;
-	}
-
-	switch (priv->scale_x) {
-	case GOAT_PLOT_SCALE_EXP:
-		x_min = exp(x_min);
-		break;
-	case GOAT_PLOT_SCALE_LOG:
-		x_min = log (x_min * (x_min < 0. ? -1 : +1));
-		break;
-	default:
-		break;
-	}
-	switch (priv->scale_x) {
-	case GOAT_PLOT_SCALE_EXP:
-		x_max = exp(x_max);
-		break;
-	case GOAT_PLOT_SCALE_LOG:
-		x_max = log(x_max * (x_max < 0. ? -1 : +1));
-		break;
-	default:
-		break;
-	}
-#endif
 
 	gdouble x, y;
 	GoatDatasetIter dit;
@@ -314,33 +272,6 @@ static gboolean draw_dataset (GoatPlot *plot, cairo_t *cr, GoatDataset *dataset,
 	gboolean first_point = TRUE;       // True if this point is first point
 	gboolean cairo_draw_filled = TRUE; // Set to true to call cairo_fill
 	while (goat_dataset_iter_next (&dit, &x, &y)) {
-#if 0
-		switch (priv->scale_x) {
-		case GOAT_PLOT_SCALE_EXP:
-			x = exp (x) * x_unit_to_pixel;
-			break;
-		case GOAT_PLOT_SCALE_LOG:
-			x = log (x) * x_unit_to_pixel;
-			break;
-		default:
-			x *= x_unit_to_pixel;
-			break;
-		}
-		x -= x_nil; //plottable
-
-		switch (priv->scale_y) {
-		case GOAT_PLOT_SCALE_EXP:
-			y = exp (y) * y_unit_to_pixel;
-			break;
-		case GOAT_PLOT_SCALE_LOG:
-			y = log (y) * y_unit_to_pixel;
-			break;
-		default:
-			y *= y_unit_to_pixel;
-			break;
-		}
-		y -= y_nil; //plottable
-#endif
 
 		x *= x_unit_to_pixel;
 		x += x_nil_pixel;
@@ -377,8 +308,6 @@ static gboolean draw_dataset (GoatPlot *plot, cairo_t *cr, GoatDataset *dataset,
 			break;
 
 		case GOAT_DATASET_STYLE_UNKNOWN:
-			g_warning ("psst .. I have no clue what to do...");
-			return FALSE;
 		default: {
 			gint gds = (gint)goat_dataset_get_style (dataset);
 			g_warning ("DatasetStyle enum out of bounds %i", gds);
@@ -447,19 +376,21 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 		goat_scale_get_range (priv->scale_y, &ref_y_min, &ref_y_max);
 
 		// draw the actual data
-		if (goat_scale_is_auto_range (priv->scale_x) || goat_scale_is_auto_range (priv->scale_y)) {
+		const gboolean register autorange_x = goat_scale_is_auto_range (priv->scale_x);
+		const gboolean register autorange_y = goat_scale_is_auto_range (priv->scale_y);
+		if (autorange_x || autorange_y) {
 
 			for (i = 0; i < priv->array->len; i++) {
 				dataset = g_array_index (priv->array, GoatDataset *, i);
 				gdouble x_min, x_max, y_min, y_max;
 				goat_dataset_get_extrema (dataset, &x_min, &x_max, &y_min, &y_max);
-				if (goat_scale_is_auto_range (priv->scale_x)) {
+				if (autorange_x) {
 					if (ref_x_min > x_min)
 						ref_x_min = x_min;
 					if (ref_x_max < x_max)
 						ref_x_max = x_max;
 				}
-				if (goat_scale_is_auto_range (priv->scale_y)) {
+				if (autorange_y) {
 					if (ref_y_min > y_min)
 						ref_y_min = y_min;
 					if (ref_y_max < y_max)
@@ -478,11 +409,11 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 		}
 		gboolean draw = TRUE;
 		if (!get_unit_to_pixel_factor (width, ref_x_min, ref_x_max, &x_unit_to_pixel)) {
-			g_warning ("Bad x range. This is too boring to plot.");
+			g_warning ("Bad x range. This is too boring to plot. %lf", x_unit_to_pixel);
 			draw = FALSE;
 		}
 		if (!get_unit_to_pixel_factor (height, ref_y_min, ref_y_max, &y_unit_to_pixel)) {
-			g_warning ("Bad y range. This is too boring to plot.");
+			g_warning ("Bad y range. This is too boring to plot. %lf", y_unit_to_pixel);
 			draw = FALSE;
 		}
 

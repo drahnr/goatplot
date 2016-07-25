@@ -66,8 +66,8 @@ int main (int argc, char *argv[])
 		exit (-1);
 	}
 
-	GoatScale *scale_x = goat_scale_new (GOAT_POSITION_BOTTOM, GOAT_ORIENTATION_HORIZONTAL);
-	GoatScale *scale_y = goat_scale_new (GOAT_POSITION_LEFT, GOAT_ORIENTATION_VERTICAL);
+	GoatScale *scale_x = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_BOTTOM, GOAT_ORIENTATION_HORIZONTAL));
+	GoatScale *scale_y = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_LEFT, GOAT_ORIENTATION_VERTICAL));
 
 	goat_scale_set_range (scale_x, 0.0, 10.0);
 	goat_scale_set_range (scale_y, -100.0, 100.0);

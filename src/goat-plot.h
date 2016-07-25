@@ -24,7 +24,8 @@
 #include <gtk/gtk.h>
 #include "goat-dataset.h"
 #include "goat-plot-enum.h"
-#include "goat-scale.h"
+#include "goat-scale-interface.h"
+#include "goat-scale-linear.h"
 
 G_BEGIN_DECLS
 

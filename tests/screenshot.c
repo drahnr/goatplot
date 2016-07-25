@@ -45,10 +45,12 @@ int main (int argc, char *argv[])
 	gtk_init (&argc, &argv);
 
 	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-	scale_x = goat_scale_new (GOAT_POSITION_BOTTOM, GOAT_ORIENTATION_HORIZONTAL);
+	scale_x = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_BOTTOM, GOAT_ORIENTATION_HORIZONTAL));
 	goat_scale_set_range (scale_x, -44., +30.);
-	scale_y = goat_scale_new (GOAT_POSITION_LEFT, GOAT_ORIENTATION_VERTICAL);
+  	goat_scale_linear_set_ticks (GOAT_SCALE_LINEAR (scale_x), 50, 5);
+	scale_y = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_LEFT, GOAT_ORIENTATION_VERTICAL));
 	goat_scale_set_range_auto (scale_y);
+  	goat_scale_linear_set_ticks (GOAT_SCALE_LINEAR (scale_y), 50, 5);
 	plot = goat_plot_new (scale_x, scale_y);
 
 	GList *list1 = NULL;

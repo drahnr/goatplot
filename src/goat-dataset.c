@@ -18,9 +18,8 @@
  * along with GoatPlot. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gtk/gtk.h>
-#include <gdk/gdk.h>
 #include "goat-dataset.h"
+#include <gtk/gtk.h>
 #include <math.h>
 
 static void update_extrema_cache (GoatDataset *dataset);

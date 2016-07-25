@@ -1,11 +1,8 @@
-#include "goat-scale.h"
+#include "goat-scale-linear.h"
 #include "goat-plot-enum.h"
 #include "goat-utils.h"
 
-#define GOAT_SCALE_GET_PRIVATE(object)                                                             \
-	(G_TYPE_INSTANCE_GET_PRIVATE ((object), GOAT_TYPE_SCALE, GoatScalePrivate));
-
-struct _GoatScalePrivate {
+struct _GoatScaleLinearPrivate {
 	gboolean scale_fixed;
 
 	// scale bounds
@@ -31,11 +28,13 @@ struct _GoatScalePrivate {
 
 	GoatOrientation orientation;
 	GoatPosition position;
-
-	void (*draw) ();
 };
 
-G_DEFINE_TYPE (GoatScale, goat_scale, G_TYPE_OBJECT)
+static void goat_scale_linear_interface_init (GoatScaleInterface *iface);
+
+G_DEFINE_TYPE_WITH_CODE (GoatScaleLinear, goat_scale_linear, G_TYPE_OBJECT,
+                         G_IMPLEMENT_INTERFACE (GOAT_TYPE_SCALE, goat_scale_linear_interface_init)
+                             G_ADD_PRIVATE (GoatScaleLinear))
 
 enum {
 	PROP_0,
@@ -50,37 +49,18 @@ static GParamSpec *obj_properties[N_PROPERTIES] = {
     NULL,
 };
 
-static void goat_scale_set_property (GObject *object, guint property_id, const GValue *value,
-                                     GParamSpec *pspec)
+static void goat_scale_linear_set_property (GObject *object, guint property_id, const GValue *value,
+                                            GParamSpec *pspec)
 {
-	GoatScale *self = GOAT_SCALE (object);
+	GoatScaleLinear *self = GOAT_SCALE_LINEAR (object);
+	GoatScaleLinearPrivate *priv = goat_scale_linear_get_instance_private (self);
 
 	switch (property_id) {
 	case PROP_ORIENTATION:
-		self->priv->orientation = g_value_get_enum (value);
-		break;
-
-	case PROP_POSITION:
-		self->priv->position = g_value_get_enum (value);
-		break;
-
-	default:
-		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-		break;
-	}
-}
-
-static void goat_scale_get_property (GObject *object, guint property_id, GValue *value,
-                                     GParamSpec *pspec)
-{
-	GoatScale *self = GOAT_SCALE (object);
-
-	switch (property_id) {
-	case PROP_ORIENTATION:
-		g_value_set_enum (value, self->priv->orientation);
+		priv->orientation = g_value_get_enum (value);
 		break;
 	case PROP_POSITION:
-		g_value_set_enum (value, self->priv->position);
+		priv->position = g_value_get_enum (value);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -88,17 +68,36 @@ static void goat_scale_get_property (GObject *object, guint property_id, GValue 
 	}
 }
 
-static void goat_scale_finalize (GObject *object)
+static void goat_scale_linear_get_property (GObject *object, guint property_id, GValue *value,
+                                            GParamSpec *pspec)
 {
-	G_OBJECT_CLASS (goat_scale_parent_class)->finalize (object);
+	GoatScaleLinear *self = GOAT_SCALE_LINEAR (object);
+	GoatScaleLinearPrivate *priv = goat_scale_linear_get_instance_private (self);
+
+	switch (property_id) {
+	case PROP_ORIENTATION:
+		g_value_set_enum (value, priv->orientation);
+		break;
+	case PROP_POSITION:
+		g_value_set_enum (value, priv->position);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+		break;
+	}
 }
 
-static void goat_scale_class_init (GoatScaleClass *klass)
+static void goat_scale_linear_finalize (GObject *object)
+{
+	G_OBJECT_CLASS (goat_scale_linear_parent_class)->finalize (object);
+}
+
+static void goat_scale_linear_class_init (GoatScaleLinearClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->set_property = goat_scale_set_property;
-	object_class->get_property = goat_scale_get_property;
+	object_class->set_property = goat_scale_linear_set_property;
+	object_class->get_property = goat_scale_linear_get_property;
 
 	obj_properties[PROP_ORIENTATION] = g_param_spec_enum (
 	    "orientation", "Set orientation property", "Set the orientation ot vertical of horizontal",
@@ -109,15 +108,13 @@ static void goat_scale_class_init (GoatScaleClass *klass)
 
 	g_object_class_install_properties (object_class, N_PROPERTIES, obj_properties);
 
-	object_class->finalize = goat_scale_finalize;
-
-	g_type_class_add_private (object_class, sizeof (GoatScalePrivate));
+	object_class->finalize = goat_scale_linear_finalize;
 }
 
-static void goat_scale_init (GoatScale *self)
+static void goat_scale_linear_init (GoatScaleLinear *self)
 {
-	GoatScalePrivate *priv = self->priv = GOAT_SCALE_GET_PRIVATE (self);
-	goat_scale_set_range_auto(self);
+	GoatScaleLinearPrivate *priv = self->priv = goat_scale_linear_get_instance_private (self);
+	goat_scale_set_range_auto (GOAT_SCALE (self));
 	priv->minors_per_major = 10;
 	priv->major_delta = 10.;
 	priv->width_minor = 5;
@@ -136,66 +133,21 @@ static void goat_scale_init (GoatScale *self)
 	priv->color_major_grid.alpha = 0.3;
 }
 
-GoatScale *goat_scale_new (GoatPosition position, GoatOrientation orientation)
+GoatScaleLinear *goat_scale_linear_new (GoatPosition position, GoatOrientation orientation)
 {
-	return g_object_new (GOAT_TYPE_SCALE, "orientation", orientation, "position", position, NULL);
+	return g_object_new (GOAT_TYPE_SCALE_LINEAR, "orientation", orientation, "position", position,
+	                     NULL);
 }
 
-void goat_scale_set_range_auto (GoatScale *scale)
-{
-	g_return_if_fail (scale);
-	g_return_if_fail (GOAT_IS_SCALE (scale));
-
-	scale->priv->min = +G_MAXDOUBLE;
-	scale->priv->max = -G_MAXDOUBLE;
-	scale->priv->autorange = TRUE;
-}
-
-void goat_scale_update_range (GoatScale *scale, gdouble min, gdouble max)
-{
-	g_return_if_fail (min < max);
-	g_return_if_fail (scale);
-	g_return_if_fail (GOAT_IS_SCALE (scale));
-
-	scale->priv->min = min;
-	scale->priv->max = max;
-}
-
-void goat_scale_set_range (GoatScale *scale, gdouble min, gdouble max)
-{
-	g_return_if_fail (min < max);
-	g_return_if_fail (scale);
-	g_return_if_fail (GOAT_IS_SCALE (scale));
-
-	scale->priv->autorange = FALSE;
-	scale->priv->min = min;
-	scale->priv->max = max;
-}
-
-void goat_scale_get_range (GoatScale *scale, gdouble *min, gdouble *max)
-{
-	g_return_if_fail (scale);
-	g_return_if_fail (GOAT_IS_SCALE (scale));
-
-	if (min) {
-		*min = scale->priv->min;
-	}
-	if (max) {
-		*max = scale->priv->max;
-	}
-}
-
-gboolean goat_scale_is_auto_range (GoatScale *scale) { return scale->priv->autorange; }
-
-void goat_scale_set_ticks (GoatScale *scale, gdouble major, gint minors_per_major)
+void goat_scale_linear_set_ticks (GoatScaleLinear *scale, gdouble major, gint minors_per_major)
 {
 	g_return_if_fail (major > 0.);
 	g_return_if_fail (scale);
-	g_return_if_fail (GOAT_IS_SCALE (scale));
+	g_return_if_fail (GOAT_IS_SCALE_LINEAR (scale));
 
-	GoatScalePrivate *priv;
+	GoatScaleLinearPrivate *priv;
 
-	priv = GOAT_SCALE_GET_PRIVATE (scale);
+	priv = goat_scale_linear_get_instance_private (scale);
 
 	priv->major_delta = major;
 	priv->minors_per_major = minors_per_major;
@@ -205,10 +157,12 @@ void goat_scale_set_ticks (GoatScale *scale, gdouble major, gint minors_per_majo
  * @param x/y-nil in pixel
  * @param x/y-factor convert unit to pixel
  */
-gboolean goat_scale_draw (GoatScale *scale, cairo_t *cr, int left, int right, int top, int bottom,
-                          double nil, gdouble factor, GoatPosition where, gboolean grid)
+static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top, gint bottom,
+                  gdouble nil, gdouble factor, GoatPosition where, gboolean grid)
 {
-	GoatScalePrivate *priv = GOAT_SCALE_GET_PRIVATE (scale);
+	GoatScaleLinear *self = GOAT_SCALE_LINEAR (scale);
+	GoatScaleLinearPrivate *priv = goat_scale_linear_get_instance_private (self);
+
 	const double step_minor = (priv->major_delta / priv->minors_per_major);
 	const int register start = (top - nil) / step_minor / factor;
 	const int register end = (bottom - nil) / step_minor / factor;
@@ -228,7 +182,7 @@ gboolean goat_scale_draw (GoatScale *scale, cairo_t *cr, int left, int right, in
 		const gboolean register majorstip = (i % priv->minors_per_major == 0);
 		if (where == GOAT_POSITION_LEFT || where == GOAT_POSITION_RIGHT) {
 			const double register y = nil + top + step_minor * factor * i;
-		  	if (grid) {
+			if (grid) {
 				cairo_move_to (cr, right, y);
 				if (majorstip) {
 					gdk_cairo_set_source_rgba (cr, &color_major_grid);
@@ -256,7 +210,7 @@ gboolean goat_scale_draw (GoatScale *scale, cairo_t *cr, int left, int right, in
 		}
 		if (where == GOAT_POSITION_TOP || where == GOAT_POSITION_BOTTOM) {
 			const double register x = nil + left + step_minor * factor * i;
-		  	if (grid) {
+			if (grid) {
 				cairo_move_to (cr, x, bottom);
 				if (majorstip) {
 					gdk_cairo_set_source_rgba (cr, &color_major_grid);
@@ -283,16 +237,71 @@ gboolean goat_scale_draw (GoatScale *scale, cairo_t *cr, int left, int right, in
 			goat_util_draw_num (cr, x, y, step_minor * i, where);
 		}
 	}
-	return TRUE;
 }
 
-// TODO merge this with the aboe
-void goat_scale_draw2 (GoatScale *gs, cairo_t *cr)
+static void set_range_auto (GoatScale *scale)
 {
-	GoatScaleClass *klass = GOAT_SCALE_GET_CLASS (gs);
-	if (gs->priv->draw) {
-		gs->priv->draw (gs, cr);
-	} else {
-		g_warning ("This type of Scale does not draw a single crappy dot.");
+	GoatScaleLinear *self = GOAT_SCALE_LINEAR (scale);
+
+	self->priv->min = +G_MAXDOUBLE;
+	self->priv->max = -G_MAXDOUBLE;
+	self->priv->autorange = TRUE;
+}
+
+/**
+ * used for goat plot to rescale depending on data
+ */
+static void update_range (GoatScale *scale, gdouble min, gdouble max)
+{
+	GoatScaleLinear *self = GOAT_SCALE_LINEAR (scale);
+
+	self->priv->min = min;
+	self->priv->max = max;
+}
+
+static void set_range (GoatScale *scale, gdouble min, gdouble max)
+{
+	GoatScaleLinear *self = GOAT_SCALE_LINEAR (scale);
+
+	self->priv->autorange = FALSE;
+	self->priv->min = min;
+	self->priv->max = max;
+}
+
+static void get_range (GoatScale *scale, gdouble *min, gdouble *max)
+{
+	GoatScaleLinear *self = GOAT_SCALE_LINEAR (scale);
+
+	if (min) {
+		*min = self->priv->min;
 	}
+	if (max) {
+		*max = self->priv->max;
+	}
+}
+
+static void set_auto_range (GoatScale *scale)
+{
+	GoatScaleLinear *self = GOAT_SCALE_LINEAR (scale);
+
+	self->priv->autorange = TRUE;
+}
+
+static gboolean is_auto_range (GoatScale *scale)
+{
+	GoatScaleLinear *self = GOAT_SCALE_LINEAR (scale);
+
+	return self->priv->autorange;
+}
+
+static void goat_scale_linear_interface_init (GoatScaleInterface *iface)
+{
+	iface->draw = draw;
+	iface->render = NULL;
+	iface->set_auto_range = set_auto_range;
+	iface->set_range = set_range;
+	iface->set_range_auto = set_range_auto;
+	iface->update_range = update_range;
+	iface->is_auto_range = is_auto_range;
+	iface->get_range = get_range;
 }
