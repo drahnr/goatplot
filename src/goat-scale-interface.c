@@ -12,8 +12,8 @@ static void goat_scale_default_init (GoatScaleInterface *iface)
 	iface->update_range = NULL;
 }
 
-void goat_scale_draw (GoatScale *self, cairo_t *cr, gint left, gint right, gint top, gint bottom,
-                      gdouble nil, gdouble factor, GoatPosition where, gboolean grid)
+void goat_scale_draw (GoatScale *self, cairo_t *cr, gint left, gint right, gint top, gint bottom, gdouble nil,
+                      gdouble factor, GoatPosition where, gboolean grid)
 {
 	GoatScaleInterface *iface;
 

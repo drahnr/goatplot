@@ -1,9 +1,9 @@
 #ifndef __GOAT_UTILS_H__
 #define __GOAT_UTILS_H__
 
-#include <math.h>
-#include <gtk/gtk.h>
 #include <goat-plot-enum.h>
+#include <gtk/gtk.h>
+#include <math.h>
 
 /**
  * draw a numer at a position

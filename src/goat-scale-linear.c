@@ -49,8 +49,7 @@ static GParamSpec *obj_properties[N_PROPERTIES] = {
     NULL,
 };
 
-static void goat_scale_linear_set_property (GObject *object, guint property_id, const GValue *value,
-                                            GParamSpec *pspec)
+static void goat_scale_linear_set_property (GObject *object, guint property_id, const GValue *value, GParamSpec *pspec)
 {
 	GoatScaleLinear *self = GOAT_SCALE_LINEAR (object);
 	GoatScaleLinearPrivate *priv = goat_scale_linear_get_instance_private (self);
@@ -68,8 +67,7 @@ static void goat_scale_linear_set_property (GObject *object, guint property_id, 
 	}
 }
 
-static void goat_scale_linear_get_property (GObject *object, guint property_id, GValue *value,
-                                            GParamSpec *pspec)
+static void goat_scale_linear_get_property (GObject *object, guint property_id, GValue *value, GParamSpec *pspec)
 {
 	GoatScaleLinear *self = GOAT_SCALE_LINEAR (object);
 	GoatScaleLinearPrivate *priv = goat_scale_linear_get_instance_private (self);
@@ -99,12 +97,12 @@ static void goat_scale_linear_class_init (GoatScaleLinearClass *klass)
 	object_class->set_property = goat_scale_linear_set_property;
 	object_class->get_property = goat_scale_linear_get_property;
 
-	obj_properties[PROP_ORIENTATION] = g_param_spec_enum (
-	    "orientation", "Set orientation property", "Set the orientation ot vertical of horizontal",
-	    GOAT_TYPE_ORIENTATION, GOAT_ORIENTATION_HORIZONTAL, G_PARAM_READWRITE);
-	obj_properties[PROP_POSITION] = g_param_spec_enum (
-	    "position", "Set position property", "Set the position to left,right,top or bottom",
-	    GOAT_TYPE_POSITION, GOAT_POSITION_LEFT, G_PARAM_READWRITE);
+	obj_properties[PROP_ORIENTATION] =
+	    g_param_spec_enum ("orientation", "Set orientation property", "Set the orientation ot vertical of horizontal",
+	                       GOAT_TYPE_ORIENTATION, GOAT_ORIENTATION_HORIZONTAL, G_PARAM_READWRITE);
+	obj_properties[PROP_POSITION] =
+	    g_param_spec_enum ("position", "Set position property", "Set the position to left,right,top or bottom",
+	                       GOAT_TYPE_POSITION, GOAT_POSITION_LEFT, G_PARAM_READWRITE);
 
 	g_object_class_install_properties (object_class, N_PROPERTIES, obj_properties);
 
@@ -139,8 +137,8 @@ GoatScaleLinear *goat_scale_linear_new (GoatPosition position, GoatOrientation o
 {
 	GoatPosition assure_pos;
 	GoatOrientation assure_ori;
-	GoatScaleLinear *self = g_object_new (GOAT_TYPE_SCALE_LINEAR, "position", position,
-	                                      "orientation", orientation, NULL);
+	GoatScaleLinear *self =
+	    g_object_new (GOAT_TYPE_SCALE_LINEAR, "position", position, "orientation", orientation, NULL);
 	g_object_get (G_OBJECT (self), "position", &assure_pos, "orientation", &assure_ori, NULL);
 	g_assert (assure_pos == position);
 	g_assert (assure_ori == orientation);
@@ -166,8 +164,8 @@ void goat_scale_linear_set_ticks (GoatScaleLinear *scale, gdouble major, gint mi
  * @param x/y-nil in pixel
  * @param x/y-factor convert unit to pixel
  */
-static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top, gint bottom,
-                  gdouble nil, gdouble factor, GoatPosition where, gboolean grid)
+static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top, gint bottom, gdouble nil,
+                  gdouble factor, GoatPosition where, gboolean grid)
 {
 	GoatScaleLinear *self = GOAT_SCALE_LINEAR (scale);
 	GoatScaleLinearPrivate *priv = goat_scale_linear_get_instance_private (self);

@@ -24,8 +24,7 @@
 
 static void update_extrema_cache (GoatDataset *dataset);
 
-#define GOAT_DATASET_GET_PRIVATE(object)                                                           \
-	(G_TYPE_INSTANCE_GET_PRIVATE ((object), GOAT_TYPE_DATASET, GoatDatasetPrivate))
+#define GOAT_DATASET_GET_PRIVATE(object) (G_TYPE_INSTANCE_GET_PRIVATE ((object), GOAT_TYPE_DATASET, GoatDatasetPrivate))
 
 struct _GoatDatasetPrivate {
 	GList *list;
@@ -59,8 +58,7 @@ static GParamSpec *obj_properties[N_PROPERTIES] = {
     NULL,
 };
 
-static void goat_dataset_set_gproperty (GObject *object, guint prop_id, const GValue *value,
-                                        GParamSpec *spec)
+static void goat_dataset_set_gproperty (GObject *object, guint prop_id, const GValue *value, GParamSpec *spec)
 {
 	GoatDataset *dataset = GOAT_DATASET (object);
 	GoatDatasetPrivate *priv = GOAT_DATASET_GET_PRIVATE (dataset);
@@ -79,8 +77,7 @@ static void goat_dataset_set_gproperty (GObject *object, guint prop_id, const GV
 	}
 }
 
-static void goat_dataset_get_gproperty (GObject *object, guint prop_id, GValue *value,
-                                        GParamSpec *spec)
+static void goat_dataset_get_gproperty (GObject *object, guint prop_id, GValue *value, GParamSpec *spec)
 {
 	GoatDataset *dataset = GOAT_DATASET (object);
 	GoatDatasetPrivate *priv = GOAT_DATASET_GET_PRIVATE (dataset);
@@ -111,8 +108,8 @@ static void goat_dataset_class_init (GoatDatasetClass *klass)
 	obj_properties[PROP_LIST] = g_param_spec_pointer ("list", "GoatDataset::list", "the store data",
 	                                                  G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 
-	obj_properties[PROP_COUNT] = g_param_spec_int (
-	    "count", "GoatDataset::count", "count of datapoints", -1, 10000, -1, G_PARAM_READABLE);
+	obj_properties[PROP_COUNT] =
+	    g_param_spec_int ("count", "GoatDataset::count", "count of datapoints", -1, 10000, -1, G_PARAM_READABLE);
 
 	g_object_class_install_properties (object_class, N_PROPERTIES, obj_properties);
 }
@@ -215,8 +212,7 @@ gboolean goat_dataset_iter_next (GoatDatasetIter *iter, double *x, double *y)
  * @param ymin [out]
  * @param ymax [out]
  */
-gboolean goat_dataset_get_extrema (GoatDataset *dataset, double *xmin, double *xmax, double *ymin,
-                                   double *ymax)
+gboolean goat_dataset_get_extrema (GoatDataset *dataset, double *xmin, double *xmax, double *ymin, double *ymax)
 {
 	if (dataset->priv->list != NULL) {
 		if (xmin)
@@ -288,12 +284,14 @@ void goat_dataset_append (GoatDataset *dataset, double x, double y)
 	if (dataset->priv->y_max < y)
 		dataset->priv->y_max = y;
 	dataset->priv->list = g_list_append (dataset->priv->list, pair);
-	g_print ("total items of %i with bounds [x%lf x%lf y%lf y%lf]\n", dataset->priv->count,
-	         dataset->priv->x_min, dataset->priv->x_max, dataset->priv->y_min,
-	         dataset->priv->y_max);
+	g_print ("total items of %i with bounds [x%lf x%lf y%lf y%lf]\n", dataset->priv->count, dataset->priv->x_min,
+	         dataset->priv->x_max, dataset->priv->y_min, dataset->priv->y_max);
 }
 
-void goat_dataset_clear (GoatDataset *dataset) { g_object_set (dataset, "list", NULL, NULL); }
+void goat_dataset_clear (GoatDataset *dataset)
+{
+	g_object_set (dataset, "list", NULL, NULL);
+}
 
 void goat_dataset_set_color (GoatDataset *dataset, GdkRGBA *color)
 {

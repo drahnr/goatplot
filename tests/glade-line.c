@@ -6,14 +6,14 @@
  * @brief	file contents
  */
 
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <goat-plot.h>
+#include <gtk/gtk.h>
 #include <math.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 typedef struct {
 	GoatPlot *plot;
@@ -98,4 +98,7 @@ int main (int argc, char *argv[])
 }
 
 // called when window is closed
-void on_window_main_destroy () { gtk_main_quit (); }
+void on_window_main_destroy ()
+{
+	gtk_main_quit ();
+}

@@ -1,7 +1,7 @@
 #include <gtk/gtk.h>
-#include <stdlib.h>
 #include <math.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "goat-plot.h"
 

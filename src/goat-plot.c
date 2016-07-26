@@ -31,8 +31,7 @@ static void get_prefered_height (GtkWidget *widget, int *minimal, int *natural);
 static gboolean event (GtkWidget *widget, GdkEvent *event);
 static gboolean scroll_event (GtkWidget *widget, GdkEventScroll *event);
 
-#define GOAT_PLOT_GET_PRIVATE(object)                                                              \
-	(G_TYPE_INSTANCE_GET_PRIVATE ((object), GOAT_TYPE_PLOT, GoatPlotPrivate))
+#define GOAT_PLOT_GET_PRIVATE(object) (G_TYPE_INSTANCE_GET_PRIVATE ((object), GOAT_TYPE_PLOT, GoatPlotPrivate))
 
 struct _GoatPlotPrivate {
 	GArray *array; // array of GoatDataset pointers
@@ -75,8 +74,7 @@ static GParamSpec *obj_properties[N_PROPERTIES] = {
     NULL,
 };
 
-static void goat_plot_set_gproperty (GObject *object, guint prop_id, const GValue *value,
-                                     GParamSpec *spec)
+static void goat_plot_set_gproperty (GObject *object, guint prop_id, const GValue *value, GParamSpec *spec)
 {
 	GoatPlot *dataset = GOAT_PLOT (object);
 	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (dataset);
@@ -93,8 +91,7 @@ static void goat_plot_set_gproperty (GObject *object, guint prop_id, const GValu
 	}
 }
 
-static void goat_plot_get_gproperty (GObject *object, guint prop_id, GValue *value,
-                                     GParamSpec *spec)
+static void goat_plot_get_gproperty (GObject *object, guint prop_id, GValue *value, GParamSpec *spec)
 {
 	GoatPlot *dataset = GOAT_PLOT (object);
 	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (dataset);
@@ -121,11 +118,9 @@ static void goat_plot_class_init (GoatPlotClass *klass)
 	object_class->set_property = goat_plot_set_gproperty;
 	object_class->get_property = goat_plot_get_gproperty;
 
-	obj_properties[PROP_SCALE_X] =
-	    g_param_spec_pointer ("scale_x", "GoatPlot::scale_x", "scale x", G_PARAM_READWRITE);
+	obj_properties[PROP_SCALE_X] = g_param_spec_pointer ("scale_x", "GoatPlot::scale_x", "scale x", G_PARAM_READWRITE);
 
-	obj_properties[PROP_SCALE_Y] =
-	    g_param_spec_pointer ("scale_y", "GoatPlot::scale_y", "scale y", G_PARAM_READWRITE);
+	obj_properties[PROP_SCALE_Y] = g_param_spec_pointer ("scale_y", "GoatPlot::scale_y", "scale y", G_PARAM_READWRITE);
 
 	g_object_class_install_properties (object_class, N_PROPERTIES, obj_properties);
 
@@ -250,9 +245,8 @@ gboolean get_unit_to_pixel_factor (int window, gdouble min, gdouble max, gdouble
  * @returns TRUE if drawing was successful (zer0 length is also TRUE), otherwise
  * FALSE
  */
-static gboolean draw_dataset (GoatPlot *plot, cairo_t *cr, GoatDataset *dataset, gint height,
-                              gint width, gdouble x_min, gdouble x_max, gdouble x_nil_pixel,
-                              gdouble x_unit_to_pixel, gdouble y_min, gdouble y_max,
+static gboolean draw_dataset (GoatPlot *plot, cairo_t *cr, GoatDataset *dataset, gint height, gint width, gdouble x_min,
+                              gdouble x_max, gdouble x_nil_pixel, gdouble x_unit_to_pixel, gdouble y_min, gdouble y_max,
                               gdouble y_nil_pixel, gdouble y_unit_to_pixel)
 {
 	g_return_val_if_fail (plot, FALSE);
@@ -424,12 +418,11 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 		x_nil_pixel = ref_x_min * -x_unit_to_pixel;
 		y_nil_pixel = ref_y_min * -y_unit_to_pixel;
 
-		draw_background (plot, cr, &allocation, &padding, x_nil_pixel, y_nil_pixel, x_unit_to_pixel,
-		                 y_unit_to_pixel, &priv->color_background, &priv->color_border);
+		draw_background (plot, cr, &allocation, &padding, x_nil_pixel, y_nil_pixel, x_unit_to_pixel, y_unit_to_pixel,
+		                 &priv->color_background, &priv->color_border);
 
 		if (draw) {
-			draw_scales (plot, cr, &allocation, &padding, x_nil_pixel, y_nil_pixel, x_unit_to_pixel,
-			             y_unit_to_pixel);
+			draw_scales (plot, cr, &allocation, &padding, x_nil_pixel, y_nil_pixel, x_unit_to_pixel, y_unit_to_pixel);
 		}
 
 		clip_drawable_area (plot, cr, &allocation, &padding);
@@ -439,8 +432,8 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 
 			for (i = 0; i < priv->array->len; i++) {
 				dataset = g_array_index (priv->array, GoatDataset *, i);
-				draw_dataset (plot, cr, dataset, height, width, ref_x_min, ref_x_max, x_nil_pixel,
-				              x_unit_to_pixel, ref_y_min, ref_y_max, y_nil_pixel, y_unit_to_pixel);
+				draw_dataset (plot, cr, dataset, height, width, ref_x_min, ref_x_max, x_nil_pixel, x_unit_to_pixel,
+				              ref_y_min, ref_y_max, y_nil_pixel, y_unit_to_pixel);
 			}
 		}
 		cairo_restore (cr);

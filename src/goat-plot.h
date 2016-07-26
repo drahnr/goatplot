@@ -21,11 +21,11 @@
 #ifndef __GOAT_PLOT_H__
 #define __GOAT_PLOT_H__
 
-#include <gtk/gtk.h>
 #include "goat-dataset.h"
 #include "goat-plot-enum.h"
 #include "goat-scale-interface.h"
 #include "goat-scale-linear.h"
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 

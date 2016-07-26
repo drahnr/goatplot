@@ -1,9 +1,9 @@
 #ifndef __GOAT_SCALE_H__
 #define __GOAT_SCALE_H__
 
-#include <gtk/gtk.h>
-#include "goat-scale-interface.h"
 #include "goat-plot-enum.h"
+#include "goat-scale-interface.h"
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
@@ -13,7 +13,7 @@ G_BEGIN_DECLS
 #define GOAT_SCALE_LINEAR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), GOAT_TYPE_SCALE_LINEAR, GoatScaleLinearClass))
 #define GOAT_IS_SCALE_LINEAR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GOAT_TYPE_SCALE_LINEAR))
 #define GOAT_IS_SCALE_LINEAR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GOAT_TYPE_SCALE_LINEAR))
-#define GOAT_SCALE_LINEAR_GET_CLASS(obj)                                                                  \
+#define GOAT_SCALE_LINEAR_GET_CLASS(obj)                                                                               \
 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GOAT_TYPE_SCALE_LINEAR, GoatScaleLinearClass))
 
 typedef struct _GoatScaleLinear GoatScaleLinear;
@@ -34,7 +34,7 @@ GType goat_scale_linear_get_type (void) G_GNUC_CONST;
 GoatScaleLinear *goat_scale_linear_new (GoatPosition position, GoatOrientation orientation);
 
 gboolean goat_scale_linear_draw (GoatScaleLinear *scale, cairo_t *cr, int left, int right, int top, int bottom,
-                          double nil, gdouble factor, GoatPosition where, gboolean grid);
+                                 double nil, gdouble factor, GoatPosition where, gboolean grid);
 
 void goat_scale_linear_set_ticks (GoatScaleLinear *scale, gdouble major_step, gint minors_per_major);
 void goat_scale_linear_set_label (GoatScaleLinear *plot, gchar *label);

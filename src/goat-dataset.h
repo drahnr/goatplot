@@ -21,8 +21,8 @@
 #ifndef __GOAT_DATASET_H__
 #define __GOAT_DATASET_H__
 
-#include <glib-object.h>
 #include <gdk/gdk.h>
+#include <glib-object.h>
 
 G_BEGIN_DECLS
 
@@ -32,14 +32,11 @@ G_BEGIN_DECLS
 
 #define GOAT_TYPE_DATASET (goat_dataset_get_type ())
 #define GOAT_DATASET(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GOAT_TYPE_DATASET, GoatDataset))
-#define GOAT_DATASET_CONST(obj)                                                                    \
-	(G_TYPE_CHECK_INSTANCE_CAST ((obj), GOAT_TYPE_DATASET, GoatDataset const))
-#define GOAT_DATASET_CLASS(klass)                                                                  \
-	(G_TYPE_CHECK_CLASS_CAST ((klass), GOAT_TYPE_DATASET, GoatDatasetClass))
+#define GOAT_DATASET_CONST(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GOAT_TYPE_DATASET, GoatDataset const))
+#define GOAT_DATASET_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), GOAT_TYPE_DATASET, GoatDatasetClass))
 #define GOAT_IS_DATASET(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GOAT_TYPE_DATASET))
 #define GOAT_IS_DATASET_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GOAT_TYPE_DATASET))
-#define GOAT_DATASET_GET_CLASS(obj)                                                                \
-	(G_TYPE_INSTANCE_GET_CLASS ((obj), GOAT_TYPE_DATASET, GoatDatasetClass))
+#define GOAT_DATASET_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GOAT_TYPE_DATASET, GoatDatasetClass))
 
 typedef struct _GoatDataset GoatDataset;
 typedef struct _GoatDatasetClass GoatDatasetClass;
@@ -95,8 +92,7 @@ void goat_dataset_iter_init (GoatDatasetIter *iter, GoatDataset *dataset);
 
 gboolean goat_dataset_iter_next (GoatDatasetIter *iter, double *x, double *y);
 
-gboolean goat_dataset_get_extrema (GoatDataset *dataset, double *xmin, double *xmax, double *ymin,
-                                   double *ymax);
+gboolean goat_dataset_get_extrema (GoatDataset *dataset, double *xmin, double *xmax, double *ymin, double *ymax);
 
 void goat_dataset_append (GoatDataset *dataset, double x, double y);
 

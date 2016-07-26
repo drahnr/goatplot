@@ -39,9 +39,7 @@ GType goat_heading_get_type (void)
 
 	if (!t) {
 		static GEnumValue ts[] = {
-		    {GOAT_HEADING_IN, "INSIDE", "in"},
-		    {GOAT_HEADING_OUT, "OUTSIDE", "out"},
-		    {0, NULL, NULL},
+		    {GOAT_HEADING_IN, "INSIDE", "in"}, {GOAT_HEADING_OUT, "OUTSIDE", "out"}, {0, NULL, NULL},
 		};
 		t = g_enum_register_static ("GoatHeadingTypes", ts);
 	}
