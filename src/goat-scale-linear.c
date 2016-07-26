@@ -131,12 +131,20 @@ static void goat_scale_linear_init (GoatScaleLinear *self)
 	priv->color_minor_grid.alpha = 0.3;
 	priv->color_major_grid = priv->color_major;
 	priv->color_major_grid.alpha = 0.3;
+	priv->orientation = GOAT_ORIENTATION_HORIZONTAL;
+	priv->position = GOAT_POSITION_TOP;
 }
 
 GoatScaleLinear *goat_scale_linear_new (GoatPosition position, GoatOrientation orientation)
 {
-	return g_object_new (GOAT_TYPE_SCALE_LINEAR, "orientation", orientation, "position", position,
-	                     NULL);
+	GoatPosition assure_pos;
+	GoatOrientation assure_ori;
+	GoatScaleLinear *self = g_object_new (GOAT_TYPE_SCALE_LINEAR, "position", position,
+	                                      "orientation", orientation, NULL);
+	g_object_get (G_OBJECT (self), "position", &assure_pos, "orientation", &assure_ori, NULL);
+	g_assert (assure_pos == position);
+	g_assert (assure_ori == orientation);
+	return self;
 }
 
 void goat_scale_linear_set_ticks (GoatScaleLinear *scale, gdouble major, gint minors_per_major)
