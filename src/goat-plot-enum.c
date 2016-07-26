@@ -6,8 +6,8 @@ GType goat_orientation_get_type (void)
 
 	if (!t) {
 		static GEnumValue ts[] = {
-		    {GOAT_ORIENTATION_VERTICAL, "Vertical scale", "vertical"},
-		    {GOAT_ORIENTATION_HORIZONTAL, "Horizontal scale", "horizontal"},
+		    {GOAT_ORIENTATION_VERTICAL, "VERTICAL", "vertical"},
+		    {GOAT_ORIENTATION_HORIZONTAL, "HORIZONTAL", "horizontal"},
 		    {0, NULL, NULL},
 		};
 		t = g_enum_register_static ("GoatOrientationTypes", ts);
@@ -21,10 +21,10 @@ GType goat_position_get_type (void)
 
 	if (!t) {
 		static GEnumValue ts[] = {
-		    {GOAT_POSITION_TOP, "Ontop the graph", "top"},
-		    {GOAT_POSITION_BOTTOM, "Below graph", "bottom"},
-		    {GOAT_POSITION_LEFT, "Left of the graph", "left"},
-		    {GOAT_POSITION_RIGHT, "Right of the graph", "right"},
+		    {GOAT_POSITION_TOP, "TOP", "top"},
+		    {GOAT_POSITION_BOTTOM, "BOTTOM", "bottom"},
+		    {GOAT_POSITION_LEFT, "LEFT", "left"},
+		    {GOAT_POSITION_RIGHT, "RIGHT", "right"},
 		    {0, NULL, NULL},
 		};
 		t = g_enum_register_static ("GoatPositionTypes", ts);
@@ -39,8 +39,8 @@ GType goat_heading_get_type (void)
 
 	if (!t) {
 		static GEnumValue ts[] = {
-		    {GOAT_HEADING_IN, "Scale dots inside", "in"},
-		    {GOAT_HEADING_OUT, "Scale dots outside", "out"},
+		    {GOAT_HEADING_IN, "INSIDE", "in"},
+		    {GOAT_HEADING_OUT, "OUTSIDE", "out"},
 		    {0, NULL, NULL},
 		};
 		t = g_enum_register_static ("GoatHeadingTypes", ts);
