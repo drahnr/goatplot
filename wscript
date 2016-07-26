@@ -81,3 +81,13 @@ class debug(BuildContext):
 	"""compile debug binary"""
 	cmd = 'debug'
 	variant = 'debug'
+
+from waflib.Context import Context
+
+def codestyle_fun(ctx):
+    ctx.recurse('./src')
+
+class codestyle(Context):
+    	"""format code properly"""
+    	cmd = 'codestyle'
+    	fun = 'codestyle_fun'

@@ -10,25 +10,23 @@ typedef struct {
 	GoatDataset *dataset;
 } Both;
 
-gboolean
-dynamic_add (Both *both)
+gboolean dynamic_add (Both *both)
 {
-	g_print("whatsoever callback\n");
+	g_print ("whatsoever callback\n");
 	static uint16_t idx = 0;
 	idx++;
 	double x = idx * 0.1;
-	double y = cos(x + 0.5 * M_PI) * (sqrt(0.01 * idx * idx * idx));
-	goat_dataset_append(both->dataset, x, y);
+	double y = cos (x + 0.5 * M_PI) * (sqrt (0.01 * idx * idx * idx));
+	goat_dataset_append (both->dataset, x, y);
 	if (idx < 200) {
-		gtk_widget_queue_draw(GTK_WIDGET(both->plot));
+		gtk_widget_queue_draw (GTK_WIDGET (both->plot));
 		return G_SOURCE_CONTINUE;
 	}
-	g_timeout_add(500, (GSourceFunc)gtk_main_quit, NULL);
+	g_timeout_add (500, (GSourceFunc)gtk_main_quit, NULL);
 	return G_SOURCE_REMOVE;
 }
 
-int
-main (int argc, char *argv[])
+int main (int argc, char *argv[])
 {
 	GtkWidget *window;
 	GoatPlot *plot;
@@ -37,7 +35,11 @@ main (int argc, char *argv[])
 	gtk_init (&argc, &argv);
 
 	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-	plot = goat_plot_new ();
+
+	GoatScale *scale_x = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_BOTTOM, GOAT_ORIENTATION_HORIZONTAL));
+	GoatScale *scale_y = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_LEFT, GOAT_ORIENTATION_VERTICAL));
+
+	plot = goat_plot_new (scale_x, scale_y);
 
 	GoatDataset *dataset;
 

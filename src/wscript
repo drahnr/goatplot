@@ -18,14 +18,6 @@ def configure(cfg):
 	cfg.check_endianness(mandatory=False)
 	cfg.check_inline(mandatory=False)
 
-	# -ggdb vs -g -- http://stackoverflow.com/questions/668962
-	cfg.setenv('debug', env=cfg.env.derive())
-	cfg.env.CFLAGS = ['-ggdb', '-Wall']
-	cfg.define('DEBUG',1)
-
-	cfg.setenv('release', env=cfg.env.derive())
-	cfg.env.CFLAGS = ['-O2', '-Wall']
-	cfg.define('RELEASE',1)
 
 def build(bld):
 	objects = bld.objects(
@@ -50,3 +42,17 @@ def build(bld):
 	)
 	bld.install_files('${INCLUDEDIR}/goatplot/', bld.path.ant_glob(['*.h'], excl=['*-internal.h']))
 
+
+
+from waflib.Context import Context
+
+def codestyle_fun(ctx):
+    	import os
+	cmd = "clang-format -i -style=file {}".format(' '.join(map(lambda node: str(node.abspath()), ctx.path.ant_glob(['*.c']))))
+ 	print(cmd)
+	os.system(cmd)
+
+class codestyle(Context):
+    	"""format code properly"""
+    	cmd = 'codestyle'
+    	fun = 'codestyle_fun'

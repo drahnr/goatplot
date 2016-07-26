@@ -4,14 +4,13 @@
 #include <gtk/gtk.h>
 
 typedef enum {
+	GOAT_ORIENTATION_UNKNOWN = 0,
 	GOAT_ORIENTATION_VERTICAL = 1,
 	GOAT_ORIENTATION_HORIZONTAL = 2
 } GoatOrientation;
 
 #define GOAT_TYPE_ORIENTATION (goat_orientation_get_type ())
-GType
-goat_orientation_get_type (void);
-
+GType goat_orientation_get_type (void);
 
 
 
@@ -23,10 +22,7 @@ typedef enum {
 } GoatPosition;
 
 #define GOAT_TYPE_POSITION (goat_position_get_type ())
-GType
-goat_position_get_type (void);
-
-
+GType goat_position_get_type (void);
 
 
 
@@ -37,8 +33,7 @@ typedef enum {
 } GoatHeading;
 
 #define GOAT_TYPE_HEADING (goat_heading_get_type ())
-GType
-goat_heading_get_type (void);
+GType goat_heading_get_type (void);
 
 
 typedef enum {
