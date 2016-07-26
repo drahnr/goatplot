@@ -6,11 +6,14 @@ Plotting library for Gtk+ 3.x using cairo.
 
 #### Status
 
-It does work for some cases but still leaves many features to be desired, not to mention that a huge refactor is required.
+The basics are working, one can plot arbitrary 2D data with various plotting styles.
 
-[![Build Status](https://travis-ci.org/drahnr/goatplot.png?branch=master)](https://travis-ci.org/drahnr/goatplot)
+There are a few open points remaining, listed in under [enhancements](https://github.com/drahnr/goatplot/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement).
 
-![widget screenshot from the testbinary](/screenshot.png)
+*Recommendation: Just see if the demos provide what you are looking for.*
+
+![widget screenshot from test-screenshot demo](screenshot.png)
+
 
 ### Build
 
@@ -23,8 +26,8 @@ For automated building i.e. in order to create a RPM package use
 ```
 ./waf configure --prefix=/usr build install --destdir=/tmp --notests --no-glade-dtd-check
 ```
-as can be found in `./meta/*`.
+as is used in `./meta/goatplot.spec.in`.
 
-Note the use of `build` instead of `release`/`debug`, which does not inject any additional `CFLAGS` but only uses those from the environment.
+_Note_: The use of `build` instead of `release`/`debug`, which does not inject any additional `CFLAGS` but only uses those from the environment.
 
-Note: The demo will launch, a screenshot is created, the demo closes, this is expected behaviour and the demo can be launched again manually.
+_Note_: The demo will launch, a screenshot is created, the demo closes, this is expected behaviour and the demo can be launched again manually.
