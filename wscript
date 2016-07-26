@@ -11,7 +11,7 @@ import os
 from waflib import Logs as logs
 from waflib import Utils as utils
 
-recurse = ['catalog','meta','tests', 'src']
+recurse = ['src','catalog','meta','tests']
 
 def options(opt):
 	opt.recurse(recurse)
@@ -85,7 +85,7 @@ class debug(BuildContext):
 from waflib.Context import Context
 
 def codestyle_fun(ctx):
-    ctx.recurse('./src')
+	ctx.recurse(['src','tests'])
 
 class codestyle(Context):
     	"""format code properly"""
