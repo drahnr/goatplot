@@ -14,12 +14,12 @@ void destroy (GtkWidget *widget, gpointer data)
 		GtkAllocation allocation;
 
 		gtk_widget_get_allocation (widget, &allocation);
-		surface =
-		    cairo_image_surface_create (CAIRO_FORMAT_ARGB32, allocation.height, allocation.width);
+		surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, allocation.width, allocation.height);
 		g_assert (surface);
 		cr = cairo_create (surface);
 		gtk_widget_draw (GTK_WIDGET (widget), cr);
-		g_assert (cairo_surface_write_to_png (surface, "./screenshot.png") == CAIRO_STATUS_SUCCESS);
+		const cairo_status_t status = cairo_surface_write_to_png (surface, "./screenshot.png");
+		g_assert (status == CAIRO_STATUS_SUCCESS);
 		cairo_surface_destroy (surface);
 		cairo_destroy (cr);
 	}
