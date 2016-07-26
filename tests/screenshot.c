@@ -37,21 +37,27 @@ gboolean self_destruct (GtkWidget *widget)
 int main (int argc, char *argv[])
 {
 	GtkWidget *window;
-	GoatPlot *plot;
-	GoatScale *scale_x, *scale_y;
+	GtkWidget *box;
+	GoatPlot *plot, *plot_clone;
+	GoatScale *scale_x, *scale_y, *scale_x_auto;
 	int i;
 	GdkRGBA color;
 
 	gtk_init (&argc, &argv);
 
 	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-	scale_x = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_BOTTOM, GOAT_ORIENTATION_HORIZONTAL));
+	box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+	scale_x = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_TOP, GOAT_ORIENTATION_HORIZONTAL));
 	goat_scale_set_range (scale_x, -44., +30.);
-  	goat_scale_linear_set_ticks (GOAT_SCALE_LINEAR (scale_x), 50, 5);
+	goat_scale_linear_set_ticks (GOAT_SCALE_LINEAR (scale_x), 50, 5);
 	scale_y = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_LEFT, GOAT_ORIENTATION_VERTICAL));
 	goat_scale_set_range_auto (scale_y);
-  	goat_scale_linear_set_ticks (GOAT_SCALE_LINEAR (scale_y), 50, 5);
+	goat_scale_linear_set_ticks (GOAT_SCALE_LINEAR (scale_y), 50, 5);
 	plot = goat_plot_new (scale_x, scale_y);
+
+	scale_x_auto = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_BOTTOM, GOAT_ORIENTATION_HORIZONTAL));
+	goat_scale_set_range (scale_x, -100., +300.);
+	plot_clone = goat_plot_new (scale_x_auto, scale_y); // yep, we can re-use those
 
 	GList *list1 = NULL;
 #if TEST_MULTIPLE
@@ -85,6 +91,7 @@ int main (int argc, char *argv[])
 	gdk_rgba_parse (&color, "royalblue");
 	goat_dataset_set_color (dataset, &color);
 	goat_plot_add_dataset (plot, dataset);
+	goat_plot_add_dataset (plot_clone, dataset);
 #if TEST_MULTIPLE
 	dataset = goat_dataset_new (list2);
 	goat_dataset_set_style (dataset, GOAT_DATASET_STYLE_POINT);
@@ -101,7 +108,9 @@ int main (int argc, char *argv[])
 	goat_plot_add_dataset (plot, dataset);
 #endif
 
-	gtk_container_add (GTK_CONTAINER (window), GTK_WIDGET (plot));
+	gtk_container_add (GTK_CONTAINER (box), GTK_WIDGET (plot));
+	gtk_container_add (GTK_CONTAINER (box), GTK_WIDGET (plot_clone));
+	gtk_container_add (GTK_CONTAINER (window), GTK_WIDGET (box));
 	gtk_widget_show_all (window);
 	g_signal_connect (G_OBJECT (window), "delete-event", G_CALLBACK (destroy), NULL);
 
