@@ -3,10 +3,12 @@
 
   <glade-widget-classes>
     <glade-widget-class name="GoatPlot" generic-name="goatplot" title="GoatPlot"/>
+    <glade-widget-class name="GoatScaleLinear" generic-name="goatscalelinear" title="GoatScaleLinear"/>
   </glade-widget-classes>
 
   <glade-widget-group name="GoatPlot" title="GoatPlot">
     <glade-widget-class-ref name="GoatPlot"/>
+    <glade-widget-class-ref name="GoatScaleLinear"/>
   </glade-widget-group>
 
 </glade-catalog>
