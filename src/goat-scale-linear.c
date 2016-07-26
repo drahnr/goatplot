@@ -185,12 +185,12 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 			const double register y = nil + top + step_minor * factor * i;
 			if (grid) {
 				cairo_move_to (cr, right, y);
+				cairo_line_to (cr, left, y);
 				if (majorstip) {
 					gdk_cairo_set_source_rgba (cr, &color_major_grid);
 				} else {
 					gdk_cairo_set_source_rgba (cr, &color_minor_grid);
 				}
-				cairo_line_to (cr, left, y);
 				cairo_stroke (cr);
 			}
 			cairo_move_to (cr, left, y);
@@ -211,12 +211,12 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 			const double register y = nil + top + step_minor * factor * i;
 			if (grid) {
 				cairo_move_to (cr, left, y);
+				cairo_line_to (cr, right, y);
 				if (majorstip) {
 					gdk_cairo_set_source_rgba (cr, &color_major_grid);
 				} else {
 					gdk_cairo_set_source_rgba (cr, &color_minor_grid);
 				}
-				cairo_line_to (cr, right, y);
 				cairo_stroke (cr);
 			}
 			cairo_move_to (cr, left, y);
@@ -237,12 +237,12 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 			const double register x = nil + left + step_minor * factor * i;
 			if (grid) {
 				cairo_move_to (cr, x, top);
+				cairo_line_to (cr, x, bottom);
 				if (majorstip) {
 					gdk_cairo_set_source_rgba (cr, &color_major_grid);
 				} else {
 					gdk_cairo_set_source_rgba (cr, &color_minor_grid);
 				}
-				cairo_line_to (cr, x, bottom);
 				cairo_stroke (cr);
 			}
 			cairo_move_to (cr, x, bottom);
@@ -263,12 +263,12 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 			const double register x = nil + left + step_minor * factor * i;
 			if (grid) {
 				cairo_move_to (cr, x, bottom);
+				cairo_line_to (cr, x, top);
 				if (majorstip) {
 					gdk_cairo_set_source_rgba (cr, &color_major_grid);
 				} else {
 					gdk_cairo_set_source_rgba (cr, &color_minor_grid);
 				}
-				cairo_line_to (cr, x, top);
 				cairo_stroke (cr);
 			}
 			cairo_move_to (cr, x, top);
