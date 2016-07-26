@@ -6,6 +6,7 @@ GType goat_orientation_get_type (void)
 
 	if (!t) {
 		static GEnumValue ts[] = {
+		    {GOAT_ORIENTATION_INVALID, "INVALID", "invalid"},
 		    {GOAT_ORIENTATION_VERTICAL, "VERTICAL", "vertical"},
 		    {GOAT_ORIENTATION_HORIZONTAL, "HORIZONTAL", "horizontal"},
 		    {0, NULL, NULL},
@@ -21,11 +22,9 @@ GType goat_position_get_type (void)
 
 	if (!t) {
 		static GEnumValue ts[] = {
-		    {GOAT_POSITION_TOP, "TOP", "top"},
-		    {GOAT_POSITION_BOTTOM, "BOTTOM", "bottom"},
-		    {GOAT_POSITION_LEFT, "LEFT", "left"},
-		    {GOAT_POSITION_RIGHT, "RIGHT", "right"},
-		    {0, NULL, NULL},
+		    {GOAT_POSITION_INVALID, "INVALID", "invalid"}, {GOAT_POSITION_TOP, "TOP", "top"},
+		    {GOAT_POSITION_BOTTOM, "BOTTOM", "bottom"},    {GOAT_POSITION_LEFT, "LEFT", "left"},
+		    {GOAT_POSITION_RIGHT, "RIGHT", "right"},       {0, NULL, NULL},
 		};
 		t = g_enum_register_static ("GoatPositionTypes", ts);
 	}

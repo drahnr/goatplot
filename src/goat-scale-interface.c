@@ -13,13 +13,13 @@ static void goat_scale_default_init (GoatScaleInterface *iface)
 }
 
 void goat_scale_draw (GoatScale *self, cairo_t *cr, gint left, gint right, gint top, gint bottom, gdouble nil,
-                      gdouble factor, GoatPosition where, gboolean grid)
+                      gdouble factor)
 {
 	GoatScaleInterface *iface;
 
 	iface = GOAT_SCALE_GET_IFACE (self);
 	if (iface->draw) {
-		iface->draw (self, cr, left, right, top, bottom, nil, factor, where, grid);
+		iface->draw (self, cr, left, right, top, bottom, nil, factor);
 	} else {
 		g_error ("Missing draw handler for GoatScaleInterface!");
 	}
@@ -84,4 +84,14 @@ gboolean goat_scale_is_auto_range (GoatScale *self)
 		return iface->is_auto_range (self);
 	}
 	return FALSE;
+}
+
+void goat_scale_grid_show (GoatScale *self, gboolean show)
+{
+	GoatScaleInterface *iface;
+
+	iface = GOAT_SCALE_GET_IFACE (self);
+	if (iface->show_grid) {
+		iface->show_grid (self, show);
+	}
 }

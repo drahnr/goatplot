@@ -33,9 +33,6 @@ struct _GoatScaleLinearClass {
 GType goat_scale_linear_get_type (void) G_GNUC_CONST;
 GoatScaleLinear *goat_scale_linear_new (GoatPosition position, GoatOrientation orientation);
 
-gboolean goat_scale_linear_draw (GoatScaleLinear *scale, cairo_t *cr, int left, int right, int top, int bottom,
-                                 double nil, gdouble factor, GoatPosition where, gboolean grid);
-
 void goat_scale_linear_set_ticks (GoatScaleLinear *scale, gdouble major_step, gint minors_per_major);
 void goat_scale_linear_set_label (GoatScaleLinear *plot, gchar *label);
 

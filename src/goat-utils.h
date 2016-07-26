@@ -22,36 +22,23 @@ void goat_util_draw_num (cairo_t *cr, double x, double y, double d, GoatPosition
 
 	PangoRectangle logrect;
 	pango_layout_get_pixel_extents (lay, NULL, &logrect);
-	g_print ("logrect//// x=%i y=%i w=%i h=%i\n", logrect.x, logrect.y, logrect.width, logrect.height);
-	g_print ("x=%lf   y=%lf\n\n", x, y);
 	double modifierx, modifiery;
-	{
-		GEnumClass *enum_class;
-		GEnumValue *enum_value;
-
-		enum_class = g_type_class_ref (GOAT_TYPE_POSITION);
-		enum_value = g_enum_get_value (enum_class, penalty);
-
-		g_print ("number where: %s\n", enum_value->value_name);
-
-		g_type_class_unref (enum_class);
-	}
 	switch (penalty) {
 	case GOAT_POSITION_BOTTOM:
 		modifierx = (double)(logrect.width) * -0.5;
-		modifiery = (double)(logrect.height) * -1.;
+		modifiery = (double)(logrect.height) * 0.;
 		break;
 	case GOAT_POSITION_LEFT:
 		modifierx = (double)(logrect.width) * -1.0;
 		modifiery = (double)(logrect.height) * 0.5;
 		break;
 	case GOAT_POSITION_RIGHT:
-		modifierx = (double)(logrect.width);
+		modifierx = (double)(logrect.width) * 0.;
 		modifiery = (double)(logrect.height) * 0.5;
 		break;
 	case GOAT_POSITION_TOP:
-		modifierx = (double)(logrect.width)* -0.5;
-		modifiery = (double)(logrect.height) * -1.;
+		modifierx = (double)(logrect.width) * -0.5;
+		modifiery = (double)(logrect.height) * 1.0;
 		break;
 	}
 	cairo_move_to (cr, x + modifierx, y + modifiery);

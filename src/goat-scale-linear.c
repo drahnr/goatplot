@@ -26,6 +26,8 @@ struct _GoatScaleLinearPrivate {
 	gint width_minor;
 	gint width_major;
 
+	gboolean draw_grid;
+
 	GoatOrientation orientation;
 	GoatPosition position;
 };
@@ -39,6 +41,7 @@ G_DEFINE_TYPE_WITH_CODE (GoatScaleLinear, goat_scale_linear, G_TYPE_OBJECT,
 enum {
 	PROP_0,
 
+	PROP_GRID_VISIBLE,
 	PROP_ORIENTATION,
 	PROP_POSITION,
 
@@ -55,6 +58,9 @@ static void goat_scale_linear_set_property (GObject *object, guint property_id, 
 	GoatScaleLinearPrivate *priv = goat_scale_linear_get_instance_private (self);
 
 	switch (property_id) {
+	case PROP_GRID_VISIBLE:
+		priv->draw_grid = g_value_get_boolean (value);
+		break;
 	case PROP_ORIENTATION:
 		priv->orientation = g_value_get_enum (value);
 		break;
@@ -73,6 +79,9 @@ static void goat_scale_linear_get_property (GObject *object, guint property_id, 
 	GoatScaleLinearPrivate *priv = goat_scale_linear_get_instance_private (self);
 
 	switch (property_id) {
+	case PROP_GRID_VISIBLE:
+		g_value_set_boolean (value, priv->draw_grid);
+		break;
 	case PROP_ORIENTATION:
 		g_value_set_enum (value, priv->orientation);
 		break;
@@ -97,9 +106,12 @@ static void goat_scale_linear_class_init (GoatScaleLinearClass *klass)
 	object_class->set_property = goat_scale_linear_set_property;
 	object_class->get_property = goat_scale_linear_get_property;
 
+	obj_properties[PROP_GRID_VISIBLE] =
+	    g_param_spec_boolean ("grid-visible", "Show the grid", "To show or not to show", FALSE, G_PARAM_READWRITE);
+
 	obj_properties[PROP_ORIENTATION] =
 	    g_param_spec_enum ("orientation", "Set orientation property", "Set the orientation ot vertical of horizontal",
-	                       GOAT_TYPE_ORIENTATION, GOAT_ORIENTATION_HORIZONTAL, G_PARAM_READWRITE);
+	                       GOAT_TYPE_ORIENTATION, GOAT_ORIENTATION_INVALID, G_PARAM_READWRITE);
 	obj_properties[PROP_POSITION] =
 	    g_param_spec_enum ("position", "Set position property", "Set the position to left,right,top or bottom",
 	                       GOAT_TYPE_POSITION, GOAT_POSITION_LEFT, G_PARAM_READWRITE);
@@ -113,6 +125,7 @@ static void goat_scale_linear_init (GoatScaleLinear *self)
 {
 	GoatScaleLinearPrivate *priv = self->priv = goat_scale_linear_get_instance_private (self);
 	goat_scale_set_range_auto (GOAT_SCALE (self));
+	priv->draw_grid = TRUE;
 	priv->minors_per_major = 4;
 	priv->major_delta = 10.;
 	priv->width_minor = 5;
@@ -129,8 +142,8 @@ static void goat_scale_linear_init (GoatScaleLinear *self)
 	priv->color_minor_grid.alpha = 0.3;
 	priv->color_major_grid = priv->color_major;
 	priv->color_major_grid.alpha = 0.3;
-	priv->orientation = GOAT_ORIENTATION_HORIZONTAL;
-	priv->position = GOAT_POSITION_TOP;
+	priv->orientation = GOAT_ORIENTATION_INVALID;
+	priv->position = GOAT_POSITION_INVALID;
 }
 
 GoatScaleLinear *goat_scale_linear_new (GoatPosition position, GoatOrientation orientation)
@@ -165,7 +178,7 @@ void goat_scale_linear_set_ticks (GoatScaleLinear *scale, gdouble major, gint mi
  * @param x/y-factor convert unit to pixel
  */
 static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top, gint bottom, gdouble nil,
-                  gdouble factor, GoatPosition where, gboolean grid)
+                  gdouble factor)
 {
 	GoatScaleLinear *self = GOAT_SCALE_LINEAR (scale);
 	GoatScaleLinearPrivate *priv = goat_scale_linear_get_instance_private (self);
@@ -183,11 +196,14 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 	GdkRGBA color_minor_grid = priv->color_minor_grid;
 	GdkRGBA color_major_grid = priv->color_major_grid;
 
+	GoatPosition where = priv->position;
+	gboolean grid = priv->draw_grid;
+
 	cairo_set_line_width (cr, 1.);
 
-	for (i = start; i <= end; i++) {
-		const gboolean register majorstip = (i % priv->minors_per_major == 0);
-		if (where == GOAT_POSITION_LEFT) {
+	if (where == GOAT_POSITION_LEFT) {
+		for (i = start; i <= end; i++) {
+			const gboolean register majorstip = (i % priv->minors_per_major == 0);
 			const double register y = nil + top + step_minor * factor * i;
 			if (grid) {
 				cairo_move_to (cr, right, y);
@@ -213,7 +229,10 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 			const double register x = left - off;
 			goat_util_draw_num (cr, x, y, step_minor * i, where);
 		}
-		if (where == GOAT_POSITION_RIGHT) {
+	}
+	if (where == GOAT_POSITION_RIGHT) {
+		for (i = start; i <= end; i++) {
+			const gboolean register majorstip = (i % priv->minors_per_major == 0);
 			const double register y = nil + top + step_minor * factor * i;
 			if (grid) {
 				cairo_move_to (cr, left, y);
@@ -225,9 +244,9 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 				}
 				cairo_stroke (cr);
 			}
-			cairo_move_to (cr, left, y);
+			cairo_move_to (cr, right, y);
 			if (majorstip) {
-				cairo_line_to (cr, left + width_major, y);
+				cairo_line_to (cr, right + width_major, y);
 				gdk_cairo_set_source_rgba (cr, &color_major);
 			} else {
 				cairo_line_to (cr, right + width_minor, y);
@@ -239,11 +258,43 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 			const double register x = right + off;
 			goat_util_draw_num (cr, x, y, step_minor * i, where);
 		}
-		if (where == GOAT_POSITION_BOTTOM) {
+	}
+	if (where == GOAT_POSITION_BOTTOM) {
+		for (i = start; i <= end; i++) {
+			const gboolean register majorstip = (i % priv->minors_per_major == 0);
 			const double register x = nil + left + step_minor * factor * i;
 			if (grid) {
 				cairo_move_to (cr, x, top);
 				cairo_line_to (cr, x, bottom);
+				if (majorstip) {
+					gdk_cairo_set_source_rgba (cr, &color_major_grid);
+				} else {
+					gdk_cairo_set_source_rgba (cr, &color_minor_grid);
+				}
+				cairo_stroke (cr);
+			}
+			cairo_move_to (cr, x, bottom);
+			if (majorstip) {
+				cairo_line_to (cr, x, top - width_major);
+				gdk_cairo_set_source_rgba (cr, &color_major);
+			} else {
+				cairo_line_to (cr, x, top - width_minor);
+				gdk_cairo_set_source_rgba (cr, &color_minor);
+			}
+			cairo_stroke (cr);
+
+			const double off = majorstip ? width_major : width_minor;
+			const double register y = top - off;
+			goat_util_draw_num (cr, x, y, step_minor * i, where);
+		}
+	}
+	if (where == GOAT_POSITION_TOP) {
+		for (i = start; i <= end; i++) {
+			const gboolean register majorstip = (i % priv->minors_per_major == 0);
+			const double register x = nil + left + step_minor * factor * i;
+			if (grid) {
+				cairo_move_to (cr, x, bottom);
+				cairo_line_to (cr, x, top);
 				if (majorstip) {
 					gdk_cairo_set_source_rgba (cr, &color_major_grid);
 				} else {
@@ -262,34 +313,7 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 			cairo_stroke (cr);
 
 			const double off = majorstip ? width_major : width_minor;
-			const double register y = bottom + off;
-			goat_util_draw_num (cr, x, y, step_minor * i, where);
-		}
-		if (where == GOAT_POSITION_TOP) {
-			const double register x = nil + left + step_minor * factor * i;
-			if (grid) {
-				cairo_move_to (cr, x, bottom);
-				cairo_line_to (cr, x, top);
-				if (majorstip) {
-					gdk_cairo_set_source_rgba (cr, &color_major_grid);
-				} else {
-					gdk_cairo_set_source_rgba (cr, &color_minor_grid);
-				}
-				cairo_stroke (cr);
-			}
-			cairo_move_to (cr, x, top);
-			if (majorstip) {
-				cairo_line_to (cr, x, top - width_major);
-				gdk_cairo_set_source_rgba (cr, &color_major);
-			} else {
-				cairo_line_to (cr, x, top - width_minor);
-				gdk_cairo_set_source_rgba (cr, &color_minor);
-			}
-			cairo_stroke (cr);
-
-			const double off = majorstip ? width_major : width_minor;
-			const double register y = top + off;
-			goat_util_draw_num (cr, x, y, step_minor * i, where);
+			goat_util_draw_num (cr, x, bottom + off, step_minor * i, where);
 		}
 	}
 }
@@ -349,6 +373,13 @@ static gboolean is_auto_range (GoatScale *scale)
 	return self->priv->autorange;
 }
 
+static void show_grid (GoatScale *scale, gboolean show)
+{
+	GoatScaleLinear *self = GOAT_SCALE_LINEAR (scale);
+
+	self->priv->draw_grid = show;
+}
+
 static void goat_scale_linear_interface_init (GoatScaleInterface *iface)
 {
 	iface->draw = draw;
@@ -359,4 +390,5 @@ static void goat_scale_linear_interface_init (GoatScaleInterface *iface)
 	iface->update_range = update_range;
 	iface->is_auto_range = is_auto_range;
 	iface->get_range = get_range;
+	iface->show_grid = show_grid;
 }

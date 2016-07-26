@@ -42,11 +42,11 @@ gboolean draw_scales (GoatPlot *plot, cairo_t *cr, GtkAllocation *allocation, Gt
 	g_printf ("scale x : left=%i right=%i top=%i bottom=%i nil=%lf u2pix=%lf\n", left, right, top, bottom, x_nil,
 	          x_unit_to_pixel);
 
-	goat_scale_draw (priv->scale_x, cr, left, right, top, bottom, x_nil, x_unit_to_pixel, GOAT_POSITION_TOP, TRUE);
+	goat_scale_draw (priv->scale_x, cr, left, right, top, bottom, x_nil, x_unit_to_pixel);
 
 	g_printf ("scale y : left=%i right=%i top=%i bottom=%i nil=%lf u2pix=%lf\n", left, right, top, bottom, y_nil,
 	          y_unit_to_pixel);
-	goat_scale_draw (priv->scale_y, cr, left, right, top, bottom, y_nil, y_unit_to_pixel, GOAT_POSITION_LEFT, TRUE);
+	goat_scale_draw (priv->scale_y, cr, left, right, top, bottom, y_nil, y_unit_to_pixel);
 	return TRUE;
 }
 

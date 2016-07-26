@@ -30,14 +30,13 @@ int main (int argc, char *argv[])
 {
 	GtkWidget *window;
 	GoatPlot *plot;
-	int i;
 
 	gtk_init (&argc, &argv);
 
 	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 
 	GoatScale *scale_x = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_BOTTOM, GOAT_ORIENTATION_HORIZONTAL));
-	GoatScale *scale_y = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_LEFT, GOAT_ORIENTATION_VERTICAL));
+	GoatScale *scale_y = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_RIGHT, GOAT_ORIENTATION_VERTICAL));
 
 	plot = goat_plot_new (scale_x, scale_y);
 
