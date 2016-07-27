@@ -273,7 +273,7 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 				}
 				cairo_stroke (cr);
 			}
-			cairo_move_to (cr, x, bottom);
+			cairo_move_to (cr, x, top);
 			if (majorstip) {
 				cairo_line_to (cr, x, top - width_major);
 				gdk_cairo_set_source_rgba (cr, &color_major);
