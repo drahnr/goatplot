@@ -173,6 +173,10 @@ void goat_scale_linear_set_ticks (GoatScaleLinear *scale, gdouble major, gint mi
 }
 
 
+static inline gboolean is_major_tick (gint i, gint minors_per_major)
+{
+	return (i == 0) || (i % minors_per_major == 0);
+}
 /**
  * @param x/y-nil in pixel
  * @param x/y-factor convert unit to pixel
@@ -184,11 +188,7 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 	GoatScaleLinearPrivate *priv = goat_scale_linear_get_instance_private (self);
 
 	const double step_minor = (priv->major_delta / priv->minors_per_major);
-	const int register start = (top - nil) / step_minor / factor;
-	const int register end = (bottom - nil) / step_minor / factor;
-	g_print ("[] bottom %i   top %i  _nil %lf\n", bottom, top, nil);
-	g_print ("> start=%i end=%i         %lf _factor\n", start, end, factor);
-	int register i;
+	gint register i;
 	const gint width_major = priv->width_major;
 	const gint width_minor = priv->width_minor;
 	GdkRGBA color_minor = priv->color_minor;
@@ -202,8 +202,10 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 	cairo_set_line_width (cr, 1.);
 
 	if (where == GOAT_POSITION_LEFT) {
+		const int register start = (top - nil) / step_minor / factor;
+		const int register end = (bottom - nil) / step_minor / factor;
 		for (i = start; i <= end; i++) {
-			const gboolean register majorstip = (i % priv->minors_per_major == 0);
+			const gboolean register majorstip = is_major_tick (i, priv->minors_per_major);
 			const double register y = nil + top + step_minor * factor * i;
 			if (grid) {
 				cairo_move_to (cr, right, y);
@@ -231,8 +233,10 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 		}
 	}
 	if (where == GOAT_POSITION_RIGHT) {
+		const int register start = (top - nil) / step_minor / factor;
+		const int register end = (bottom - nil) / step_minor / factor;
 		for (i = start; i <= end; i++) {
-			const gboolean register majorstip = (i % priv->minors_per_major == 0);
+			const gboolean register majorstip = is_major_tick (i, priv->minors_per_major);
 			const double register y = nil + top + step_minor * factor * i;
 			if (grid) {
 				cairo_move_to (cr, left, y);
@@ -260,8 +264,10 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 		}
 	}
 	if (where == GOAT_POSITION_BOTTOM) {
+		const int register start = (left - nil) / step_minor / factor;
+		const int register end = (right - nil) / step_minor / factor;
 		for (i = start; i <= end; i++) {
-			const gboolean register majorstip = (i % priv->minors_per_major == 0);
+			const gboolean register majorstip = is_major_tick (i, priv->minors_per_major);
 			const double register x = nil + left + step_minor * factor * i;
 			if (grid) {
 				cairo_move_to (cr, x, top);
@@ -289,8 +295,10 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 		}
 	}
 	if (where == GOAT_POSITION_TOP) {
+		const int register start = (left - nil) / step_minor / factor;
+		const int register end = (right - nil) / step_minor / factor;
 		for (i = start; i <= end; i++) {
-			const gboolean register majorstip = (i % priv->minors_per_major == 0);
+			const gboolean register majorstip = is_major_tick (i, priv->minors_per_major);
 			const double register x = nil + left + step_minor * factor * i;
 			if (grid) {
 				cairo_move_to (cr, x, bottom);

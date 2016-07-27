@@ -366,16 +366,23 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 		const gint width = allocation.width - padding.left - padding.right;
 		const gint height = allocation.height - padding.top - padding.bottom;
 
+		g_printf ("--- w=%i h=%i\n", width, height);
 		gdouble ref_x_min = +G_MAXDOUBLE;
 		gdouble ref_x_max = -G_MAXDOUBLE;
 		gdouble ref_y_min = +G_MAXDOUBLE;
 		gdouble ref_y_max = -G_MAXDOUBLE;
-		goat_scale_get_range (priv->scale_x, &ref_x_min, &ref_x_max);
-		goat_scale_get_range (priv->scale_y, &ref_y_min, &ref_y_max);
 
-		// draw the actual data
+		// get the common extends of all data sets if any scale used is set to autorange
+		//
+		// vfunc, we use it in a loop, so caching is good idea
 		const gboolean register autorange_x = goat_scale_is_auto_range (priv->scale_x);
 		const gboolean register autorange_y = goat_scale_is_auto_range (priv->scale_y);
+		if (!autorange_x) {
+			goat_scale_get_range (priv->scale_x, &ref_x_min, &ref_x_max);
+		}
+		if (!autorange_y) {
+			goat_scale_get_range (priv->scale_y, &ref_y_min, &ref_y_max);
+		}
 		if (autorange_x || autorange_y) {
 
 			for (i = 0; i < priv->array->len; i++) {
@@ -399,19 +406,17 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 			goat_scale_update_range (priv->scale_x, ref_x_min, ref_x_max);
 			goat_scale_update_range (priv->scale_y, ref_y_min, ref_y_max);
 
-			g_printf ("x range %lf %lf\n", ref_x_min, ref_x_max);
-			g_printf ("y range %lf %lf\n", ref_y_min, ref_y_max);
-
 			// TODO add some fixup if x_min is very close to x_max
 			// TODO add some additional padding for niceness :)
+			// TODO think about extra padding to compensate marker sizes
 		}
 		gboolean draw = TRUE;
 		if (!get_unit_to_pixel_factor (width, ref_x_min, ref_x_max, &x_unit_to_pixel)) {
-			g_warning ("Bad x range. This is too boring to plot. %lf", x_unit_to_pixel);
+			g_warning ("Bad x range");
 			draw = FALSE;
 		}
 		if (!get_unit_to_pixel_factor (height, ref_y_min, ref_y_max, &y_unit_to_pixel)) {
-			g_warning ("Bad y range. This is too boring to plot. %lf", y_unit_to_pixel);
+			g_warning ("Bad y range");
 			draw = FALSE;
 		}
 

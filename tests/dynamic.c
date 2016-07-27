@@ -38,6 +38,8 @@ int main (int argc, char *argv[])
 	GoatScale *scale_x = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_BOTTOM, GOAT_ORIENTATION_HORIZONTAL));
 	GoatScale *scale_y = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_RIGHT, GOAT_ORIENTATION_VERTICAL));
 
+	goat_scale_linear_set_ticks (GOAT_SCALE_LINEAR (scale_y), 100, 2);
+
 	plot = goat_plot_new (scale_x, scale_y);
 
 	GoatDataset *dataset;
