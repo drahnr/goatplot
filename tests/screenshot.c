@@ -3,7 +3,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "goat-plot.h"
+#include <goatplot.h>
 
 void destroy (GtkWidget *widget, gpointer data)
 {
@@ -65,47 +65,44 @@ int main (int argc, char *argv[])
 	GList *list3 = NULL;
 #endif
 	for (i = -10; i < 20; i++) {
-		GoatPair *pair;
+		GoatTriple *pair;
 
-		pair = g_new (GoatPair, 1);
+		pair = g_new (GoatTriple, 1);
 		pair->x = i;
 		pair->y = (double)i * ((double)i - 16.) - 4.;
 		list1 = g_list_prepend (list1, pair);
 #if TEST_MULTIPLE
-		pair = g_new (GoatPair, 1);
+		pair = g_new (GoatTriple, 1);
 		pair->x = i;
 		pair->y = sin (2 * M_PI / 64 * i) * 25;
 		list2 = g_list_prepend (list2, pair);
 
-		pair = g_new (GoatPair, 1);
+		pair = g_new (GoatTriple, 1);
 		pair->x = i * 15.f;
 		pair->y = sin (2 * M_PI / 64 * i + M_PI / 2) * 55;
 		list3 = g_list_prepend (list3, pair);
 #endif
 	}
-	GoatDataset *dataset;
+	GoatDatasetSimple *dataset;
 
-	dataset = goat_dataset_new (list1);
-	goat_dataset_set_style (dataset, GOAT_DATASET_STYLE_TRIANGLE);
-	g_assert (goat_dataset_get_length (dataset) > 0);
+	dataset = goat_dataset_simple_new (list1);
+	goat_dataset_simple_set_style (dataset, GOAT_MARKER_STYLE_TRIANGLE);
 	gdk_rgba_parse (&color, "royalblue");
-	goat_dataset_set_color (dataset, &color);
-	goat_plot_add_dataset (plot, dataset);
-	goat_plot_add_dataset (plot_clone, dataset);
+	goat_dataset_simple_set_color (dataset, &color);
+	goat_plot_add_dataset (plot, GOAT_DATASET (dataset));
+	goat_plot_add_dataset (plot_clone, GOAT_DATASET (dataset));
 #if TEST_MULTIPLE
-	dataset = goat_dataset_new (list2);
-	goat_dataset_set_style (dataset, GOAT_DATASET_STYLE_POINT);
-	g_assert (goat_dataset_get_length (dataset) > 0);
+	dataset = goat_dataset_simple_new (list2);
+	goat_dataset_simple_set_style (dataset, GOAT_MARKER_STYLE_POINT);
 	gdk_rgba_parse (&color, "green");
-	goat_dataset_set_color (dataset, &color);
-	goat_plot_add_dataset (plot, dataset);
+	goat_dataset_simple_set_color (dataset, &color);
+	goat_plot_add_dataset (plot, GOAT_DATASET (dataset));
 
-	dataset = goat_dataset_new (list3);
-	goat_dataset_set_style (dataset, GOAT_DATASET_STYLE_SQUARE);
-	g_assert (goat_dataset_get_length (dataset) > 0);
+	dataset = goat_dataset_simple_new (list3);
+	goat_dataset_simple_set_style (dataset, GOAT_MARKER_STYLE_SQUARE);
 	gdk_rgba_parse (&color, "goldenrod");
-	goat_dataset_set_color (dataset, &color);
-	goat_plot_add_dataset (plot, dataset);
+	goat_dataset_simple_set_color (dataset, &color);
+	goat_plot_add_dataset (plot, GOAT_DATASET (dataset));
 #endif
 
 	gtk_container_add (GTK_CONTAINER (box), GTK_WIDGET (plot));
@@ -114,7 +111,7 @@ int main (int argc, char *argv[])
 	gtk_widget_show_all (window);
 	g_signal_connect (G_OBJECT (window), "delete-event", G_CALLBACK (destroy), NULL);
 
-	g_timeout_add (1000, (GSourceFunc)self_destruct, GTK_WIDGET (window));
+	/* g_timeout_add (1000, (GSourceFunc)self_destruct, GTK_WIDGET (window)); */
 
 	gtk_main ();
 

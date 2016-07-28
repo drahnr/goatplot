@@ -18,13 +18,12 @@
  * along with GoatPlot. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __GOAT_PLOT_H__
-#define __GOAT_PLOT_H__
+#ifndef GOAT_PLOT_H
+#define GOAT_PLOT_H
 
-#include "goat-dataset.h"
+#include "goat-dataset-interface.h"
 #include "goat-plot-enum.h"
 #include "goat-scale-interface.h"
-#include "goat-scale-linear.h"
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
@@ -51,8 +50,6 @@ struct _GoatPlotClass {
 	GtkDrawingAreaClass parent_class;
 };
 
-
-
 GType goat_plot_get_type (void) G_GNUC_CONST;
 GoatPlot *goat_plot_new (GoatScale *scale_x, GoatScale *scale_y);
 void goat_plot_prepend_value (GoatPlot *graph, float x, float y);
@@ -67,4 +64,4 @@ void goat_plot_set_scale_x (GoatPlot *plot, GoatScale *scale_x);
 void goat_plot_set_scale_y (GoatPlot *plot, GoatScale *scale_y);
 G_END_DECLS
 
-#endif /* __GOAT_PLOT_H__ */
+#endif /* GOAT_PLOT_H */

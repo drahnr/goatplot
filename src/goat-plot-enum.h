@@ -40,7 +40,22 @@ GType goat_heading_get_type (void);
 typedef enum {
 	GOAT_PLOT_SCALE_EXP = 1,
 	GOAT_PLOT_SCALE_LIN = 2,
-	GOAT_PLOT_SCALE_LOG = 2,
+	GOAT_PLOT_SCALE_LOG = 3,
 } GoatPlotScaleType;
+
+// FIXME this does not make much sense here, make this an option for the GoatPlot widget itself,
+// FIXME it is the users duty to convert his data to the proper form
+typedef enum {
+	GOAT_MARKER_STYLE_INVALID = 0,
+	GOAT_MARKER_STYLE_NONE = 1,
+	GOAT_MARKER_STYLE_POINT = 2,
+	GOAT_MARKER_STYLE_SQUARE = 3,
+	GOAT_MARKER_STYLE_TRIANGLE = 4,
+	GOAT_MARKER_STYLE_CROSS = 5
+} GoatMarkerStyle;
+
+#define GOAT_TYPE_MARKER_STYLE (goat_marker_style_get_type ())
+GType goat_marker_style_get_type (void);
+
 
 #endif /* __GOAT_ENUM_H__ */

@@ -7,7 +7,6 @@
  */
 
 #include <gdk/gdk.h>
-#include <goat-plot.h>
 #include <gtk/gtk.h>
 #include <math.h>
 #include <stdint.h>
@@ -15,9 +14,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <goatplot.h>
+
 typedef struct {
 	GoatPlot *plot;
-	GoatDataset *dataset;
+	GoatDatasetSimple *dataset;
 } Both;
 
 gboolean dynamic_add (Both *both)
@@ -34,7 +35,7 @@ gboolean dynamic_add (Both *both)
 	idx++;
 	x = idx * 0.1;
 	y = cos (x + 0.5 * M_PI) * (sqrt (0.01 * idx * idx * idx));
-	goat_dataset_append (both->dataset, x, y);
+	goat_dataset_simple_append (both->dataset, x, y, (x + 1) / (y + 1));
 	gtk_widget_queue_draw (GTK_WIDGET (both->plot));
 	return 1;
 }
@@ -44,7 +45,7 @@ int main (int argc, char *argv[])
 	GtkBuilder *builder;
 	GtkWidget *window;
 	GoatPlot *plot;
-	GoatDataset *dataset;
+	GoatDatasetSimple *dataset;
 	Both both;
 	GdkRGBA datasetColor;
 
@@ -80,11 +81,11 @@ int main (int argc, char *argv[])
 
 	g_object_unref (builder);
 
-	dataset = goat_dataset_new (NULL);
-	goat_dataset_set_style (dataset, GOAT_DATASET_STYLE_LINE);
+	dataset = goat_dataset_simple_new (NULL);
+	goat_dataset_simple_set_style (dataset, GOAT_MARKER_STYLE_SQUARE);
 	gdk_rgba_parse (&datasetColor, "cyan");
-	goat_dataset_set_color (dataset, &datasetColor);
-	goat_plot_add_dataset (plot, dataset);
+	goat_dataset_simple_set_color (dataset, &datasetColor);
+	goat_plot_add_dataset (plot, GOAT_DATASET (dataset));
 
 	both.plot = plot;
 	both.dataset = dataset;
