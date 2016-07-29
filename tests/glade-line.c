@@ -31,7 +31,6 @@ gboolean dynamic_add (Both *both)
 		g_timeout_add (500, (GSourceFunc)gtk_main_quit, NULL);
 		return 0;
 	}
-	g_print ("whatsoever callback\n");
 	idx++;
 	x = idx * 0.1;
 	y = cos (x + 0.5 * M_PI) * (sqrt (0.01 * idx * idx * idx));

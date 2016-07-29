@@ -12,12 +12,11 @@ typedef struct {
 
 gboolean dynamic_add (Both *both)
 {
-	g_print ("whatsoever callback\n");
 	static uint16_t idx = 0;
 	idx++;
 	double x = idx * 0.1;
 	double y = cos (x + 0.5 * M_PI) * (sqrt (0.01 * idx * idx * idx));
-	goat_dataset_simple_append (both->dataset, x, y, sqrt ((x + y) / ((x * y) + 1)));
+	goat_dataset_simple_append (both->dataset, x, y, sqrt (x * (x * y + 1) / ((x + y) + 1)));
 	if (idx < 200) {
 		gtk_widget_queue_draw (GTK_WIDGET (both->plot));
 		return G_SOURCE_CONTINUE;

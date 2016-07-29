@@ -70,16 +70,19 @@ int main (int argc, char *argv[])
 		pair = g_new (GoatTriple, 1);
 		pair->x = i;
 		pair->y = (double)i * ((double)i - 16.) - 4.;
+		pair->ystddev = fabs (pair->y * pair->x * 2 + 1) / fabs (MAX (fabs (pair->x), fabs (pair->y)));
 		list1 = g_list_prepend (list1, pair);
 #if TEST_MULTIPLE
 		pair = g_new (GoatTriple, 1);
 		pair->x = i;
 		pair->y = sin (2 * M_PI / 64 * i) * 25;
+		pair->ystddev = sqrt (pair->y * pair->x);
 		list2 = g_list_prepend (list2, pair);
 
 		pair = g_new (GoatTriple, 1);
 		pair->x = i * 15.f;
 		pair->y = sin (2 * M_PI / 64 * i + M_PI / 2) * 55;
+		pair->ystddev = sqrt (fabs (log (fabs (pair->y * pair->x)) * pair->x));
 		list3 = g_list_prepend (list3, pair);
 #endif
 	}
