@@ -31,8 +31,6 @@ static void get_prefered_height (GtkWidget *widget, int *minimal, int *natural);
 static gboolean event (GtkWidget *widget, GdkEvent *event);
 static gboolean scroll_event (GtkWidget *widget, GdkEventScroll *event);
 
-#define GOAT_PLOT_GET_PRIVATE(object) (G_TYPE_INSTANCE_GET_PRIVATE ((object), GOAT_TYPE_PLOT, GoatPlotPrivate))
-
 struct _GoatPlotPrivate {
 	GArray *array; // array of GoatDataset pointers
 	// remove this, its the users duty to prescale data properly FIXME
@@ -44,14 +42,14 @@ struct _GoatPlotPrivate {
 	GoatScale *scale_y;
 };
 
-G_DEFINE_TYPE (GoatPlot, goat_plot, GTK_TYPE_DRAWING_AREA);
+G_DEFINE_TYPE_WITH_PRIVATE (GoatPlot, goat_plot, GTK_TYPE_DRAWING_AREA);
 
 #include "goat-plot-internal.h"
 
 static void goat_plot_finalize (GObject *object)
 {
 	GoatPlot *plot = GOAT_PLOT (object);
-	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (plot);
+	GoatPlotPrivate *priv = goat_plot_get_instance_private (plot);
 	gint register i = priv->array->len;
 	while (--i >= 0) {
 		g_object_unref (g_array_index (priv->array, GoatDataset *, i));
@@ -77,7 +75,7 @@ static GParamSpec *obj_properties[N_PROPERTIES] = {
 static void goat_plot_set_gproperty (GObject *object, guint prop_id, const GValue *value, GParamSpec *spec)
 {
 	GoatPlot *dataset = GOAT_PLOT (object);
-	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (dataset);
+	GoatPlotPrivate *priv = goat_plot_get_instance_private (dataset);
 
 	switch (prop_id) {
 	case PROP_SCALE_X:
@@ -94,7 +92,7 @@ static void goat_plot_set_gproperty (GObject *object, guint prop_id, const GValu
 static void goat_plot_get_gproperty (GObject *object, guint prop_id, GValue *value, GParamSpec *spec)
 {
 	GoatPlot *dataset = GOAT_PLOT (object);
-	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (dataset);
+	GoatPlotPrivate *priv = goat_plot_get_instance_private (dataset);
 
 	switch (prop_id) {
 	case PROP_SCALE_X:
@@ -144,7 +142,7 @@ static void goat_plot_init (GoatPlot *self)
 	GtkWidget *widget = GTK_WIDGET (self);
 	gtk_widget_set_has_window (widget, FALSE);
 
-	self->priv = GOAT_PLOT_GET_PRIVATE (self);
+	self->priv = goat_plot_get_instance_private (self);
 
 	self->priv->array = g_array_new (FALSE, TRUE, sizeof (void *));
 
@@ -208,7 +206,7 @@ gint goat_plot_add_dataset (GoatPlot *plot, GoatDataset *dataset)
 GoatDataset *goat_plot_remove_dataset (GoatPlot *plot, gint datasetid)
 {
 	GoatDataset *dataset = NULL;
-	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (plot);
+	GoatPlotPrivate *priv = goat_plot_get_instance_private (plot);
 	GoatDataset **datasetptr = &(g_array_index (priv->array, GoatDataset *, datasetid));
 	if (datasetptr != NULL) {
 		dataset = *datasetptr;
@@ -254,7 +252,7 @@ static gboolean draw_dataset (GoatPlot *plot, cairo_t *cr, GoatDataset *dataset,
 		return TRUE;
 	}
 
-	GoatPlotPrivate *priv = GOAT_PLOT_GET_PRIVATE (plot);
+	GoatPlotPrivate *priv = goat_plot_get_instance_private (plot);
 	(void)priv;
 
 	gdouble x, y;
@@ -340,7 +338,7 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 
 	if (gtk_widget_is_drawable (widget)) {
 		plot = GOAT_PLOT (widget);
-		priv = GOAT_PLOT_GET_PRIVATE (plot);
+		priv = goat_plot_get_instance_private (plot);
 		cairo_save (cr);
 
 		gtk_widget_get_allocation (widget, &allocation);
@@ -468,7 +466,7 @@ void goat_plot_set_background_color (GoatPlot *plot, GdkRGBA *color)
 
 	GoatPlotPrivate *priv;
 
-	priv = GOAT_PLOT_GET_PRIVATE (plot);
+	priv = goat_plot_get_instance_private (plot);
 
 	priv->color_background = *color;
 }
@@ -481,7 +479,7 @@ void goat_plot_set_border_color (GoatPlot *plot, GdkRGBA *color)
 
 	GoatPlotPrivate *priv;
 
-	priv = GOAT_PLOT_GET_PRIVATE (plot);
+	priv = goat_plot_get_instance_private (plot);
 
 	priv->color_border = *color;
 }

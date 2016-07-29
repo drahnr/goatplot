@@ -24,8 +24,6 @@
 
 static void update_extrema_cache (GoatDataset *dataset);
 
-#define GOAT_DATASET_GET_PRIVATE(object) (G_TYPE_INSTANCE_GET_PRIVATE ((object), GOAT_TYPE_DATASET, GoatDatasetPrivate))
-
 struct _GoatDatasetPrivate {
 	GList *list;
 	gint count;
@@ -38,7 +36,7 @@ struct _GoatDatasetPrivate {
 	GoatDatasetStyle style;
 };
 
-G_DEFINE_TYPE (GoatDataset, goat_dataset, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GoatDataset, goat_dataset, G_TYPE_OBJECT);
 
 static void goat_dataset_finalize (GObject *object)
 {
@@ -61,7 +59,7 @@ static GParamSpec *obj_properties[N_PROPERTIES] = {
 static void goat_dataset_set_gproperty (GObject *object, guint prop_id, const GValue *value, GParamSpec *spec)
 {
 	GoatDataset *dataset = GOAT_DATASET (object);
-	GoatDatasetPrivate *priv = GOAT_DATASET_GET_PRIVATE (dataset);
+	GoatDatasetPrivate *priv = goat_dataset_get_instance_private (dataset);
 
 	switch (prop_id) {
 	case PROP_COUNT:
@@ -80,7 +78,7 @@ static void goat_dataset_set_gproperty (GObject *object, guint prop_id, const GV
 static void goat_dataset_get_gproperty (GObject *object, guint prop_id, GValue *value, GParamSpec *spec)
 {
 	GoatDataset *dataset = GOAT_DATASET (object);
-	GoatDatasetPrivate *priv = GOAT_DATASET_GET_PRIVATE (dataset);
+	GoatDatasetPrivate *priv = goat_dataset_get_instance_private (dataset);
 
 	switch (prop_id) {
 	case PROP_COUNT:
@@ -116,7 +114,7 @@ static void goat_dataset_class_init (GoatDatasetClass *klass)
 
 static void goat_dataset_init (GoatDataset *self)
 {
-	self->priv = GOAT_DATASET_GET_PRIVATE (self);
+	self->priv = goat_dataset_get_instance_private (self);
 	self->priv->list = NULL;
 	self->priv->count = -1;
 	self->priv->x_min = +G_MAXDOUBLE;
@@ -300,7 +298,7 @@ void goat_dataset_set_color (GoatDataset *dataset, GdkRGBA *color)
 	g_return_if_fail (dataset);
 	g_return_if_fail (color);
 
-	priv = GOAT_DATASET_GET_PRIVATE (dataset);
+	priv = goat_dataset_get_instance_private (dataset);
 
 	priv->color = *color;
 }
@@ -312,7 +310,7 @@ void goat_dataset_get_color (GoatDataset *dataset, GdkRGBA *color)
 	g_return_if_fail (dataset);
 	g_return_if_fail (color);
 
-	priv = GOAT_DATASET_GET_PRIVATE (dataset);
+	priv = goat_dataset_get_instance_private (dataset);
 
 	*color = priv->color;
 }
