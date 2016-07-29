@@ -106,8 +106,6 @@ static void goat_plot_get_gproperty (GObject *object, guint prop_id, GValue *val
 
 static void goat_plot_class_init (GoatPlotClass *klass)
 {
-	g_type_class_add_private (klass, sizeof (GoatPlotPrivate));
-
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	object_class->finalize = goat_plot_finalize;
 
