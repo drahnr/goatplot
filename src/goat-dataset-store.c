@@ -25,7 +25,7 @@ GoatDatasetStore *goat_dataset_store_new (GtkTreeModel *tree_model)
 
 static void goat_dataset_store_finalize (GObject *object)
 {
-	GoatDatasetStore *self = (GoatDatasetStore *)object;
+	/* GoatDatasetStore *self = (GoatDatasetStore *)object; */
 	/* GoatDatasetStorePrivate *priv = goat_dataset_store_get_instance_private (self); */
 
 	G_OBJECT_CLASS (goat_dataset_store_parent_class)->finalize (object);
@@ -86,17 +86,18 @@ static void goat_dataset_store_class_init (GoatDatasetStoreClass *klass)
 	object_class->set_property = goat_dataset_store_set_property;
 
 	obj_properties[PROP_TREE_MODEL] =
-	    g_param_spec_object ("tree-model", "GoatDatasetStore::tree-model", "the backend tree store", GTK_TYPE_TREE_MODEL,
-	                         G_PARAM_READWRITE | G_PARAM_STATIC_BLURB);
+	    g_param_spec_object ("tree-model", "GoatDatasetStore::tree-model", "the backend tree store",
+	                         GTK_TYPE_TREE_MODEL, G_PARAM_READWRITE | G_PARAM_STATIC_BLURB);
 
-	obj_properties[PROP_X_INDEX] = g_param_spec_int ("x-index", "GoatDatasetStore::x-index", "mapping", -1, G_MAXINT, -1,
-	                                                    G_PARAM_READWRITE | G_PARAM_STATIC_BLURB);
+	obj_properties[PROP_X_INDEX] = g_param_spec_int ("x-index", "GoatDatasetStore::x-index", "mapping", -1, G_MAXINT,
+	                                                 -1, G_PARAM_READWRITE | G_PARAM_STATIC_BLURB);
 
-	obj_properties[PROP_Y_INDEX] = g_param_spec_int ("y-index", "GoatDatasetStore::y-index", "mapping", -1, G_MAXINT, -1,
-	                                                    G_PARAM_READWRITE | G_PARAM_STATIC_BLURB);
+	obj_properties[PROP_Y_INDEX] = g_param_spec_int ("y-index", "GoatDatasetStore::y-index", "mapping", -1, G_MAXINT,
+	                                                 -1, G_PARAM_READWRITE | G_PARAM_STATIC_BLURB);
 
-	obj_properties[PROP_YSTDDEV_INDEX] = g_param_spec_int ("ystddev-index", "GoatDatasetStore::ystddev-index",
-	                                                          "mapping", -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_BLURB);
+	obj_properties[PROP_YSTDDEV_INDEX] =
+	    g_param_spec_int ("ystddev-index", "GoatDatasetStore::ystddev-index", "mapping", -1, G_MAXINT, -1,
+	                      G_PARAM_READWRITE | G_PARAM_STATIC_BLURB);
 
 	g_object_class_install_properties (object_class, N_PROPS, obj_properties);
 }
@@ -105,9 +106,9 @@ static void goat_dataset_store_init (GoatDatasetStore *self)
 {
 	GoatDatasetStorePrivate *priv = goat_dataset_store_get_instance_private (self);
 	priv->tree_model = NULL;
-  	priv->x_index = -1; // minus one so gtk_tree_model_get stops parsing
-  	priv->y_index = -1;
-  	priv->ystddev_index = -1;
+	priv->x_index = -1; // minus one so gtk_tree_model_get stops parsing
+	priv->y_index = -1;
+	priv->ystddev_index = -1;
 }
 
 static gboolean iter_init (GoatDataset *dataset, GoatDatasetIter *iter)
@@ -138,12 +139,67 @@ static gboolean get (GoatDataset *dataset, GoatDatasetIter *iter, gdouble *x, gd
 	GoatDatasetStore *self = GOAT_DATASET_STORE (dataset);
 	GoatDatasetStorePrivate *priv = goat_dataset_store_get_instance_private (self);
 
-	gtk_tree_model_get (priv->tree_model, (GtkTreeIter *)(iter->state), priv->x_index, x, priv->y_index, y, priv->ystddev_index, ystddev, -1);
+	gtk_tree_model_get (priv->tree_model, (GtkTreeIter *)(iter->state), priv->x_index, x, priv->y_index, y,
+	                    priv->ystddev_index, ystddev, -1);
 	return TRUE;
 }
 
-static gboolean get_extrema(GoatDataset *dataset, gdouble *x, gdouble *y, gdouble *ystddev) {
-	return FALSE; // FIXME
+// FIXME make this the interface default implementation?
+static gboolean get_extrema (GoatDataset *dataset, gdouble *x_min, gdouble *x_max, gdouble *y_min, gdouble *y_max)
+{
+	g_return_val_if_fail (dataset, FALSE);
+	g_return_val_if_fail (GOAT_IS_DATASET_STORE (dataset), FALSE);
+	GoatDatasetStore *self = GOAT_DATASET_STORE (dataset);
+
+	GoatDatasetIter iter;
+	double x, y, ystddev;
+
+	x = y = ystddev = 0.;
+
+	*x_min = 0.;
+	*x_max = 0.;
+	*y_min = 0.;
+	*y_max = 0.;
+
+	if (goat_dataset_get_iter_first (GOAT_DATASET (self), &iter)) {
+		goat_dataset_get (GOAT_DATASET (self), &iter, &x, &y, &ystddev);
+		if (goat_dataset_iter_next (GOAT_DATASET (self), &iter)) {
+			*x_min = *x_max = x;
+			*y_min = y + ystddev;
+			*y_max = y - ystddev;
+			if (goat_dataset_iter_next (GOAT_DATASET (self), &iter)) {
+				do {
+					goat_dataset_get (GOAT_DATASET (self), &iter, &x, &y, &ystddev);
+
+					if (x < *x_min) {
+						*x_min = x;
+					}
+					if (x > *x_max) {
+						*x_max = x;
+					}
+					if (y - ystddev < *y_min) {
+						*y_min = y - ystddev;
+					}
+					if (y + ystddev > *y_max) {
+						*y_max = y + ystddev;
+					}
+				} while (goat_dataset_iter_next (GOAT_DATASET (self), &iter));
+			}
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+
+static GoatMarkerStyle get_marker_style (GoatDataset *dataset)
+{
+	return GOAT_MARKER_STYLE_POINT; // FIXME
+}
+
+static void get_color (GoatDataset *dataset, GdkRGBA *color)
+{
+	gdk_rgba_parse (color, "mediumseagreen"); // FIXME
 }
 
 static void goat_dataset_store_interface_init (GoatDatasetInterface *iface)
@@ -152,4 +208,6 @@ static void goat_dataset_store_interface_init (GoatDatasetInterface *iface)
 	iface->iter_next = iter_next;
 	iface->get = get;
 	iface->get_extrema = get_extrema;
+	iface->get_marker_style = get_marker_style;
+	iface->get_color = get_color;
 }

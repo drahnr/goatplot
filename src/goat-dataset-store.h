@@ -1,8 +1,8 @@
 #ifndef GOAT_DATASET_STORE_H
 #define GOAT_DATASET_STORE_H
 
-#include <gtk/gtk.h>
 #include <goat-dataset-interface.h>
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
