@@ -88,20 +88,20 @@ int main (int argc, char *argv[])
 	}
 	GoatDatasetSimple *dataset;
 
-	dataset = goat_dataset_simple_new (list1);
+	dataset = goat_dataset_simple_new (list1, FALSE, FALSE);
 	goat_dataset_simple_set_style (dataset, GOAT_MARKER_STYLE_TRIANGLE);
 	gdk_rgba_parse (&color, "royalblue");
 	goat_dataset_simple_set_color (dataset, &color);
 	goat_plot_add_dataset (plot, GOAT_DATASET (dataset));
 	goat_plot_add_dataset (plot_clone, GOAT_DATASET (dataset));
 #if TEST_MULTIPLE
-	dataset = goat_dataset_simple_new (list2);
+	dataset = goat_dataset_simple_new (list2, TRUE, FALSE);
 	goat_dataset_simple_set_style (dataset, GOAT_MARKER_STYLE_POINT);
 	gdk_rgba_parse (&color, "green");
 	goat_dataset_simple_set_color (dataset, &color);
 	goat_plot_add_dataset (plot, GOAT_DATASET (dataset));
 
-	dataset = goat_dataset_simple_new (list3);
+	dataset = goat_dataset_simple_new (list3, FALSE, TRUE);
 	goat_dataset_simple_set_style (dataset, GOAT_MARKER_STYLE_SQUARE);
 	gdk_rgba_parse (&color, "goldenrod");
 	goat_dataset_simple_set_color (dataset, &color);

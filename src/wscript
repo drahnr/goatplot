@@ -47,7 +47,7 @@ def build(bld):
 from waflib.Context import Context
 
 def codestyle_fun(ctx):
-    	import os
+	import os
 	cmd = "clang-format -i -style=file {}".format(' '.join(map(lambda node: str(node.abspath()), ctx.path.ant_glob(['*.[ch]']))))
 	os.system(cmd)
 

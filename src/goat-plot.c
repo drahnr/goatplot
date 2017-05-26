@@ -319,11 +319,11 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 		}
 		gboolean draw = TRUE;
 		if (!get_unit_to_pixel_factor (width, ref_x_min, ref_x_max, &x_unit_to_pixel)) {
-			g_warning ("Bad x range: %lf..%lf", ref_x_min, ref_x_max);
+			g_warning ("Bad x range: %lf..%lf, delta of %lf", ref_x_min, ref_x_max, ref_x_max - ref_x_min);
 			draw = FALSE;
 		}
 		if (!get_unit_to_pixel_factor (height, ref_y_min, ref_y_max, &y_unit_to_pixel)) {
-			g_warning ("Bad x range: %lf..%lf", ref_y_min, ref_y_max);
+			g_warning ("Bad y range: %lf..%lf, delta of %lf", ref_y_min, ref_y_max, ref_y_max - ref_y_min);
 			draw = FALSE;
 		}
 

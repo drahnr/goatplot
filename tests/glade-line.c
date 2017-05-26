@@ -80,7 +80,7 @@ int main (int argc, char *argv[])
 
 	g_object_unref (builder);
 
-	dataset = goat_dataset_simple_new (NULL);
+	dataset = goat_dataset_simple_new (NULL, FALSE, FALSE);
 	goat_dataset_simple_set_style (dataset, GOAT_MARKER_STYLE_SQUARE);
 	gdk_rgba_parse (&datasetColor, "cyan");
 	goat_dataset_simple_set_color (dataset, &datasetColor);

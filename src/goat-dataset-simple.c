@@ -35,6 +35,9 @@ struct _GoatDatasetSimplePrivate {
 	GdkRGBA color;
 
 	GoatMarkerStyle style;
+
+	gboolean interpolation_enabled;
+	gboolean valid_stddev;
 };
 
 static void goat_dataset_simple_interface_init (GoatDatasetInterface *iface);
@@ -53,6 +56,8 @@ enum {
 
 	PROP_LIST,
 	PROP_COUNT,
+	PROP_VALID_STDDEV,
+	PROP_INTERPOLATION_ENABLED,
 
 	N_PROPERTIES
 };
@@ -67,6 +72,12 @@ static void goat_dataset_simple_set_gproperty (GObject *object, guint prop_id, c
 	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
 
 	switch (prop_id) {
+	case PROP_INTERPOLATION_ENABLED:
+		priv->interpolation_enabled = g_value_get_boolean (value);
+		break;
+	case PROP_VALID_STDDEV:
+		priv->valid_stddev = g_value_get_boolean (value);
+		break;
 	case PROP_COUNT:
 		priv->count = g_value_get_int (value);
 		break;
@@ -86,6 +97,12 @@ static void goat_dataset_simple_get_gproperty (GObject *object, guint prop_id, G
 	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
 
 	switch (prop_id) {
+	case PROP_INTERPOLATION_ENABLED:
+		g_value_set_boolean(value, priv->interpolation_enabled);
+		break;
+	case PROP_VALID_STDDEV:
+		g_value_set_boolean(value, priv->valid_stddev);
+		break;
 	case PROP_COUNT:
 		g_value_set_int (value, priv->count);
 		break;
@@ -112,6 +129,12 @@ static void goat_dataset_simple_class_init (GoatDatasetSimpleClass *klass)
 	obj_properties[PROP_COUNT] =
 	    g_param_spec_int ("count", "GoatDataset::count", "count of datapoints", -1, 10000, -1, G_PARAM_READABLE);
 
+	obj_properties[PROP_VALID_STDDEV] =
+	    g_param_spec_boolean ("valid_stddev", "GoatDataset::valid_stddev", "is the stdandard deviation associated to this datatset valid", FALSE, G_PARAM_READWRITE);
+
+	obj_properties[PROP_INTERPOLATION_ENABLED] =
+	    g_param_spec_boolean ("interpolation_enabled", "GoatDataset::interpolation_enabled", "shall the points be interpolated", FALSE, G_PARAM_READWRITE);
+
 	g_object_class_install_properties (object_class, N_PROPERTIES, obj_properties);
 }
 
@@ -131,9 +154,13 @@ static void goat_dataset_simple_init (GoatDatasetSimple *self)
 /**
  * create a new dataset from a GList containing GoatTriple values
  */
-GoatDatasetSimple *goat_dataset_simple_new (GList *list)
+GoatDatasetSimple *goat_dataset_simple_new (GList *list, gboolean valid_stddev, gboolean interpolate)
 {
-	return g_object_new (GOAT_TYPE_DATASET_SIMPLE, "list", list, NULL);
+	return g_object_new (GOAT_TYPE_DATASET_SIMPLE,
+						 "valid_stddev", valid_stddev,
+						 "interpolation_enabled", interpolate,
+						 "list", list,
+						 NULL);
 }
 
 /**
@@ -172,42 +199,50 @@ static void update_extrema_cache (GoatDatasetSimple *self)
 	double x, y, ystddev;
 	double register x_min, y_min;
 	double register x_max, y_max;
+	double register y_upper;
+	double register y_lower;
+	const gboolean register valid_stddev = goat_dataset_has_valid_standard_deviation (GOAT_DATASET(self));
 
-	priv->x_min = x_min = 0.;
-	priv->x_max = x_max = 0.;
-	priv->y_min = y_min = 0.;
-	priv->y_max = y_max = 0.;
+	x_min = +G_MAXDOUBLE;
+	y_min = +G_MAXDOUBLE;
+	x_max = -G_MAXDOUBLE;
+	y_max = -G_MAXDOUBLE;
 
 	if (goat_dataset_get_iter_first (GOAT_DATASET (self), &iter)) {
 		goat_dataset_get (GOAT_DATASET (self), &iter, &x, &y, &ystddev);
-		if (goat_dataset_iter_next (GOAT_DATASET (self), &iter)) {
-			x_min = x_max = x;
-			y_min = y_max = y;
-			if (goat_dataset_iter_next (GOAT_DATASET (self), &iter)) {
-				do {
-					goat_dataset_get (GOAT_DATASET (self), &iter, &x, &y, &ystddev);
-
-					if (x < x_min) {
-						x_min = x;
-					}
-					if (x > x_max) {
-						x_max = x;
-					}
-					// TODO account for ystddev
-					if (y < y_min) {
-						y_min = y;
-					}
-					if (y > y_max) {
-						y_max = y;
-					}
-				} while (goat_dataset_iter_next (GOAT_DATASET (self), &iter));
+		x_min = x_max = x;
+		y_min = y_max = y;
+		if (valid_stddev) {
+			y_min -= ystddev;
+			y_max += ystddev;
+		}
+		while (goat_dataset_iter_next (GOAT_DATASET (self), &iter)) {
+			goat_dataset_get (GOAT_DATASET (self), &iter, &x, &y, &ystddev);
+			if (x < x_min) {
+				x_min = x;
+			}
+			if (x > x_max) {
+				x_max = x;
+			}
+			y_upper = y_lower = y;
+			if (valid_stddev) {
+				g_assert(ystddev >= 0.);
+				y_upper += ystddev;
+				y_lower -= ystddev;
+			}
+			if (y_lower < y_min) {
+				y_min = y_lower;
+			}
+			if (y_upper > y_max) {
+				y_max = y_upper;
 			}
 		}
-		priv->x_min = x_min;
-		priv->x_max = x_max;
-		priv->y_min = y_min;
-		priv->y_max = y_max;
 	}
+
+	priv->x_min = x_min;
+	priv->y_min = y_min;
+	priv->x_max = x_max;
+	priv->y_max = y_max;
 }
 
 void goat_dataset_simple_append (GoatDatasetSimple *self, gdouble x, gdouble y, gdouble ystddev)
@@ -217,6 +252,10 @@ void goat_dataset_simple_append (GoatDatasetSimple *self, gdouble x, gdouble y, 
 	GoatTriple *pair = g_new0 (GoatTriple, 1);
 	pair->x = x;
 	pair->y = y;
+	if (ystddev < 0.) {
+		g_warning("goat_dataset_simple_append: ystddev has to be positive");
+		ystddev = fabs(ystddev);
+	}
 	pair->ystddev = ystddev;
 	if (priv->count < 0) {
 		priv->count = g_list_length (priv->list);
@@ -224,14 +263,24 @@ void goat_dataset_simple_append (GoatDatasetSimple *self, gdouble x, gdouble y, 
 	priv->count++;
 	if (priv->x_min > x)
 		priv->x_min = x;
-	if (priv->y_min > y)
-		priv->y_min = y;
 	if (priv->x_max < x)
 		priv->x_max = x;
-	if (priv->y_max < y)
-		priv->y_max = y;
-	g_debug ("calc x range: %lf..%lf", priv->x_min, priv->x_max);
-	g_debug ("calc y range: %lf..%lf", priv->y_min, priv->y_max);
+
+	const gboolean register valid_stddev = goat_dataset_has_valid_standard_deviation (GOAT_DATASET(self));
+	double register y_lower = y;
+	double register y_upper = y;
+	if (valid_stddev) {
+		g_assert(ystddev >= 0.);
+		y_upper += ystddev;
+		y_lower -= ystddev;
+	}
+	if (priv->y_min > y_lower)
+		priv->y_min = y_lower;
+	if (priv->y_max < y_upper)
+		priv->y_max = y_upper;
+
+	/* g_printf ("calc x range: %lf..%lf\n", priv->x_min, priv->x_max); */
+	/* g_printf ("calc y range: %lf..%lf\n", priv->y_min, priv->y_max); */
 	priv->list = g_list_append (priv->list, pair);
 }
 
@@ -342,10 +391,22 @@ static GoatMarkerStyle get_marker_style (GoatDataset *dataset)
 	return priv->style;
 }
 
+static gboolean has_valid_standard_deviation(GoatDataset *dataset) {
+	g_return_val_if_fail(GOAT_IS_DATASET_SIMPLE (dataset), FALSE);
+	return GOAT_DATASET_SIMPLE(dataset)->priv->valid_stddev;
+}
+
+static gboolean is_interpolation_enabled(GoatDataset *dataset) {
+	g_return_val_if_fail(GOAT_IS_DATASET_SIMPLE (dataset), FALSE);
+	return GOAT_DATASET_SIMPLE(dataset)->priv->interpolation_enabled;
+}
+
 static void goat_dataset_simple_interface_init (GoatDatasetInterface *iface)
 {
 	iface->get_color = get_color;
 	iface->get_extrema = get_extrema;
+	iface->is_interpolation_enabled = is_interpolation_enabled;
+	iface->has_valid_standard_deviation = has_valid_standard_deviation;
 	iface->iter_init = iter_init;
 	iface->iter_next = iter_next;
 	iface->get_marker_style = get_marker_style;

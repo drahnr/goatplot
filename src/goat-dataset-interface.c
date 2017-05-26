@@ -10,6 +10,8 @@ static void goat_dataset_default_init (GoatDatasetInterface *iface)
 	iface->get = NULL;
 	iface->get_extrema = NULL;
 	iface->get_color = NULL;
+	iface->has_valid_standard_deviation = NULL;
+	iface->is_interpolation_enabled = NULL;
 }
 
 GoatMarkerStyle goat_dataset_get_marker_style (GoatDataset *self)
@@ -90,10 +92,26 @@ gboolean goat_dataset_get_extrema (GoatDataset *self, gdouble *xmin, gdouble *xm
 
 gboolean goat_dataset_interpolate (GoatDataset *self)
 {
-	return TRUE;
+	GoatDatasetInterface *iface;
+
+	iface = GOAT_DATASET_GET_IFACE (self);
+	if (iface->is_interpolation_enabled) {
+		return iface->is_interpolation_enabled (self);
+	} else {
+		g_error ("Implementing the `is_interpolation_enabled` interface for GoatDataset is necessary!");
+	}
+	return FALSE;
 }
 
 gboolean goat_dataset_has_valid_standard_deviation (GoatDataset *self)
 {
-	return TRUE;
+	GoatDatasetInterface *iface;
+
+	iface = GOAT_DATASET_GET_IFACE (self);
+	if (iface->has_valid_standard_deviation) {
+		return iface->has_valid_standard_deviation (self);
+	} else {
+		g_error ("Implementing the `has_valid_standard_deviation` interface for GoatDataset is necessary!");
+	}
+	return FALSE;
 }

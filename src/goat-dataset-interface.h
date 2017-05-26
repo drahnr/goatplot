@@ -29,6 +29,9 @@ struct _GoatDatasetInterface {
 	gboolean (*get) (GoatDataset *dataset, GoatDatasetIter *iter, gdouble *x, gdouble *y, gdouble *ystddev);
 	gboolean (*get_extrema) (GoatDataset *dataset, gdouble *xmin, gdouble *xmax, gdouble *ymin, gdouble *ymax);
 	void (*get_color) (GoatDataset *dataset, GdkRGBA *color);
+	// TODO is this really necessary to be part of the interface and not be filled with some property
+	gboolean (*has_valid_standard_deviation)(GoatDataset *dataset);
+	gboolean (*is_interpolation_enabled)(GoatDataset *dataset);
 };
 
 /**

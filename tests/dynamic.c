@@ -15,8 +15,8 @@ gboolean dynamic_add (Both *both)
 	static uint16_t idx = 0;
 	idx++;
 	double x = idx * 0.1;
-	double y = cos (x + 0.5 * M_PI) * (sqrt (0.01 * idx * idx * idx));
-	goat_dataset_simple_append (both->dataset, x, y, sqrt (x * (x * y + 1) / ((x + y) + 1)));
+	double y = cos (x + 0.5 * M_PI) * (sqrt (idx * idx * idx));
+	goat_dataset_simple_append (both->dataset, x, y, fabs(sin(x) * x * 20));
 	if (idx < 200) {
 		gtk_widget_queue_draw (GTK_WIDGET (both->plot));
 		return G_SOURCE_CONTINUE;
@@ -43,7 +43,7 @@ int main (int argc, char *argv[])
 
 	GoatDatasetSimple *dataset;
 
-	dataset = goat_dataset_simple_new (NULL);
+	dataset = goat_dataset_simple_new (NULL, TRUE, TRUE);
 	goat_dataset_simple_set_style (dataset, GOAT_MARKER_STYLE_TRIANGLE);
 	goat_plot_add_dataset (plot, GOAT_DATASET (dataset));
 
