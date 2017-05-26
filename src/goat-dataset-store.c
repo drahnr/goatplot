@@ -5,6 +5,8 @@ typedef struct {
 	gint x_index;
 	gint y_index;
 	gint ystddev_index;
+	gchar* color; // TODO move to GdkRGBA, but need to figure out GValue handling
+	GoatMarkerStyle marker_style;
 } GoatDatasetStorePrivate;
 
 static void goat_dataset_store_interface_init (GoatDatasetInterface *iface);
@@ -13,7 +15,17 @@ G_DEFINE_TYPE_WITH_CODE (GoatDatasetStore, goat_dataset_store, G_TYPE_OBJECT,
                          G_IMPLEMENT_INTERFACE (GOAT_TYPE_DATASET, goat_dataset_store_interface_init)
                              G_ADD_PRIVATE (GoatDatasetStore))
 
-enum { PROP_0, PROP_TREE_MODEL, PROP_X_INDEX, PROP_Y_INDEX, PROP_YSTDDEV_INDEX, N_PROPS };
+enum {
+	PROP_0,
+
+	PROP_TREE_MODEL,
+	PROP_X_INDEX,
+	PROP_Y_INDEX,
+	PROP_YSTDDEV_INDEX,
+	PROP_MARKER_STYLE,
+	PROP_COLOR,
+
+	N_PROPS };
 
 static GParamSpec *obj_properties[N_PROPS];
 
@@ -49,6 +61,12 @@ static void goat_dataset_store_get_property (GObject *object, guint prop_id, GVa
 	case PROP_YSTDDEV_INDEX:
 		g_value_set_int (value, priv->ystddev_index);
 		break;
+	case PROP_COLOR:
+		g_value_take_string(value, priv->color);
+		break;
+	case PROP_MARKER_STYLE:
+		g_value_set_enum(value, priv->marker_style);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 	}
@@ -71,6 +89,12 @@ static void goat_dataset_store_set_property (GObject *object, guint prop_id, con
 		break;
 	case PROP_YSTDDEV_INDEX:
 		priv->ystddev_index = g_value_get_int (value);
+		break;
+	case PROP_COLOR:
+		priv->color = g_value_dup_string (value); // TODO verify dup is needed
+		break;
+	case PROP_MARKER_STYLE:
+		priv->marker_style = g_value_get_enum (value);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -109,6 +133,8 @@ static void goat_dataset_store_init (GoatDatasetStore *self)
 	priv->x_index = -1; // minus one so gtk_tree_model_get stops parsing
 	priv->y_index = -1;
 	priv->ystddev_index = -1;
+	priv->color = g_strdup("mediumseagreen");
+	priv->marker_style = GOAT_MARKER_STYLE_POINT;
 }
 
 static gboolean iter_init (GoatDataset *dataset, GoatDatasetIter *iter)
@@ -144,62 +170,23 @@ static gboolean get (GoatDataset *dataset, GoatDatasetIter *iter, gdouble *x, gd
 	return TRUE;
 }
 
-// FIXME make this the interface default implementation?
-static gboolean get_extrema (GoatDataset *dataset, gdouble *x_min, gdouble *x_max, gdouble *y_min, gdouble *y_max)
+static GoatMarkerStyle get_marker_style (GoatDataset *dataset)
 {
 	g_return_val_if_fail (dataset, FALSE);
 	g_return_val_if_fail (GOAT_IS_DATASET_STORE (dataset), FALSE);
 	GoatDatasetStore *self = GOAT_DATASET_STORE (dataset);
-
-	GoatDatasetIter iter;
-	double x, y, ystddev;
-
-	x = y = ystddev = 0.;
-
-	*x_min = 0.;
-	*x_max = 0.;
-	*y_min = 0.;
-	*y_max = 0.;
-
-	if (goat_dataset_get_iter_first (GOAT_DATASET (self), &iter)) {
-		goat_dataset_get (GOAT_DATASET (self), &iter, &x, &y, &ystddev);
-		if (goat_dataset_iter_next (GOAT_DATASET (self), &iter)) {
-			*x_min = *x_max = x;
-			*y_min = y + ystddev;
-			*y_max = y - ystddev;
-			if (goat_dataset_iter_next (GOAT_DATASET (self), &iter)) {
-				do {
-					goat_dataset_get (GOAT_DATASET (self), &iter, &x, &y, &ystddev);
-
-					if (x < *x_min) {
-						*x_min = x;
-					}
-					if (x > *x_max) {
-						*x_max = x;
-					}
-					if (y - ystddev < *y_min) {
-						*y_min = y - ystddev;
-					}
-					if (y + ystddev > *y_max) {
-						*y_max = y + ystddev;
-					}
-				} while (goat_dataset_iter_next (GOAT_DATASET (self), &iter));
-			}
-			return TRUE;
-		}
-	}
-	return FALSE;
-}
-
-
-static GoatMarkerStyle get_marker_style (GoatDataset *dataset)
-{
-	return GOAT_MARKER_STYLE_POINT; // FIXME
+	GoatDatasetStorePrivate *priv = goat_dataset_store_get_instance_private (self);
+	return priv->marker_style;
 }
 
 static void get_color (GoatDataset *dataset, GdkRGBA *color)
 {
-	gdk_rgba_parse (color, "mediumseagreen"); // FIXME
+	g_return_if_fail (color);
+	g_return_if_fail (dataset);
+	g_return_if_fail (GOAT_IS_DATASET_STORE (dataset));
+	GoatDatasetStore *self = GOAT_DATASET_STORE (dataset);
+	GoatDatasetStorePrivate *priv = goat_dataset_store_get_instance_private (self);
+	gdk_rgba_parse (color, priv->color); // FIXME see GoatDatasetStorePrivate
 }
 
 static void goat_dataset_store_interface_init (GoatDatasetInterface *iface)
@@ -207,7 +194,7 @@ static void goat_dataset_store_interface_init (GoatDatasetInterface *iface)
 	iface->iter_init = iter_init;
 	iface->iter_next = iter_next;
 	iface->get = get;
-	iface->get_extrema = get_extrema;
+	// use the default implementation for iface->get_extrema
 	iface->get_marker_style = get_marker_style;
 	iface->get_color = get_color;
 }

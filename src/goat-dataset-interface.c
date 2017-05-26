@@ -2,17 +2,6 @@
 
 G_DEFINE_INTERFACE (GoatDataset, goat_dataset, G_TYPE_OBJECT)
 
-static void goat_dataset_default_init (GoatDatasetInterface *iface)
-{
-	iface->get_marker_style = NULL;
-	iface->iter_init = NULL;
-	iface->iter_next = NULL;
-	iface->get = NULL;
-	iface->get_extrema = NULL;
-	iface->get_color = NULL;
-	iface->has_valid_standard_deviation = NULL;
-	iface->is_interpolation_enabled = NULL;
-}
 
 GoatMarkerStyle goat_dataset_get_marker_style (GoatDataset *self)
 {
@@ -114,4 +103,75 @@ gboolean goat_dataset_has_valid_standard_deviation (GoatDataset *self)
 		g_error ("Implementing the `has_valid_standard_deviation` interface for GoatDataset is necessary!");
 	}
 	return FALSE;
+}
+
+/**
+ * default implementation for get extrema
+ *
+ * @attention this is slow, it is recommended to cache this if possible, see #GoatDatasetSimple
+ */
+static gboolean get_extrema(GoatDataset *self, gdouble *xmin, gdouble *xmax, gdouble *ymin, gdouble *ymax) {
+	GoatDatasetIter iter;
+	double x, y, ystddev;
+	double register x_min, y_min;
+	double register x_max, y_max;
+	double register y_upper;
+	double register y_lower;
+	const gboolean register valid_stddev = goat_dataset_has_valid_standard_deviation (GOAT_DATASET(self));
+
+	x_min = +G_MAXDOUBLE;
+	y_min = +G_MAXDOUBLE;
+	x_max = -G_MAXDOUBLE;
+	y_max = -G_MAXDOUBLE;
+
+	if (goat_dataset_get_iter_first (GOAT_DATASET (self), &iter)) {
+		goat_dataset_get (GOAT_DATASET (self), &iter, &x, &y, &ystddev);
+		x_min = x_max = x;
+		y_min = y_max = y;
+		if (valid_stddev) {
+			y_min -= ystddev;
+			y_max += ystddev;
+		}
+		while (goat_dataset_iter_next (GOAT_DATASET (self), &iter)) {
+			goat_dataset_get (GOAT_DATASET (self), &iter, &x, &y, &ystddev);
+			if (x < x_min) {
+				x_min = x;
+			}
+			if (x > x_max) {
+				x_max = x;
+			}
+			y_upper = y_lower = y;
+			if (valid_stddev) {
+				g_assert(ystddev >= 0.);
+				y_upper += ystddev;
+				y_lower -= ystddev;
+			}
+			if (y_lower < y_min) {
+				y_min = y_lower;
+			}
+			if (y_upper > y_max) {
+				y_max = y_upper;
+			}
+		}
+	} else {
+		return FALSE;
+	}
+
+	*xmin = x_min;
+	*ymin = y_min;
+	*xmax = x_max;
+	*ymax = y_max;
+	return TRUE;
+}
+
+static void goat_dataset_default_init (GoatDatasetInterface *iface)
+{
+	iface->get_marker_style = NULL;
+	iface->iter_init = NULL;
+	iface->iter_next = NULL;
+	iface->get = NULL;
+	iface->get_extrema = get_extrema;
+	iface->get_color = NULL;
+	iface->has_valid_standard_deviation = NULL;
+	iface->is_interpolation_enabled = NULL;
 }
