@@ -45,3 +45,23 @@ GType goat_heading_get_type (void)
 
 	return t;
 }
+
+GType goat_marker_style_get_type (void)
+{
+	static GType t = 0;
+
+	if (!t) {
+		static GEnumValue ts[] = {
+		    {GOAT_MARKER_STYLE_INVALID, "INVALID", "invalid marker style"},
+		    {GOAT_MARKER_STYLE_NONE, "NONE", "none"},
+		    {GOAT_MARKER_STYLE_POINT, "POINT", "•"},
+		    {GOAT_MARKER_STYLE_SQUARE, "SQUARE", "■"},
+		    {GOAT_MARKER_STYLE_TRIANGLE, "TRIANGLE", "▲"},
+		    {GOAT_MARKER_STYLE_CROSS, "CROSS", "❌"},
+		    {0, NULL, NULL},
+		};
+		t = g_enum_register_static ("GoatMarkerStyleTypes", ts);
+	}
+
+	return t;
+}

@@ -40,6 +40,10 @@ void goat_util_draw_num (cairo_t *cr, double x, double y, double d, GoatPosition
 		modifierx = (double)(logrect.width) * -0.5;
 		modifiery = (double)(logrect.height) * 1.0;
 		break;
+	case GOAT_POSITION_INVALID:
+	default:
+		g_warning("Invalid Scale Position");
+		break;
 	}
 	cairo_move_to (cr, x + modifierx, y + modifiery);
 	cairo_scale (cr, 1., -1.);

@@ -21,8 +21,6 @@
 #include "goat-plot.h"
 
 #include <glib/gprintf.h>
-#include <goat-dataset.h>
-#include <goat-scale-linear.h>
 #include <math.h>
 
 static gboolean draw (GtkWidget *widget, cairo_t *cr);
@@ -108,8 +106,6 @@ static void goat_plot_get_gproperty (GObject *object, guint prop_id, GValue *val
 
 static void goat_plot_class_init (GoatPlotClass *klass)
 {
-	g_type_class_add_private (klass, sizeof (GoatPlotPrivate));
-
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	object_class->finalize = goat_plot_finalize;
 
@@ -226,98 +222,11 @@ gboolean get_unit_to_pixel_factor (int window, gdouble min, gdouble max, gdouble
 	gdouble delta = max - min;
 	if (delta > 0.) {
 		*unit_to_pixel = (double)window / delta;
+		g_printf ("MAPPING: %i --{%lf}--> %lf\n", window, (*unit_to_pixel), delta);
 		return TRUE;
 	}
 	*unit_to_pixel = 1.;
 	return FALSE;
-}
-
-// TODO draw on a surface so redraw is really really fast?
-// TODO Do some benchmarking (and check CPU load)
-/**
- * @param plot
- * @param cr the cairo context to draw on
- * @param dataset which dataset to draw ontop of #cr
- * @param height the height of the drawable plotting area
- * @param width the width of the drawable plotting area
- * @returns TRUE if drawing was successful (zer0 length is also TRUE), otherwise
- * FALSE
- */
-static gboolean draw_dataset (GoatPlot *plot, cairo_t *cr, GoatDataset *dataset, gint height, gint width, gdouble x_min,
-                              gdouble x_max, gdouble x_nil_pixel, gdouble x_unit_to_pixel, gdouble y_min, gdouble y_max,
-                              gdouble y_nil_pixel, gdouble y_unit_to_pixel)
-{
-	g_return_val_if_fail (plot, FALSE);
-	if (goat_dataset_get_length (dataset) <= 0) {
-		return TRUE;
-	}
-
-	GoatPlotPrivate *priv = goat_plot_get_instance_private (plot);
-	(void)priv;
-
-	gdouble x, y;
-	GoatDatasetIter dit;
-	GdkRGBA color;
-
-	goat_dataset_iter_init (&dit, dataset);
-	goat_dataset_get_color (dataset, &color);
-
-	// draw points
-	const double register diameter = 8.;
-	gdk_cairo_set_source_rgba (cr, &color);
-	gboolean first_point = TRUE;       // True if this point is first point
-	gboolean cairo_draw_filled = TRUE; // Set to true to call cairo_fill
-	while (goat_dataset_iter_next (&dit, &x, &y)) {
-
-		x *= x_unit_to_pixel;
-		x += x_nil_pixel;
-		y *= y_unit_to_pixel;
-		y += y_nil_pixel;
-		// TODO spline/linear interconnect here
-		switch (goat_dataset_get_style (dataset)) {
-		case GOAT_DATASET_STYLE_TRIANGLE:
-			cairo_move_to (cr, x + diameter / 2., y - diameter / 2.);
-			cairo_line_to (cr, x - diameter / 2., y - diameter / 2.);
-			cairo_line_to (cr, x + 0., y + diameter / 2.);
-			break;
-		case GOAT_DATASET_STYLE_SQUARE:
-			cairo_rectangle (cr, x - diameter / 2., y - diameter / 2., diameter, diameter);
-			break;
-		case GOAT_DATASET_STYLE_POINT:
-			cairo_move_to (cr, x + diameter / 2., y + diameter / 2.);
-			cairo_arc (cr, x, y, diameter / 2., 0., 2 * M_PI);
-			break;
-		case GOAT_DATASET_STYLE_CROSS:
-			cairo_move_to (cr, x + diameter / 2., y + diameter / 2.);
-			cairo_line_to (cr, x - diameter / 2., y - diameter / 2.);
-			cairo_move_to (cr, x - diameter / 2., y + diameter / 2.);
-			cairo_line_to (cr, x + diameter / 2., y - diameter / 2.);
-			break;
-		case GOAT_DATASET_STYLE_LINE:
-			if (first_point) {
-				first_point = FALSE;
-				cairo_draw_filled = FALSE; // call cairo_stroke for LINE style
-				cairo_move_to (cr, x, y);  // start line
-			} else {
-				cairo_line_to (cr, x, y);
-			}
-			break;
-
-		case GOAT_DATASET_STYLE_UNKNOWN:
-		default: {
-			gint gds = (gint)goat_dataset_get_style (dataset);
-			g_warning ("DatasetStyle enum out of bounds %i", gds);
-		}
-			return FALSE;
-		}
-	}
-	if (cairo_draw_filled) {
-		cairo_fill (cr);
-	} else {
-		cairo_stroke (cr);
-	}
-
-	return TRUE;
 }
 
 static gboolean draw (GtkWidget *widget, cairo_t *cr)
@@ -410,11 +319,11 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 		}
 		gboolean draw = TRUE;
 		if (!get_unit_to_pixel_factor (width, ref_x_min, ref_x_max, &x_unit_to_pixel)) {
-			g_warning ("Bad x range");
+			g_warning ("Bad x range: %lf..%lf, delta of %lf", ref_x_min, ref_x_max, ref_x_max - ref_x_min);
 			draw = FALSE;
 		}
 		if (!get_unit_to_pixel_factor (height, ref_y_min, ref_y_max, &y_unit_to_pixel)) {
-			g_warning ("Bad y range");
+			g_warning ("Bad y range: %lf..%lf, delta of %lf", ref_y_min, ref_y_max, ref_y_max - ref_y_min);
 			draw = FALSE;
 		}
 
@@ -435,8 +344,8 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 
 			for (i = 0; i < priv->array->len; i++) {
 				dataset = g_array_index (priv->array, GoatDataset *, i);
-				draw_dataset (plot, cr, dataset, height, width, ref_x_min, ref_x_max, x_nil_pixel, x_unit_to_pixel,
-				              ref_y_min, ref_y_max, y_nil_pixel, y_unit_to_pixel);
+				draw_dataset (cr, dataset, height, width, ref_x_min, ref_x_max, x_nil_pixel, x_unit_to_pixel, ref_y_min,
+				              ref_y_max, y_nil_pixel, y_unit_to_pixel);
 			}
 		}
 		cairo_restore (cr);

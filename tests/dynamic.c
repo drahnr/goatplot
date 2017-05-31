@@ -3,26 +3,25 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "goat-plot.h"
+#include <goatplot.h>
 
 typedef struct {
 	GoatPlot *plot;
-	GoatDataset *dataset;
+	GoatDatasetSimple *dataset;
 } Both;
 
 gboolean dynamic_add (Both *both)
 {
-	g_print ("whatsoever callback\n");
 	static uint16_t idx = 0;
 	idx++;
 	double x = idx * 0.1;
-	double y = cos (x + 0.5 * M_PI) * (sqrt (0.01 * idx * idx * idx));
-	goat_dataset_append (both->dataset, x, y);
+	double y = cos (x + 0.5 * M_PI) * (sqrt (idx * idx * idx));
+	goat_dataset_simple_append (both->dataset, x, y, fabs(sin(x) * x * 20));
 	if (idx < 200) {
 		gtk_widget_queue_draw (GTK_WIDGET (both->plot));
 		return G_SOURCE_CONTINUE;
 	}
-	g_timeout_add (500, (GSourceFunc)gtk_main_quit, NULL);
+	//	g_timeout_add (500, (GSourceFunc)gtk_main_quit, NULL);
 	return G_SOURCE_REMOVE;
 }
 
@@ -42,11 +41,11 @@ int main (int argc, char *argv[])
 
 	plot = goat_plot_new (scale_x, scale_y);
 
-	GoatDataset *dataset;
+	GoatDatasetSimple *dataset;
 
-	dataset = goat_dataset_new (NULL);
-	goat_dataset_set_style (dataset, GOAT_DATASET_STYLE_TRIANGLE);
-	goat_plot_add_dataset (plot, dataset);
+	dataset = goat_dataset_simple_new (NULL, TRUE, TRUE);
+	goat_dataset_simple_set_style (dataset, GOAT_MARKER_STYLE_TRIANGLE);
+	goat_plot_add_dataset (plot, GOAT_DATASET (dataset));
 
 	gtk_container_add (GTK_CONTAINER (window), GTK_WIDGET (plot));
 	gtk_widget_show_all (window);
@@ -55,7 +54,7 @@ int main (int argc, char *argv[])
 	Both both;
 	both.plot = plot;
 	both.dataset = dataset;
-	g_timeout_add (20, (GSourceFunc)dynamic_add, &both);
+	g_timeout_add (10, (GSourceFunc)dynamic_add, &both);
 
 	gtk_main ();
 
