@@ -74,6 +74,19 @@ void goat_dataset_simple_append (GoatDatasetSimple *dataset, gdouble x, gdouble 
 
 void goat_dataset_simple_set_color (GoatDatasetSimple *dataset, GdkRGBA *color);
 
+void goat_dataset_simple_set_marker_line_color (GoatDatasetSimple *self, GdkRGBA *color);
+
+void goat_dataset_simple_set_marker_fill_color (GoatDatasetSimple *self, GdkRGBA *color);
+
+void goat_dataset_simple_set_marker_line_width (GoatDatasetSimple *self, double width);
+
+void goat_dataset_simple_set_line_width (GoatDatasetSimple *self, double width);
+
+void goat_dataset_simple_set_marker_size (GoatDatasetSimple *self, double size);
+
+void goat_dataset_simple_set_marker_fill (GoatDatasetSimple *self, gboolean marker_fill);
+
+
 G_END_DECLS
 
 #endif /* GOAT_DATASET_SIMPLE_H */

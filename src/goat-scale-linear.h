@@ -1,5 +1,5 @@
-#ifndef __GOAT_SCALE_H__
-#define __GOAT_SCALE_H__
+#ifndef __GOAT_SCALE_LINEAR_H__
+#define __GOAT_SCALE_LINEAR_H__
 
 #include "goat-plot-enum.h"
 #include "goat-scale-interface.h"

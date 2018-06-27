@@ -19,6 +19,8 @@
  */
 
 #include "goat-plot.h"
+#include "goat-scale-linear.h"
+#include "goat-scale-log.h"
 
 #include <glib/gprintf.h>
 #include <math.h>
@@ -211,6 +213,18 @@ GoatDataset *goat_plot_remove_dataset (GoatPlot *plot, gint datasetid)
 	return dataset;
 }
 
+
+
+/**
+ * return dataset
+ */
+GoatDataset *goat_plot_get_dataset( GoatPlot *plot, gint datasetid )
+{
+	GoatPlotPrivate *priv = goat_plot_get_instance_private (plot);
+	GoatDataset *dataset = g_array_index (priv->array, GoatDataset *, datasetid);
+	return dataset;
+}
+
 /**
  * @param window window height or width, or if fixed scale, use a const for that
  * @param min in units
@@ -222,7 +236,7 @@ gboolean get_unit_to_pixel_factor (int window, gdouble min, gdouble max, gdouble
 	gdouble delta = max - min;
 	if (delta > 0.) {
 		*unit_to_pixel = (double)window / delta;
-		g_printf ("MAPPING: %i --{%lf}--> %lf\n", window, (*unit_to_pixel), delta);
+		//g_printf ("MAPPING: %i --{%lf}--> %lf\n", window, (*unit_to_pixel), delta);
 		return TRUE;
 	}
 	*unit_to_pixel = 1.;
@@ -238,45 +252,46 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 	// TODO this needs to be done dynamically
 	// TODO based on the style context and where the scales are
 	// TODO https://github.com/drahnr/goatplot/issues/8
-	GtkBorder padding = {50, 50, 50, 50}; // left, right, top, bottom
+	GtkBorder padding = {90, 30, 30, 30}; // left, right, top, bottom
 	gint i;
 	gdouble x_nil_pixel;
 	gdouble y_nil_pixel;
 	gdouble x_unit_to_pixel;
 	gdouble y_unit_to_pixel;
+	int width, height;
+	GdkRGBA color, color_meta, marker_line_color, marker_fill_color;
+	double diameter;
+	double line_width;
+	double marker_line_width;
+	gdouble x, y, ystddev, x_log_min, y_log_min;
+	GoatDatasetIter dit;
+	gboolean x_log, y_log;
+	gboolean draw = TRUE;
+	int count;
+
 
 	if (gtk_widget_is_drawable (widget)) {
 		plot = GOAT_PLOT (widget);
 		priv = goat_plot_get_instance_private (plot);
 		cairo_save (cr);
 
+		g_assert (priv);
+		g_assert (priv->scale_x);
+		g_assert (GOAT_IS_SCALE (priv->scale_x));
+		g_assert (priv->scale_y);
+		g_assert (GOAT_IS_SCALE (priv->scale_y));
+
 		gtk_widget_get_allocation (widget, &allocation);
 
-#if 0
-		//FIXME this is all zer0es
-		gtk_style_context_get_padding (gtk_widget_get_style_context (widget), GTK_STATE_FLAG_ACTIVE, &padding);
-
-		g_print ("alocation x,y %i %i    w,h %i %i\n",
-		         allocation.x, allocation.y, allocation.width, allocation.height);
-		g_print ("padding left,right,top,bottom %i %i %i %i\n",
-		         padding.left, padding.right, padding.top, padding.bottom);
-#endif
 		// translate origin to plot graphs to (0,0) of our plot
 		cairo_translate (cr, padding.left, allocation.height - padding.bottom);
 
 		// make it plot naturally +up, -down
 		cairo_scale (cr, 1., -1.);
-		// draw the background (scale + grid + white box)
 
-		// the scale we just drew should not be drawable either
-		// now the coords are y↑ x→
-		const gint width = allocation.width - padding.left - padding.right;
-		const gint height = allocation.height - padding.top - padding.bottom;
-
-		g_printf ("--- w=%i h=%i\n", width, height);
-		gdouble ref_x_min = +G_MAXDOUBLE;
+		gdouble ref_x_min = G_MAXDOUBLE;
 		gdouble ref_x_max = -G_MAXDOUBLE;
-		gdouble ref_y_min = +G_MAXDOUBLE;
+		gdouble ref_y_min = G_MAXDOUBLE;
 		gdouble ref_y_max = -G_MAXDOUBLE;
 
 		// get the common extends of all data sets if any scale used is set to autorange
@@ -284,68 +299,284 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 		// vfunc, we use it in a loop, so caching is good idea
 		const gboolean register autorange_x = goat_scale_is_auto_range (priv->scale_x);
 		const gboolean register autorange_y = goat_scale_is_auto_range (priv->scale_y);
-		if (!autorange_x) {
-			goat_scale_get_range (priv->scale_x, &ref_x_min, &ref_x_max);
-		}
-		if (!autorange_y) {
-			goat_scale_get_range (priv->scale_y, &ref_y_min, &ref_y_max);
-		}
-		if (autorange_x || autorange_y) {
 
+		x_log = y_log = FALSE;
+
+		x_log = GOAT_IS_SCALE_LOG (priv->scale_x);
+		y_log = GOAT_IS_SCALE_LOG (priv->scale_y);
+
+		goat_scale_get_range (priv->scale_x, &ref_x_min, &ref_x_max);
+		goat_scale_get_range (priv->scale_y, &ref_y_min, &ref_y_max);
+
+		if (autorange_x || autorange_y ) {
+			/* For each dataset -> find min/max  */
 			for (i = 0; i < priv->array->len; i++) {
-				dataset = g_array_index (priv->array, GoatDataset *, i);
 				gdouble x_min, x_max, y_min, y_max;
+
+				dataset = g_array_index (priv->array, GoatDataset *, i);
+
+				if( !dataset ) continue;
+
 				goat_dataset_get_extrema (dataset, &x_min, &x_max, &y_min, &y_max);
-				if (autorange_x) {
-					if (ref_x_min > x_min)
-						ref_x_min = x_min;
-					if (ref_x_max < x_max)
-						ref_x_max = x_max;
+
+				if (autorange_x ) {
+					if (ref_x_min > x_min) ref_x_min = x_min;
+					if (ref_x_max < x_max) ref_x_max = x_max;
 				}
-				if (autorange_y) {
-					if (ref_y_min > y_min)
-						ref_y_min = y_min;
-					if (ref_y_max < y_max)
-						ref_y_max = y_max;
+				if (autorange_y ) {
+					if (ref_y_min > y_min) ref_y_min = y_min;
+					if (ref_y_max < y_max) ref_y_max = y_max;
+				}
+			}
+		}
+
+		if( x_log ) {
+			/* May need to find smallest value > 0. */
+			if( ref_x_min <= 0. ) {
+				double xlm;
+				ref_x_min = G_MAXDOUBLE;
+				for (i = 0; i < priv->array->len; i++) {
+					dataset = g_array_index (priv->array, GoatDataset *, i);
+					goat_dataset_get_log_extrema( dataset, &xlm, NULL, NULL, NULL );
+					if( ref_x_min > xlm ) ref_x_min = xlm;
 				}
 			}
 
+			/* Final check to avoid negative values on scale */
+			if( ref_x_min <= 0. ) ref_x_min = 1.;
+
+			/* Round upper scale so whole number of order 10 steps */
+			i = (int) (ceil(log10( ref_x_max/ref_x_min ) / goat_scale_log_get_major_delta(GOAT_SCALE_LOG(priv->scale_x))));
+			if( i < 1 ) i = 1;
+			ref_x_max = ref_x_min * pow (10, i);
+
 			goat_scale_update_range (priv->scale_x, ref_x_min, ref_x_max);
+
+			/* these are now used for data -> pixel mapping - need to be on log scale */
+			x_log_min = ref_x_min;
+			ref_x_min = log10 (ref_x_min);
+			ref_x_max = log10 (ref_x_max);
+		} else {
+			if( ref_x_max <= ref_x_min ) ref_x_max = ref_x_min + 1.;
+			goat_scale_update_range (priv->scale_x, ref_x_min, ref_x_max);
+		}
+
+
+		if( y_log ) {
+			if( ref_y_min <= 0. ) {
+				double ylm;
+				ref_y_min = G_MAXDOUBLE;
+				for (i = 0; i < priv->array->len; i++) {
+					dataset = g_array_index (priv->array, GoatDataset *, i);
+					goat_dataset_get_log_extrema( dataset, NULL, NULL, &ylm, NULL );
+					if( ref_y_min > ylm ) ref_y_min = ylm;
+				}
+			}
+
+			/* Final check to avoid negative values on scale */
+			if( ref_y_min <= 0. ) ref_y_min = 1.;
+
+			/* Round upper scale so whole number of order 10 steps */
+			i = (int) (ceil(log10( ref_y_max/ref_y_min ) / goat_scale_log_get_major_delta(GOAT_SCALE_LOG(priv->scale_y))));
+			if( i < 1 ) i = 1;
+			ref_y_max =  ref_y_min * pow (10, i);
+
 			goat_scale_update_range (priv->scale_y, ref_y_min, ref_y_max);
 
-			// TODO add some fixup if x_min is very close to x_max
-			// TODO add some additional padding for niceness :)
-			// TODO think about extra padding to compensate marker sizes
-		}
-		gboolean draw = TRUE;
-		if (!get_unit_to_pixel_factor (width, ref_x_min, ref_x_max, &x_unit_to_pixel)) {
-			g_warning ("Bad x range: %lf..%lf, delta of %lf", ref_x_min, ref_x_max, ref_x_max - ref_x_min);
-			draw = FALSE;
-		}
-		if (!get_unit_to_pixel_factor (height, ref_y_min, ref_y_max, &y_unit_to_pixel)) {
-			g_warning ("Bad y range: %lf..%lf, delta of %lf", ref_y_min, ref_y_max, ref_y_max - ref_y_min);
-			draw = FALSE;
+			/* these are now used for data -> pixel mapping - need to be on log scale */
+			y_log_min = ref_y_min;
+			ref_y_min = log10 (ref_y_min);
+			ref_y_max = log10 (ref_y_max);
+		} else {
+			if( ref_y_max <= ref_y_min ) ref_y_max = ref_y_min + 1.;
+			goat_scale_update_range (priv->scale_y, ref_y_min, ref_y_max);
 		}
 
+
+		/* Generate data->pixel mapping */
+		height = allocation.height - padding.bottom - padding.top;
+		width = allocation.width - padding.right - padding.left;
+
+		if (!get_unit_to_pixel_factor (width, ref_x_min, ref_x_max, &x_unit_to_pixel)) {
+			g_warning ("Bad x range: %lf..%lf, delta of %lf", ref_x_min, ref_x_max,ref_x_max - ref_x_min);
+			cairo_restore (cr);
+			return FALSE;
+		}
 		x_nil_pixel = ref_x_min * -x_unit_to_pixel;
+
+
+		if (!get_unit_to_pixel_factor (height, ref_y_min, ref_y_max, &y_unit_to_pixel)) {
+			g_warning ("Bad x range: %lf..%lf, delta of %lf", ref_y_min, ref_y_max, ref_y_max - ref_y_min);
+			cairo_restore (cr);
+			return FALSE;
+		}
 		y_nil_pixel = ref_y_min * -y_unit_to_pixel;
 
-		draw_background (plot, cr, &allocation, &padding, x_nil_pixel, y_nil_pixel, x_unit_to_pixel, y_unit_to_pixel,
-		                 &priv->color_background, &priv->color_border);
+		/* Draw background */
+		cairo_rectangle (cr, 0, 0, width, height);
+		gdk_cairo_set_source_rgba (cr, &priv->color_background);
+		cairo_fill (cr);
 
-		if (draw) {
-			draw_scales (plot, cr, &allocation, &padding, x_nil_pixel, y_nil_pixel, x_unit_to_pixel, y_unit_to_pixel);
+		/* Draw border */
+		cairo_rectangle (cr, 0, 0, width, height);
+		gdk_cairo_set_source_rgba (cr, &priv->color_border);
+		cairo_set_line_width (cr, 1.);
+		cairo_stroke (cr);
+
+		/* Draw scales */
+		if( draw ) {
+			goat_scale_draw (priv->scale_x, cr, 0, width, 0, height );
+			goat_scale_draw (priv->scale_y, cr, 0, width, 0, height );
 		}
 
-		clip_drawable_area (plot, cr, &allocation, &padding);
-
 		if (draw) {
-			draw_nil_lines (plot, cr, width, height, x_nil_pixel, y_nil_pixel);
-
 			for (i = 0; i < priv->array->len; i++) {
 				dataset = g_array_index (priv->array, GoatDataset *, i);
-				draw_dataset (cr, dataset, height, width, ref_x_min, ref_x_max, x_nil_pixel, x_unit_to_pixel, ref_y_min,
-				              ref_y_max, y_nil_pixel, y_unit_to_pixel);
+
+				if( !dataset ) continue;
+
+				/* Load colours for rendering */
+				goat_dataset_get_color (dataset, &color);
+				goat_dataset_get_marker_line_color (dataset, &marker_line_color);
+				goat_dataset_get_marker_fill_color (dataset, &marker_fill_color);
+				goat_dataset_get_line_width (dataset, &line_width);
+				goat_dataset_get_marker_line_width (dataset, &marker_line_width);
+				goat_dataset_get_marker_size (dataset, &diameter);
+				color_meta = color;
+				color_meta.alpha *= 0.5;
+
+				if (!goat_dataset_get_iter_first (dataset, &dit)) {
+					g_debug ("Dataset appears to be empty");
+					return FALSE;
+				}
+
+				/* Draw line */
+				gdk_cairo_set_source_rgba (cr, &color_meta);
+
+				// draw interconnection in the first round
+				if (goat_dataset_interpolate (dataset)) {
+					cairo_set_line_width (cr, line_width);
+					if (goat_dataset_get_iter_first (dataset, &dit)) {
+
+						goat_dataset_get (dataset, &dit, &x, &y, &ystddev);
+						if( x_log ) {
+							if( x < x_log_min ) x = x_log_min;
+							x = log10 (x);
+						}
+						x = x*x_unit_to_pixel + x_nil_pixel;
+						if( y_log ) {
+							if( y < y_log_min ) y = y_log_min;
+							y = log10 (y);
+							ystddev = log10 (ystddev);
+						}
+						y = y*y_unit_to_pixel + y_nil_pixel;
+						cairo_move_to (cr, x, y);
+
+						while (goat_dataset_iter_next (dataset, &dit)) {
+							goat_dataset_get (dataset, &dit, &x, &y, &ystddev);
+							if( x_log ) {
+								if( x < x_log_min ) x = x_log_min;
+								x = log10 (x);
+							}
+							x = x*x_unit_to_pixel + x_nil_pixel;
+							if( y_log ) {
+								if( y < y_log_min ) y = y_log_min;
+								y = log10 (y);
+								ystddev = log10 (ystddev);
+							}
+							y = y*y_unit_to_pixel + y_nil_pixel;
+							cairo_line_to (cr, x, y);
+						}
+						cairo_stroke (cr);
+					}
+				}
+				// draw the variation (if desired) on top in a separate loop
+				if (goat_dataset_has_valid_standard_deviation (dataset)) {
+					if (goat_dataset_get_iter_first (dataset, &dit)) {
+						cairo_set_line_width (cr, line_width);
+						do {
+							goat_dataset_get (dataset, &dit, &x, &y, &ystddev);
+							if( x_log ) {
+								if( x < x_log_min ) x = x_log_min;
+								x = log10 (x);
+							}
+							x = x*x_unit_to_pixel + x_nil_pixel;
+							if( y_log ) {
+								if( y < y_log_min ) y = y_log_min;
+								y = log10 (y);
+								ystddev = log10 (ystddev);
+							}
+							y = y*y_unit_to_pixel + y_nil_pixel;
+							ystddev *= y_unit_to_pixel;
+							if (fabs (ystddev) > G_MAXFLOAT) {
+								cairo_move_to (cr, x, 0);
+								cairo_line_to (cr, x, height);
+							}
+							cairo_move_to (cr, x + diameter / 2., y + ystddev);
+							cairo_line_to (cr, x - diameter / 2., y + ystddev);
+							cairo_move_to (cr, x + diameter / 2., y - ystddev);
+							cairo_line_to (cr, x - diameter / 2., y - ystddev);
+							cairo_move_to (cr, x, y + ystddev);
+							cairo_line_to (cr, x, y - ystddev);
+						} while (goat_dataset_iter_next (dataset, &dit));
+						cairo_stroke (cr);
+					}
+				}
+
+				// draw the indivdual data markers on top
+				if (goat_dataset_get_iter_first (dataset, &dit) && goat_dataset_get_marker_style (dataset) != GOAT_MARKER_STYLE_NONE ) {
+					/* TODO: Switch outside loops? */
+					do {
+						goat_dataset_get (dataset, &dit, &x, &y, NULL);
+						if( x_log ) {
+							if( x < x_log_min ) x = x_log_min;
+							x = log10 (x);
+						}
+						x = x*x_unit_to_pixel + x_nil_pixel;
+						if( y_log ) {
+							if( y < y_log_min ) y = y_log_min;
+							y = log10 (y);
+							ystddev = log10 (ystddev);
+						}
+						y = y*y_unit_to_pixel + y_nil_pixel;
+						switch (goat_dataset_get_marker_style (dataset)) {
+						case GOAT_MARKER_STYLE_TRIANGLE:
+							cairo_move_to (cr, x + diameter / 2., y - diameter / 2.);
+							cairo_line_to (cr, x - diameter / 2., y - diameter / 2.);
+							cairo_line_to (cr, x + 0., y + diameter / 2.);
+							break;
+						case GOAT_MARKER_STYLE_SQUARE:
+							cairo_rectangle (cr, x - diameter / 2., y - diameter / 2., diameter, diameter);
+							break;
+						case GOAT_MARKER_STYLE_POINT:
+							cairo_move_to (cr, x + diameter / 2., y + diameter / 2.);
+							cairo_arc (cr, x, y, diameter / 2., 0., 2 * M_PI);
+							break;
+						case GOAT_MARKER_STYLE_CROSS:
+							cairo_move_to (cr, x + diameter / 2., y + diameter / 2.);
+							cairo_line_to (cr, x - diameter / 2., y - diameter / 2.);
+							cairo_move_to (cr, x - diameter / 2., y + diameter / 2.);
+							cairo_line_to (cr, x + diameter / 2., y - diameter / 2.);
+							break;
+						case GOAT_MARKER_STYLE_NONE:
+							break;
+						case GOAT_MARKER_STYLE_INVALID:
+						default: {
+							gint gds = (gint)goat_dataset_get_marker_style (dataset);
+							g_warning ("DatasetStyle enum out of bounds %i", gds);
+						}
+							return FALSE;
+						}
+					} while (goat_dataset_iter_next (dataset, &dit));
+
+					if( goat_dataset_get_marker_fill (dataset) ) {
+						gdk_cairo_set_source_rgba (cr, &marker_fill_color);
+						cairo_fill_preserve (cr);
+					}
+
+					gdk_cairo_set_source_rgba (cr, &marker_line_color);
+					cairo_stroke (cr);
+				}
 			}
 		}
 		cairo_restore (cr);

@@ -54,7 +54,8 @@ GType goat_plot_get_type (void) G_GNUC_CONST;
 GoatPlot *goat_plot_new (GoatScale *scale_x, GoatScale *scale_y);
 void goat_plot_prepend_value (GoatPlot *graph, float x, float y);
 gint goat_plot_add_dataset (GoatPlot *plot, GoatDataset *dataset);
-
+GoatDataset *goat_plot_remove_dataset (GoatPlot *plot, gint datasetid);
+GoatDataset *goat_plot_get_dataset( GoatPlot *plot, gint datasetid );
 void goat_plot_set_fixed_x_size (GoatPlot *plot, gdouble min_x, gdouble max_x);
 void goat_plot_set_fixed_y_size (GoatPlot *plot, gdouble min_y, gdouble max_y);
 void goat_plot_set_dynamic_x_size (GoatPlot *plot, gboolean dyn);
@@ -62,6 +63,8 @@ void goat_plot_set_dynamic_y_size (GoatPlot *plot, gboolean dyn);
 void goat_plot_set_grid_visible (GoatPlot *plot, gboolean visible);
 void goat_plot_set_scale_x (GoatPlot *plot, GoatScale *scale_x);
 void goat_plot_set_scale_y (GoatPlot *plot, GoatScale *scale_y);
+void goat_plot_set_background_color (GoatPlot *plot, GdkRGBA *color);
+void goat_plot_set_border_color (GoatPlot *plot, GdkRGBA *color);
 G_END_DECLS
 
 #endif /* GOAT_PLOT_H */

@@ -32,7 +32,15 @@ struct _GoatDatasetSimplePrivate {
 	double y_min;
 	double x_max;
 	double y_max;
+	double x_log_min;
+	double y_log_min;
 	GdkRGBA color;
+	GdkRGBA marker_line_color;
+	GdkRGBA marker_fill_color;
+	double line_width;
+	double marker_line_width;
+	double marker_size;
+	gboolean marker_fill;
 
 	GoatMarkerStyle style;
 
@@ -145,9 +153,17 @@ static void goat_dataset_simple_init (GoatDatasetSimple *self)
 	priv->count = -1;
 	priv->x_min = +G_MAXDOUBLE;
 	priv->y_min = +G_MAXDOUBLE;
+	priv->x_log_min = +G_MAXDOUBLE;
+	priv->y_log_min = +G_MAXDOUBLE;
 	priv->x_max = -G_MAXDOUBLE;
 	priv->y_max = -G_MAXDOUBLE;
 	gdk_rgba_parse (&priv->color, "blue");
+	gdk_rgba_parse (&priv->marker_line_color, "blue");
+	gdk_rgba_parse (&priv->marker_fill_color, "blue");
+	priv->line_width = 1.5;
+	priv->marker_line_width = 1.5;
+	priv->marker_size = 8.0;
+	priv->marker_fill = 0;
 	priv->style = GOAT_MARKER_STYLE_SQUARE;
 }
 
@@ -163,17 +179,6 @@ GoatDatasetSimple *goat_dataset_simple_new (GList *list, gboolean valid_stddev, 
 						 NULL);
 }
 
-/**
- * return the number of items contained in the dataset
- * @param dataset
- */
-gint goat_dataset_get_length (GoatDatasetSimple *self)
-{
-	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
-	if (priv->count >= 0)
-		return priv->count;
-	return priv->count = (gint)g_list_length (priv->list);
-}
 
 /**
  * @param dataset
@@ -197,14 +202,14 @@ static void update_extrema_cache (GoatDatasetSimple *self)
 
 	GoatDatasetIter iter;
 	double x, y, ystddev;
-	double register x_min, y_min;
+	double register x_min, y_min, x_log_min, y_log_min;
 	double register x_max, y_max;
 	double register y_upper;
 	double register y_lower;
 	const gboolean register valid_stddev = goat_dataset_has_valid_standard_deviation (GOAT_DATASET(self));
 
-	x_min = +G_MAXDOUBLE;
-	y_min = +G_MAXDOUBLE;
+	x_log_min = x_min = +G_MAXDOUBLE;
+	y_log_min = y_min = +G_MAXDOUBLE;
 	x_max = -G_MAXDOUBLE;
 	y_max = -G_MAXDOUBLE;
 
@@ -212,6 +217,10 @@ static void update_extrema_cache (GoatDatasetSimple *self)
 		goat_dataset_get (GOAT_DATASET (self), &iter, &x, &y, &ystddev);
 		x_min = x_max = x;
 		y_min = y_max = y;
+
+		if( x > 0. ) x_log_min = x;
+		if( y > 0. ) y_log_min = y;
+
 		if (valid_stddev) {
 			y_min -= ystddev;
 			y_max += ystddev;
@@ -223,6 +232,9 @@ static void update_extrema_cache (GoatDatasetSimple *self)
 			}
 			if (x > x_max) {
 				x_max = x;
+			}
+			if( x < x_log_min && x > 0. ) {
+				x_log_min = x;
 			}
 			y_upper = y_lower = y;
 			if (valid_stddev) {
@@ -236,6 +248,9 @@ static void update_extrema_cache (GoatDatasetSimple *self)
 			if (y_upper > y_max) {
 				y_max = y_upper;
 			}
+			if( y < y_log_min && y > 0. ) {
+				y_log_min = y;
+			}
 		}
 	}
 
@@ -243,6 +258,8 @@ static void update_extrema_cache (GoatDatasetSimple *self)
 	priv->y_min = y_min;
 	priv->x_max = x_max;
 	priv->y_max = y_max;
+	priv->x_log_min = x_log_min;
+	priv->y_log_min = y_log_min;
 }
 
 void goat_dataset_simple_append (GoatDatasetSimple *self, gdouble x, gdouble y, gdouble ystddev)
@@ -265,6 +282,8 @@ void goat_dataset_simple_append (GoatDatasetSimple *self, gdouble x, gdouble y, 
 		priv->x_min = x;
 	if (priv->x_max < x)
 		priv->x_max = x;
+	if( priv->x_log_min > x && x > 0. )
+		priv->x_log_min = x;
 
 	const gboolean register valid_stddev = goat_dataset_has_valid_standard_deviation (GOAT_DATASET(self));
 	double register y_lower = y;
@@ -278,6 +297,8 @@ void goat_dataset_simple_append (GoatDatasetSimple *self, gdouble x, gdouble y, 
 		priv->y_min = y_lower;
 	if (priv->y_max < y_upper)
 		priv->y_max = y_upper;
+	if( priv->y_log_min > y_lower && y_lower > 0. )
+		priv->y_log_min = y_lower;
 
 	/* g_printf ("calc x range: %lf..%lf\n", priv->x_min, priv->x_max); */
 	/* g_printf ("calc y range: %lf..%lf\n", priv->y_min, priv->y_max); */
@@ -299,6 +320,62 @@ void goat_dataset_simple_set_color (GoatDatasetSimple *self, GdkRGBA *color)
 	priv->color = *color;
 }
 
+void goat_dataset_simple_set_marker_line_color (GoatDatasetSimple *self, GdkRGBA *color)
+{
+	g_return_if_fail (self);
+	g_return_if_fail (color);
+
+	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
+
+	priv->marker_line_color = *color;
+}
+
+void goat_dataset_simple_set_marker_fill_color (GoatDatasetSimple *self, GdkRGBA *color)
+{
+	g_return_if_fail (self);
+	g_return_if_fail (color);
+
+	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
+
+	priv->marker_fill_color = *color;
+}
+
+void goat_dataset_simple_set_marker_line_width (GoatDatasetSimple *self, double width)
+{
+	g_return_if_fail (self);
+
+	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
+
+	priv->marker_line_width = width;
+}
+
+void goat_dataset_simple_set_line_width (GoatDatasetSimple *self, double width)
+{
+	g_return_if_fail (self);
+
+	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
+
+	priv->line_width = width;
+}
+
+void goat_dataset_simple_set_marker_size (GoatDatasetSimple *self, double size)
+{
+	g_return_if_fail (self);
+
+	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
+
+	priv->marker_size = size;
+}
+
+void goat_dataset_simple_set_marker_fill (GoatDatasetSimple *self, gboolean marker_fill)
+{
+	g_return_if_fail (self);
+
+	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
+
+	priv->marker_fill = marker_fill;
+}
+
 static void get_color (GoatDataset *dataset, GdkRGBA *color)
 {
 	g_return_if_fail (dataset);
@@ -308,6 +385,71 @@ static void get_color (GoatDataset *dataset, GdkRGBA *color)
 	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
 
 	*color = priv->color;
+}
+
+static void get_marker_line_color (GoatDataset *dataset, GdkRGBA *color)
+{
+	g_return_if_fail (dataset);
+	g_return_if_fail (color);
+
+	GoatDatasetSimple *self = GOAT_DATASET_SIMPLE (dataset);
+	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
+
+	*color = priv->marker_line_color;
+}
+
+static void get_marker_fill_color (GoatDataset *dataset, GdkRGBA *color)
+{
+	g_return_if_fail (dataset);
+	g_return_if_fail (color);
+
+	GoatDatasetSimple *self = GOAT_DATASET_SIMPLE (dataset);
+	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
+
+	*color = priv->marker_fill_color;
+}
+
+static void get_marker_line_width (GoatDataset *dataset, double *width)
+{
+	g_return_if_fail (dataset);
+	g_return_if_fail (width);
+
+	GoatDatasetSimple *self = GOAT_DATASET_SIMPLE (dataset);
+	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
+
+	*width = priv->marker_line_width;
+}
+
+static void get_line_width (GoatDataset *dataset, double *width)
+{
+	g_return_if_fail (dataset);
+	g_return_if_fail (width);
+
+	GoatDatasetSimple *self = GOAT_DATASET_SIMPLE (dataset);
+	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
+
+	*width = priv->line_width;
+}
+
+static void get_marker_size (GoatDataset *dataset, double *size)
+{
+	g_return_if_fail (dataset);
+	g_return_if_fail (size);
+
+	GoatDatasetSimple *self = GOAT_DATASET_SIMPLE (dataset);
+	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
+
+	*size = priv->marker_size;
+}
+
+static gboolean get_marker_fill (GoatDataset *dataset)
+{
+	if(!dataset) return FALSE;
+
+	GoatDatasetSimple *self = GOAT_DATASET_SIMPLE (dataset);
+	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
+
+	return priv->marker_fill;
 }
 
 static gboolean get_extrema (GoatDataset *dataset, gdouble *xmin, gdouble *xmax, gdouble *ymin, gdouble *ymax)
@@ -324,15 +466,39 @@ static gboolean get_extrema (GoatDataset *dataset, gdouble *xmin, gdouble *xmax,
 			*ymin = priv->y_min;
 		if (ymax)
 			*ymax = priv->y_max;
-
-		g_debug ("GET x range: %lf..%lf", priv->x_min, priv->x_max);
-		g_debug ("GET y range: %lf..%lf", priv->y_min, priv->y_max);
 		return TRUE;
 	}
 	priv->list = NULL;
 	priv->count = -1;
 	priv->x_min = +G_MAXDOUBLE;
 	priv->y_min = +G_MAXDOUBLE;
+	priv->x_max = -G_MAXDOUBLE;
+	priv->y_max = -G_MAXDOUBLE;
+	return FALSE;
+}
+
+static gboolean get_log_extrema (GoatDataset *dataset, gdouble *xmin, gdouble *xmax, gdouble *ymin, gdouble *ymax)
+{
+	GoatDatasetSimple *self = GOAT_DATASET_SIMPLE (dataset);
+	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
+	printf( "DS_get_log1 (%g, %g)\n", priv->x_log_min, priv->y_log_min );
+	if (priv->list != NULL) {
+		printf( "DS_get_log2\n" );
+		if (xmin)
+			*xmin = priv->x_log_min;
+		if (xmax)
+			*xmax = priv->x_max;
+		if (ymin)
+			*ymin = priv->y_log_min;
+		if (ymax)
+			*ymax = priv->y_max;
+		return TRUE;
+	}
+
+	priv->list = NULL;
+	priv->count = -1;
+	priv->x_log_min = +G_MAXDOUBLE;
+	priv->y_log_min = +G_MAXDOUBLE;
 	priv->x_max = -G_MAXDOUBLE;
 	priv->y_max = -G_MAXDOUBLE;
 	return FALSE;
@@ -401,14 +567,37 @@ static gboolean is_interpolation_enabled(GoatDataset *dataset) {
 	return GOAT_DATASET_SIMPLE(dataset)->priv->interpolation_enabled;
 }
 
+/**
+ * return the number of items contained in the dataset
+ * @param dataset
+ */
+gint get_length (GoatDataset *dataset)
+{
+	g_return_val_if_fail(GOAT_IS_DATASET_SIMPLE (dataset), FALSE);
+	GoatDatasetSimple *self = GOAT_DATASET_SIMPLE (dataset);
+	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
+	if (priv->count >= 0)
+		return priv->count;
+	return priv->count = (gint)g_list_length (priv->list);
+}
+
+
 static void goat_dataset_simple_interface_init (GoatDatasetInterface *iface)
 {
 	iface->get_color = get_color;
+	iface->get_marker_line_color = get_marker_line_color;
+	iface->get_marker_fill_color = get_marker_fill_color;
+	iface->get_marker_line_width = get_marker_line_width;
+	iface->get_line_width = get_line_width;
+	iface->get_marker_size = get_marker_size;
 	iface->get_extrema = get_extrema;
+	iface->get_log_extrema = get_log_extrema;
 	iface->is_interpolation_enabled = is_interpolation_enabled;
 	iface->has_valid_standard_deviation = has_valid_standard_deviation;
 	iface->iter_init = iter_init;
 	iface->iter_next = iter_next;
 	iface->get_marker_style = get_marker_style;
 	iface->get = get;
+	iface->get_marker_fill = get_marker_fill;
+	iface->get_length = get_length;
 }

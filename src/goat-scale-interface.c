@@ -12,14 +12,13 @@ static void goat_scale_default_init (GoatScaleInterface *iface)
 	iface->update_range = NULL;
 }
 
-void goat_scale_draw (GoatScale *self, cairo_t *cr, gint left, gint right, gint top, gint bottom, gdouble nil,
-                      gdouble factor)
+void goat_scale_draw (GoatScale *self, cairo_t *cr, gint left, gint right, gint top, gint bottom )
 {
 	GoatScaleInterface *iface;
 
 	iface = GOAT_SCALE_GET_IFACE (self);
 	if (iface->draw) {
-		iface->draw (self, cr, left, right, top, bottom, nil, factor);
+		iface->draw (self, cr, left, right, top, bottom );
 	} else {
 		g_error ("Missing draw handler for GoatScaleInterface!");
 	}
@@ -42,6 +41,9 @@ void goat_scale_get_range (GoatScale *self, gdouble *min, gdouble *max)
 	iface = GOAT_SCALE_GET_IFACE (self);
 	if (iface->get_range) {
 		iface->get_range (self, min, max);
+	} else {
+		*min = -1.;
+		*max = 1.;
 	}
 }
 

@@ -7,5 +7,6 @@
 #include <goat-plot.h>
 #include <goat-scale-interface.h>
 #include <goat-scale-linear.h>
+#include <goat-scale-log.h>
 
 #endif /* LIBGOATPLOT */

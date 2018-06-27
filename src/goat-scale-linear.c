@@ -181,8 +181,7 @@ static inline gboolean is_major_tick (gint i, gint minors_per_major)
  * @param x/y-nil in pixel
  * @param x/y-factor convert unit to pixel
  */
-static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top, gint bottom, gdouble nil,
-                  gdouble factor)
+static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top, gint bottom )
 {
 	GoatScaleLinear *self = GOAT_SCALE_LINEAR (scale);
 	GoatScaleLinearPrivate *priv = goat_scale_linear_get_instance_private (self);
@@ -199,14 +198,34 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 	GoatPosition where = priv->position;
 	gboolean grid = priv->draw_grid;
 
+	gdouble scale_min, scale_max;
+	gdouble nil, factor;
+
+	int register start;
+	int register end;
+
+
+	scale_min = priv->min;
+	scale_max = priv->max;
+
 	cairo_set_line_width (cr, 1.);
 
 	if (where == GOAT_POSITION_LEFT) {
-		const int register start = (top - nil) / step_minor / factor;
-		const int register end = (bottom - nil) / step_minor / factor;
+		if (!get_unit_to_pixel_factor (bottom-top, scale_min, scale_max, &factor)) {
+			g_warning ("Bad y range\n");
+			return;
+		}
+		nil = scale_min * -factor;
+
+		start = (top - nil) / step_minor / factor;
+		end = (bottom - nil) / step_minor / factor;
+
 		for (i = start; i <= end; i++) {
 			const gboolean register majorstip = is_major_tick (i, priv->minors_per_major);
 			const double register y = nil + top + step_minor * factor * i;
+
+			if( y > bottom || y < top ) continue;
+
 			if (grid) {
 				cairo_move_to (cr, right, y);
 				cairo_line_to (cr, left, y);
@@ -227,17 +246,36 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 			}
 			cairo_stroke (cr);
 
-			const double off = majorstip ? width_major : width_minor;
-			const double register x = left - off;
-			goat_util_draw_num (cr, x, y, step_minor * i, where);
+			if( majorstip ) {
+				goat_util_draw_num (cr, left - width_major, y, step_minor * i, where);
+			}
+		}
+
+		/* Zero axis */
+		if( nil >= top && nil <= bottom ) {
+			cairo_set_line_width (cr, 1.);
+			cairo_set_source_rgba (cr, 0.7, 0., 0., 1.);
+			cairo_move_to (cr, left, nil );
+			cairo_line_to (cr, right, nil );
+			cairo_stroke (cr);
 		}
 	}
 	if (where == GOAT_POSITION_RIGHT) {
-		const int register start = (top - nil) / step_minor / factor;
-		const int register end = (bottom - nil) / step_minor / factor;
+		if (!get_unit_to_pixel_factor (bottom-top, scale_min, scale_max, &factor)) {
+			g_warning ("Bad y range\n");
+			return;
+		}
+		nil = scale_min * -factor;
+
+		start = (top - nil) / step_minor / factor;
+		end = (bottom - nil) / step_minor / factor;
+
 		for (i = start; i <= end; i++) {
 			const gboolean register majorstip = is_major_tick (i, priv->minors_per_major);
 			const double register y = nil + top + step_minor * factor * i;
+
+			if( y > bottom || y < top ) continue;
+
 			if (grid) {
 				cairo_move_to (cr, left, y);
 				cairo_line_to (cr, right, y);
@@ -258,17 +296,36 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 			}
 			cairo_stroke (cr);
 
-			const double off = majorstip ? width_major : width_minor;
-			const double register x = right + off;
-			goat_util_draw_num (cr, x, y, step_minor * i, where);
+			if( majorstip ) {
+				goat_util_draw_num (cr, right+width_major, y, step_minor * i, where);
+			}
+		}
+
+		/* Zero axis */
+		if( nil >= top && nil <= bottom ) {
+			cairo_set_line_width (cr, 1.);
+			cairo_set_source_rgba (cr, 0.7, 0., 0., 1.);
+			cairo_move_to (cr, left, nil );
+			cairo_line_to (cr, right, nil );
+			cairo_stroke (cr);
 		}
 	}
 	if (where == GOAT_POSITION_BOTTOM) {
-		const int register start = (left - nil) / step_minor / factor;
-		const int register end = (right - nil) / step_minor / factor;
+		if (!get_unit_to_pixel_factor (right-left, scale_min, scale_max, &factor)) {
+			g_warning ("Bad x range\n");
+			return;
+		}
+		nil = scale_min * -factor;
+
+		start = (left - nil) / step_minor / factor;
+		end = (right - nil) / step_minor / factor;
+
 		for (i = start; i <= end; i++) {
 			const gboolean register majorstip = is_major_tick (i, priv->minors_per_major);
 			const double register x = nil + left + step_minor * factor * i;
+
+			if( x < left || x > right ) continue;
+
 			if (grid) {
 				cairo_move_to (cr, x, top);
 				cairo_line_to (cr, x, bottom);
@@ -289,17 +346,36 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 			}
 			cairo_stroke (cr);
 
-			const double off = majorstip ? width_major : width_minor;
-			const double register y = top - off;
-			goat_util_draw_num (cr, x, y, step_minor * i, where);
+			if( majorstip ) {
+				goat_util_draw_num (cr, x, top-width_major, step_minor * i, where);
+			}
+		}
+
+		/* Zero axis */
+		if( nil <= right && nil >= left ) {
+			cairo_set_line_width (cr, 1.);
+			cairo_set_source_rgba (cr, 0.7, 0., 0., 1.);
+			cairo_move_to (cr, nil, top );
+			cairo_line_to (cr, nil, bottom );
+			cairo_stroke (cr);
 		}
 	}
 	if (where == GOAT_POSITION_TOP) {
-		const int register start = (left - nil) / step_minor / factor;
-		const int register end = (right - nil) / step_minor / factor;
+		if (!get_unit_to_pixel_factor (right-left, scale_min, scale_max, &factor)) {
+			g_warning ("Bad x range\n");
+			return;
+		}
+		nil = scale_min * -factor;
+
+		start = (left - nil) / step_minor / factor;
+		end = (right - nil) / step_minor / factor;
+
 		for (i = start; i <= end; i++) {
 			const gboolean register majorstip = is_major_tick (i, priv->minors_per_major);
 			const double register x = nil + left + step_minor * factor * i;
+
+			if( x < left || x > right ) continue;
+
 			if (grid) {
 				cairo_move_to (cr, x, bottom);
 				cairo_line_to (cr, x, top);
@@ -320,8 +396,17 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 			}
 			cairo_stroke (cr);
 
-			const double off = majorstip ? width_major : width_minor;
-			goat_util_draw_num (cr, x, bottom + off, step_minor * i, where);
+			if( majorstip ) {
+				goat_util_draw_num (cr, x, bottom + width_major, step_minor * i, where);
+			}
+		}
+		/* Zero axis */
+		if( nil <= right && nil >= left ) {
+			cairo_set_line_width (cr, 1.);
+			cairo_set_source_rgba (cr, 0.7, 0., 0., 1.);
+			cairo_move_to (cr, nil, top );
+			cairo_line_to (cr, nil, bottom );
+			cairo_stroke (cr);
 		}
 	}
 }

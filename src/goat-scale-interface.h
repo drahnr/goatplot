@@ -11,8 +11,7 @@ G_DECLARE_INTERFACE (GoatScale, goat_scale, GOAT, SCALE, GObject)
 
 struct _GoatScaleInterface {
 	GTypeInterface parent_iface;
-	void (*draw) (GoatScale *self, cairo_t *cr, gint left, gint right, gint top, gint bottom, gdouble nil,
-	              gdouble factor);
+	void (*draw) (GoatScale *self, cairo_t *cr, gint left, gint right, gint top, gint bottom );
 	void (*render) (GoatScale *self);
 	void (*get_range) (GoatScale *self, gdouble *min, gdouble *max);
 	void (*set_range) (GoatScale *self, gdouble min, gdouble max);
@@ -21,6 +20,8 @@ struct _GoatScaleInterface {
 	void (*set_auto_range) (GoatScale *self);
 	gboolean (*is_auto_range) (GoatScale *scale);
 	void (*show_grid) (GoatScale *scale, gboolean show);
+
+	gboolean draw_grid;
 };
 
 
@@ -33,8 +34,7 @@ void goat_scale_render (GoatScale *self);
 /**
  * does the actual drawing
  */
-void goat_scale_draw (GoatScale *self, cairo_t *cr, gint left, gint right, gint top, gint bottom, gdouble nil,
-                      gdouble factor);
+void goat_scale_draw (GoatScale *self, cairo_t *cr, gint left, gint right, gint top, gint bottom );
 
 void goat_scale_get_range (GoatScale *scale, gdouble *min, gdouble *max);
 void goat_scale_set_range_auto (GoatScale *scale);

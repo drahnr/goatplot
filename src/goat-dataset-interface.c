@@ -27,6 +27,92 @@ void goat_dataset_get_color (GoatDataset *self, GdkRGBA *rgba)
 	}
 }
 
+int goat_dataset_get_length (GoatDataset *self)
+{
+	GoatDatasetInterface *iface;
+
+	iface = GOAT_DATASET_GET_IFACE (self);
+	if (iface->get_length) {
+		return iface->get_length (self);
+	} else {
+		return 0;
+	}
+}
+
+
+gboolean goat_dataset_get_marker_fill (GoatDataset *self )
+{
+	GoatDatasetInterface *iface;
+
+	iface = GOAT_DATASET_GET_IFACE (self);
+	if (iface->get_marker_fill) {
+		return iface->get_marker_fill (self);
+	} else {
+		return FALSE;
+	}
+}
+
+void goat_dataset_get_marker_line_color (GoatDataset *self, GdkRGBA *rgba)
+{
+	GoatDatasetInterface *iface;
+
+	iface = GOAT_DATASET_GET_IFACE (self);
+	if (iface->get_marker_line_color) {
+		iface->get_marker_line_color (self, rgba);
+	} else {
+		gdk_rgba_parse (rgba, "red");
+	}
+}
+
+void goat_dataset_get_marker_fill_color (GoatDataset *self, GdkRGBA *rgba)
+{
+	GoatDatasetInterface *iface;
+
+	iface = GOAT_DATASET_GET_IFACE (self);
+	if (iface->get_marker_fill_color) {
+		iface->get_marker_fill_color (self, rgba);
+	} else {
+		gdk_rgba_parse (rgba, "red");
+	}
+}
+
+void goat_dataset_get_marker_line_width (GoatDataset *self, double *width)
+{
+	GoatDatasetInterface *iface;
+
+	iface = GOAT_DATASET_GET_IFACE (self);
+	if (iface->get_marker_line_width) {
+		iface->get_marker_line_width (self, width);
+	} else {
+		*width = 1.5;
+	}
+}
+
+void goat_dataset_get_line_width (GoatDataset *self, double *width)
+{
+	GoatDatasetInterface *iface;
+
+	iface = GOAT_DATASET_GET_IFACE (self);
+	if (iface->get_line_width) {
+		iface->get_line_width (self, width);
+	} else {
+		*width = 1.5;
+	}
+}
+
+void goat_dataset_get_marker_size (GoatDataset *self, double *size)
+{
+	GoatDatasetInterface *iface;
+
+	iface = GOAT_DATASET_GET_IFACE (self);
+	if (iface->get_marker_size) {
+		iface->get_marker_size (self, size);
+	} else {
+		*size = 8.;;
+	}
+}
+
+
 gboolean goat_dataset_get_iter_first (GoatDataset *self, GoatDatasetIter *iter)
 {
 	GoatDatasetInterface *iface;
@@ -75,6 +161,21 @@ gboolean goat_dataset_get_extrema (GoatDataset *self, gdouble *xmin, gdouble *xm
 		return iface->get_extrema (self, xmin, xmax, ymin, ymax);
 	} else {
 		g_error ("Implementing the `get` interface for GoatDataset is necessary!");
+	}
+	return FALSE;
+}
+
+gboolean goat_dataset_get_log_extrema (GoatDataset *dataset, gdouble *xmin, gdouble *xmax, gdouble *ymin, gdouble *ymax)
+{
+	GoatDatasetInterface *iface;
+	printf( "IF_get_log\n" );
+	iface = GOAT_DATASET_GET_IFACE (dataset);
+	if (iface->get_log_extrema) {
+		return iface->get_log_extrema (dataset, xmin, xmax, ymin, ymax);
+	} else if( iface->get_extrema ) {
+		return iface->get_extrema (dataset, xmin, xmax, ymin, ymax);
+	} else {
+		*xmin = *xmax = *ymin = *ymax = 0.;
 	}
 	return FALSE;
 }
@@ -171,7 +272,15 @@ static void goat_dataset_default_init (GoatDatasetInterface *iface)
 	iface->iter_next = NULL;
 	iface->get = NULL;
 	iface->get_extrema = get_extrema;
+	iface->get_log_extrema = NULL;
 	iface->get_color = NULL;
+	iface->get_marker_line_color = NULL;
+	iface->get_marker_fill_color = NULL;
+	iface->get_marker_line_width = NULL;
+	iface->get_line_width = NULL;
+	iface->get_marker_size = NULL;
+	iface->get_marker_fill = NULL;
 	iface->has_valid_standard_deviation = NULL;
 	iface->is_interpolation_enabled = NULL;
+	iface->get_length = NULL;
 }
