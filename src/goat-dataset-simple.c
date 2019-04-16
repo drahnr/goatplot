@@ -481,9 +481,8 @@ static gboolean get_log_extrema (GoatDataset *dataset, gdouble *xmin, gdouble *x
 {
 	GoatDatasetSimple *self = GOAT_DATASET_SIMPLE (dataset);
 	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
-	printf( "DS_get_log1 (%g, %g)\n", priv->x_log_min, priv->y_log_min );
+
 	if (priv->list != NULL) {
-		printf( "DS_get_log2\n" );
 		if (xmin)
 			*xmin = priv->x_log_min;
 		if (xmax)

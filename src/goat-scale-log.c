@@ -220,9 +220,7 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 
 	for( i = 0; i < minors_per_major-1; i++ ) {
 		minor_steps[i] = 1.+log10((double) (i+1)/minors_per_major);
-		printf( "%g ", minor_steps[i] );
 	}
-	printf( "\n" );
 
 	minors_per_major -= 1;
 

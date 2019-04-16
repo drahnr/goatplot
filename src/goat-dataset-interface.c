@@ -168,7 +168,7 @@ gboolean goat_dataset_get_extrema (GoatDataset *self, gdouble *xmin, gdouble *xm
 gboolean goat_dataset_get_log_extrema (GoatDataset *dataset, gdouble *xmin, gdouble *xmax, gdouble *ymin, gdouble *ymax)
 {
 	GoatDatasetInterface *iface;
-	printf( "IF_get_log\n" );
+
 	iface = GOAT_DATASET_GET_IFACE (dataset);
 	if (iface->get_log_extrema) {
 		return iface->get_log_extrema (dataset, xmin, xmax, ymin, ymax);
