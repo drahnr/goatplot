@@ -406,11 +406,12 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 
 
 		if (!get_unit_to_pixel_factor (height, ref_y_min, ref_y_max, &y_unit_to_pixel)) {
-			g_warning ("Bad x range: %lf..%lf, delta of %lf", ref_y_min, ref_y_max, ref_y_max - ref_y_min);
+			g_warning ("Bad y range: %lf..%lf, delta of %lf", ref_y_min, ref_y_max, ref_y_max - ref_y_min);
 			cairo_restore (cr);
 			return FALSE;
 		}
 		y_nil_pixel = ref_y_min * -y_unit_to_pixel;
+
 
 		/* Draw background */
 		cairo_rectangle (cr, 0, 0, width, height);
@@ -429,7 +430,16 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 			goat_scale_draw (priv->scale_y, cr, 0, width, 0, height );
 		}
 
+		/* Draw datasets */
 		if (draw) {
+			/* make sure we do not draw outside the frame or under the scale*/
+			const int top = 0;
+			const int left = 0;
+			const int bottom = allocation.height - padding.bottom - padding.top;
+			const int right = allocation.width - padding.right - padding.left;
+			cairo_rectangle (cr, left, top, right - left, bottom - top);
+			cairo_clip (cr);
+			
 			for (i = 0; i < priv->array->len; i++) {
 				dataset = g_array_index (priv->array, GoatDataset *, i);
 

@@ -338,6 +338,7 @@ void goat_dataset_simple_set_marker_fill_color (GoatDatasetSimple *self, GdkRGBA
 	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
 
 	priv->marker_fill_color = *color;
+	priv->marker_fill = TRUE;
 }
 
 void goat_dataset_simple_set_marker_line_width (GoatDatasetSimple *self, double width)

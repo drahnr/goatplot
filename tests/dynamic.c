@@ -43,8 +43,16 @@ int main (int argc, char *argv[])
 
 	GoatDatasetSimple *dataset;
 
+	GdkRGBA color1, color2, color3;
+	gdk_rgba_parse(&color1, "yellow");
+	gdk_rgba_parse(&color2, "orange");
+	gdk_rgba_parse(&color3, "red");
+
 	dataset = goat_dataset_simple_new (NULL, TRUE, TRUE);
 	goat_dataset_simple_set_style (dataset, GOAT_MARKER_STYLE_TRIANGLE);
+	goat_dataset_simple_set_color(dataset, &color1);
+	goat_dataset_simple_set_marker_line_color(dataset, &color2);
+	goat_dataset_simple_set_marker_fill_color(dataset, &color3);
 	goat_plot_add_dataset (plot, GOAT_DATASET (dataset));
 
 	gtk_container_add (GTK_CONTAINER (window), GTK_WIDGET (plot));
