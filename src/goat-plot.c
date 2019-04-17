@@ -554,6 +554,7 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 							cairo_move_to (cr, x + diameter / 2., y - diameter / 2.);
 							cairo_line_to (cr, x - diameter / 2., y - diameter / 2.);
 							cairo_line_to (cr, x + 0., y + diameter / 2.);
+							cairo_line_to (cr, x + diameter / 2., y - diameter / 2.);
 							break;
 						case GOAT_MARKER_STYLE_SQUARE:
 							cairo_rectangle (cr, x - diameter / 2., y - diameter / 2., diameter, diameter);

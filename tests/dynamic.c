@@ -44,8 +44,8 @@ int main (int argc, char *argv[])
 	GoatDatasetSimple *dataset;
 
 	GdkRGBA color1, color2, color3;
-	gdk_rgba_parse(&color1, "yellow");
-	gdk_rgba_parse(&color2, "orange");
+	gdk_rgba_parse(&color1, "black");
+	gdk_rgba_parse(&color2, "green");
 	gdk_rgba_parse(&color3, "red");
 
 	dataset = goat_dataset_simple_new (NULL, TRUE, TRUE);
