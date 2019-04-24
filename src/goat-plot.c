@@ -21,6 +21,7 @@
 #include "goat-plot.h"
 #include "goat-scale-linear.h"
 #include "goat-scale-log.h"
+#include "goat-utils.h"
 
 #include <glib/gprintf.h>
 #include <math.h>
@@ -218,7 +219,7 @@ GoatDataset *goat_plot_remove_dataset (GoatPlot *plot, gint datasetid)
 /**
  * return dataset
  */
-GoatDataset *goat_plot_get_dataset( GoatPlot *plot, gint datasetid )
+GoatDataset *goat_plot_get_dataset (GoatPlot *plot, gint datasetid)
 {
 	GoatPlotPrivate *priv = goat_plot_get_instance_private (plot);
 	GoatDataset *dataset = g_array_index (priv->array, GoatDataset *, datasetid);
@@ -236,7 +237,7 @@ gboolean get_unit_to_pixel_factor (int window, gdouble min, gdouble max, gdouble
 	gdouble delta = max - min;
 	if (delta > 0.) {
 		*unit_to_pixel = (double)window / delta;
-		//g_printf ("MAPPING: %i --{%lf}--> %lf\n", window, (*unit_to_pixel), delta);
+		// g_printf ("MAPPING: %i --{%lf}--> %lf\n", window, (*unit_to_pixel), delta);
 		return TRUE;
 	}
 	*unit_to_pixel = 1.;
@@ -252,7 +253,7 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 	// TODO this needs to be done dynamically
 	// TODO based on the style context and where the scales are
 	// TODO https://github.com/drahnr/goatplot/issues/8
-	GtkBorder padding = {90, 30, 30, 30}; // left, right, top, bottom
+	GtkBorder padding = {10, 10, 10, 10}; // left, right, top, bottom
 	gint i;
 	gdouble x_nil_pixel;
 	gdouble y_nil_pixel;
@@ -265,9 +266,9 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 	double marker_line_width;
 	gdouble x, y, ystddev, x_log_min, y_log_min;
 	GoatDatasetIter dit;
-	gboolean x_log, y_log;
+	gboolean x_log = FALSE, y_log = FALSE;
 	gboolean draw = TRUE;
-	int count;
+	int count = 0;
 
 
 	if (gtk_widget_is_drawable (widget)) {
@@ -283,12 +284,6 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 
 		gtk_widget_get_allocation (widget, &allocation);
 
-		// translate origin to plot graphs to (0,0) of our plot
-		cairo_translate (cr, padding.left, allocation.height - padding.bottom);
-
-		// make it plot naturally +up, -down
-		cairo_scale (cr, 1., -1.);
-
 		gdouble ref_x_min = G_MAXDOUBLE;
 		gdouble ref_x_max = -G_MAXDOUBLE;
 		gdouble ref_y_min = G_MAXDOUBLE;
@@ -300,54 +295,61 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 		const gboolean register autorange_x = goat_scale_is_auto_range (priv->scale_x);
 		const gboolean register autorange_y = goat_scale_is_auto_range (priv->scale_y);
 
-		x_log = y_log = FALSE;
-
 		x_log = GOAT_IS_SCALE_LOG (priv->scale_x);
 		y_log = GOAT_IS_SCALE_LOG (priv->scale_y);
 
 		goat_scale_get_range (priv->scale_x, &ref_x_min, &ref_x_max);
 		goat_scale_get_range (priv->scale_y, &ref_y_min, &ref_y_max);
 
-		if (autorange_x || autorange_y ) {
+		if (autorange_x || autorange_y) {
 			/* For each dataset -> find min/max  */
 			for (i = 0; i < priv->array->len; i++) {
 				gdouble x_min, x_max, y_min, y_max;
 
 				dataset = g_array_index (priv->array, GoatDataset *, i);
 
-				if( !dataset ) continue;
+				if (!dataset)
+					continue;
 
 				goat_dataset_get_extrema (dataset, &x_min, &x_max, &y_min, &y_max);
 
-				if (autorange_x ) {
-					if (ref_x_min > x_min) ref_x_min = x_min;
-					if (ref_x_max < x_max) ref_x_max = x_max;
+				if (autorange_x) {
+					if (ref_x_min > x_min)
+						ref_x_min = x_min;
+					if (ref_x_max < x_max)
+						ref_x_max = x_max;
 				}
-				if (autorange_y ) {
-					if (ref_y_min > y_min) ref_y_min = y_min;
-					if (ref_y_max < y_max) ref_y_max = y_max;
+				if (autorange_y) {
+					if (ref_y_min > y_min)
+						ref_y_min = y_min;
+					if (ref_y_max < y_max)
+						ref_y_max = y_max;
 				}
 			}
 		}
 
-		if( x_log ) {
+		if (x_log) {
 			/* May need to find smallest value > 0. */
-			if( ref_x_min <= 0. ) {
+			if (ref_x_min <= 0.) {
 				double xlm;
 				ref_x_min = G_MAXDOUBLE;
 				for (i = 0; i < priv->array->len; i++) {
 					dataset = g_array_index (priv->array, GoatDataset *, i);
-					goat_dataset_get_log_extrema( dataset, &xlm, NULL, NULL, NULL );
-					if( ref_x_min > xlm ) ref_x_min = xlm;
+					goat_dataset_get_log_extrema (dataset, &xlm, NULL, NULL, NULL);
+					if (ref_x_min > xlm)
+						ref_x_min = xlm;
 				}
 			}
 
 			/* Final check to avoid negative values on scale */
-			if( ref_x_min <= 0. ) ref_x_min = 1.;
+			if (ref_x_min <= 0.)
+				ref_x_min = 1.;
 
 			/* Round upper scale so whole number of order 10 steps */
-			i = (int) (ceil(log10( ref_x_max/ref_x_min ) / goat_scale_log_get_major_delta(GOAT_SCALE_LOG(priv->scale_x))));
-			if( i < 1 ) i = 1;
+			i = (int)(ceil (log10 (ref_x_max / ref_x_min) /
+			                goat_scale_log_get_major_delta (GOAT_SCALE_LOG (priv->scale_x))));
+			if (i < 1)
+				i = 1;
 			ref_x_max = ref_x_min * pow (10, i);
 
 			goat_scale_update_range (priv->scale_x, ref_x_min, ref_x_max);
@@ -357,29 +359,34 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 			ref_x_min = log10 (ref_x_min);
 			ref_x_max = log10 (ref_x_max);
 		} else {
-			if( ref_x_max <= ref_x_min ) ref_x_max = ref_x_min + 1.;
+			if (ref_x_max <= ref_x_min)
+				ref_x_max = ref_x_min + 1.;
 			goat_scale_update_range (priv->scale_x, ref_x_min, ref_x_max);
 		}
 
 
-		if( y_log ) {
-			if( ref_y_min <= 0. ) {
+		if (y_log) {
+			if (ref_y_min <= 0.) {
 				double ylm;
 				ref_y_min = G_MAXDOUBLE;
 				for (i = 0; i < priv->array->len; i++) {
 					dataset = g_array_index (priv->array, GoatDataset *, i);
-					goat_dataset_get_log_extrema( dataset, NULL, NULL, &ylm, NULL );
-					if( ref_y_min > ylm ) ref_y_min = ylm;
+					goat_dataset_get_log_extrema (dataset, NULL, NULL, &ylm, NULL);
+					if (ref_y_min > ylm)
+						ref_y_min = ylm;
 				}
 			}
 
 			/* Final check to avoid negative values on scale */
-			if( ref_y_min <= 0. ) ref_y_min = 1.;
+			if (ref_y_min <= 0.)
+				ref_y_min = 1.;
 
 			/* Round upper scale so whole number of order 10 steps */
-			i = (int) (ceil(log10( ref_y_max/ref_y_min ) / goat_scale_log_get_major_delta(GOAT_SCALE_LOG(priv->scale_y))));
-			if( i < 1 ) i = 1;
-			ref_y_max =  ref_y_min * pow (10, i);
+			i = (int)(ceil (log10 (ref_y_max / ref_y_min) /
+			                goat_scale_log_get_major_delta (GOAT_SCALE_LOG (priv->scale_y))));
+			if (i < 1)
+				i = 1;
+			ref_y_max = ref_y_min * pow (10, i);
 
 			goat_scale_update_range (priv->scale_y, ref_y_min, ref_y_max);
 
@@ -388,17 +395,78 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 			ref_y_min = log10 (ref_y_min);
 			ref_y_max = log10 (ref_y_max);
 		} else {
-			if( ref_y_max <= ref_y_min ) ref_y_max = ref_y_min + 1.;
+			if (ref_y_max <= ref_y_min)
+				ref_y_max = ref_y_min + 1.;
 			goat_scale_update_range (priv->scale_y, ref_y_min, ref_y_max);
 		}
 
+		/* calculate maximum number of displayed */
+		/* TODO move into goat scale draw, but mind the perf implications doing it once per scale! */
+		/* TODO migrate this into the scale itself, which knows best how much space is needed */
+		{
+			int dummy = 0;
+			int num_x_padding_max_num = 0;
+			int num_x_padding_min_num = 0;
+			int num_y_padding_max_num = 0;
+			int num_y_padding_min_num = 0;
+			goat_util_calc_num_extents(ref_x_min, &num_x_padding_min_num, &dummy);
+			goat_util_calc_num_extents(ref_x_max, &num_x_padding_max_num, &dummy);
+			goat_util_calc_num_extents(ref_y_min, &dummy, &num_y_padding_min_num);
+			goat_util_calc_num_extents(ref_y_max, &dummy, &num_y_padding_max_num);
+			const gint16 num_x_padding = MAX(num_x_padding_min_num,num_x_padding_max_num);
+			const gint16 num_y_padding = MAX(num_y_padding_min_num,num_y_padding_max_num);
+			if(priv->scale_x != NULL) {
+				switch (goat_scale_get_position(priv->scale_x)) {
+					case GOAT_POSITION_LEFT:
+						padding.left += num_x_padding + 30;
+						break;
+					case GOAT_POSITION_RIGHT:
+						padding.right += num_x_padding + 30;
+						break;
+					case GOAT_POSITION_TOP:
+						padding.top += num_y_padding + 30;
+						break;
+					case GOAT_POSITION_BOTTOM:
+						padding.bottom += num_y_padding + 30;
+						break;
+					default:
+						g_error("Scale X does not have position");
+						break;
+				}
+			}
+			if(priv->scale_y != NULL) {
+				switch (goat_scale_get_position(priv->scale_y)) {
+				case GOAT_POSITION_LEFT:
+					padding.left += num_x_padding + 30;
+					break;
+				case GOAT_POSITION_RIGHT:
+					padding.right += num_x_padding + 30;
+					break;
+				case GOAT_POSITION_TOP:
+					padding.top += num_y_padding + 30;
+					break;
+				case GOAT_POSITION_BOTTOM:
+					padding.bottom += num_y_padding + 30;
+					break;
+				default:
+					g_error("Scale Y does not have position");
+					break;
+				}
+			}
+		}
 
+		// translate origin to plot graphs to (0,0) of our plot
+		cairo_translate (cr, padding.left, allocation.height - padding.bottom);
+
+		// make it plot naturally +up, -down
+		cairo_scale (cr, 1., -1.);
+		
 		/* Generate data->pixel mapping */
 		height = allocation.height - padding.bottom - padding.top;
 		width = allocation.width - padding.right - padding.left;
 
 		if (!get_unit_to_pixel_factor (width, ref_x_min, ref_x_max, &x_unit_to_pixel)) {
-			g_warning ("Bad x range: %lf..%lf, delta of %lf", ref_x_min, ref_x_max,ref_x_max - ref_x_min);
+			g_warning ("Bad x range: %lf..%lf, delta of %lf", ref_x_min, ref_x_max, ref_x_max - ref_x_min);
 			cairo_restore (cr);
 			return FALSE;
 		}
@@ -425,9 +493,9 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 		cairo_stroke (cr);
 
 		/* Draw scales */
-		if( draw ) {
-			goat_scale_draw (priv->scale_x, cr, 0, width, 0, height );
-			goat_scale_draw (priv->scale_y, cr, 0, width, 0, height );
+		if (draw) {
+			goat_scale_draw (priv->scale_x, cr, 0, width, 0, height);
+			goat_scale_draw (priv->scale_y, cr, 0, width, 0, height);
 		}
 
 		/* Draw datasets */
@@ -439,11 +507,12 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 			const int right = allocation.width - padding.right - padding.left;
 			cairo_rectangle (cr, left, top, right - left, bottom - top);
 			cairo_clip (cr);
-			
+
 			for (i = 0; i < priv->array->len; i++) {
 				dataset = g_array_index (priv->array, GoatDataset *, i);
 
-				if( !dataset ) continue;
+				if (!dataset)
+					continue;
 
 				/* Load colours for rendering */
 				goat_dataset_get_color (dataset, &color);
@@ -469,32 +538,36 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 					if (goat_dataset_get_iter_first (dataset, &dit)) {
 
 						goat_dataset_get (dataset, &dit, &x, &y, &ystddev);
-						if( x_log ) {
-							if( x < x_log_min ) x = x_log_min;
+						if (x_log) {
+							if (x < x_log_min)
+								x = x_log_min;
 							x = log10 (x);
 						}
-						x = x*x_unit_to_pixel + x_nil_pixel;
-						if( y_log ) {
-							if( y < y_log_min ) y = y_log_min;
+						x = x * x_unit_to_pixel + x_nil_pixel;
+						if (y_log) {
+							if (y < y_log_min)
+								y = y_log_min;
 							y = log10 (y);
 							ystddev = log10 (ystddev);
 						}
-						y = y*y_unit_to_pixel + y_nil_pixel;
+						y = y * y_unit_to_pixel + y_nil_pixel;
 						cairo_move_to (cr, x, y);
 
 						while (goat_dataset_iter_next (dataset, &dit)) {
 							goat_dataset_get (dataset, &dit, &x, &y, &ystddev);
-							if( x_log ) {
-								if( x < x_log_min ) x = x_log_min;
+							if (x_log) {
+								if (x < x_log_min)
+									x = x_log_min;
 								x = log10 (x);
 							}
-							x = x*x_unit_to_pixel + x_nil_pixel;
-							if( y_log ) {
-								if( y < y_log_min ) y = y_log_min;
+							x = x * x_unit_to_pixel + x_nil_pixel;
+							if (y_log) {
+								if (y < y_log_min)
+									y = y_log_min;
 								y = log10 (y);
 								ystddev = log10 (ystddev);
 							}
-							y = y*y_unit_to_pixel + y_nil_pixel;
+							y = y * y_unit_to_pixel + y_nil_pixel;
 							cairo_line_to (cr, x, y);
 						}
 						cairo_stroke (cr);
@@ -506,17 +579,19 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 						cairo_set_line_width (cr, line_width);
 						do {
 							goat_dataset_get (dataset, &dit, &x, &y, &ystddev);
-							if( x_log ) {
-								if( x < x_log_min ) x = x_log_min;
+							if (x_log) {
+								if (x < x_log_min)
+									x = x_log_min;
 								x = log10 (x);
 							}
-							x = x*x_unit_to_pixel + x_nil_pixel;
-							if( y_log ) {
-								if( y < y_log_min ) y = y_log_min;
+							x = x * x_unit_to_pixel + x_nil_pixel;
+							if (y_log) {
+								if (y < y_log_min)
+									y = y_log_min;
 								y = log10 (y);
 								ystddev = log10 (ystddev);
 							}
-							y = y*y_unit_to_pixel + y_nil_pixel;
+							y = y * y_unit_to_pixel + y_nil_pixel;
 							ystddev *= y_unit_to_pixel;
 							if (fabs (ystddev) > G_MAXFLOAT) {
 								cairo_move_to (cr, x, 0);
@@ -534,21 +609,24 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 				}
 
 				// draw the indivdual data markers on top
-				if (goat_dataset_get_iter_first (dataset, &dit) && goat_dataset_get_marker_style (dataset) != GOAT_MARKER_STYLE_NONE ) {
+				if (goat_dataset_get_iter_first (dataset, &dit) &&
+				    goat_dataset_get_marker_style (dataset) != GOAT_MARKER_STYLE_NONE) {
 					/* TODO: Switch outside loops? */
 					do {
 						goat_dataset_get (dataset, &dit, &x, &y, NULL);
-						if( x_log ) {
-							if( x < x_log_min ) x = x_log_min;
+						if (x_log) {
+							if (x < x_log_min)
+								x = x_log_min;
 							x = log10 (x);
 						}
-						x = x*x_unit_to_pixel + x_nil_pixel;
-						if( y_log ) {
-							if( y < y_log_min ) y = y_log_min;
+						x = x * x_unit_to_pixel + x_nil_pixel;
+						if (y_log) {
+							if (y < y_log_min)
+								y = y_log_min;
 							y = log10 (y);
 							ystddev = log10 (ystddev);
 						}
-						y = y*y_unit_to_pixel + y_nil_pixel;
+						y = y * y_unit_to_pixel + y_nil_pixel;
 						switch (goat_dataset_get_marker_style (dataset)) {
 						case GOAT_MARKER_STYLE_TRIANGLE:
 							cairo_move_to (cr, x + diameter / 2., y - diameter / 2.);
@@ -580,7 +658,7 @@ static gboolean draw (GtkWidget *widget, cairo_t *cr)
 						}
 					} while (goat_dataset_iter_next (dataset, &dit));
 
-					if( goat_dataset_get_marker_fill (dataset) ) {
+					if (goat_dataset_get_marker_fill (dataset)) {
 						gdk_cairo_set_source_rgba (cr, &marker_fill_color);
 						cairo_fill_preserve (cr);
 					}
@@ -663,3 +741,4 @@ static gboolean event (GtkWidget *widget, GdkEvent *event)
 	}
 	return TRUE;
 }
+

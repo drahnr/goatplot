@@ -38,8 +38,8 @@ struct _GoatDatasetInterface {
 	void (*get_marker_size) (GoatDataset *self, double *size);
 	int (*get_length) (GoatDataset *dataset);
 	// TODO is this really necessary to be part of the interface and not be filled with some property
-	gboolean (*has_valid_standard_deviation)(GoatDataset *dataset);
-	gboolean (*is_interpolation_enabled)(GoatDataset *dataset);
+	gboolean (*has_valid_standard_deviation) (GoatDataset *dataset);
+	gboolean (*is_interpolation_enabled) (GoatDataset *dataset);
 };
 
 /**
@@ -63,7 +63,8 @@ gboolean goat_dataset_get_extrema (GoatDataset *self, gdouble *xmin, gdouble *xm
  * @param xmin [out]
  * @param ymin [out]
  */
-gboolean goat_dataset_get_log_extrema (GoatDataset *dataset, gdouble *xmin, gdouble *xmax, gdouble *ymin, gdouble *ymax);
+gboolean goat_dataset_get_log_extrema (GoatDataset *dataset, gdouble *xmin, gdouble *xmax, gdouble *ymin,
+                                       gdouble *ymax);
 
 /**
  * @param dataset
@@ -102,7 +103,7 @@ void goat_dataset_get_line_width (GoatDataset *self, double *width);
  */
 void goat_dataset_get_marker_size (GoatDataset *self, double *size);
 
-gboolean goat_dataset_get_marker_fill (GoatDataset *self );
+gboolean goat_dataset_get_marker_fill (GoatDataset *self);
 
 gboolean goat_dataset_get_iter_first (GoatDataset *self, GoatDatasetIter *iter);
 

@@ -1,6 +1,6 @@
 
-#include <goat-utils.h>
 #include <goat-plot-enum.h>
+#include <goat-utils.h>
 #include <gtk/gtk.h>
 #include <math.h>
 
@@ -41,7 +41,7 @@ void goat_util_draw_num (cairo_t *cr, double x, double y, double d, GoatPosition
 		break;
 	case GOAT_POSITION_INVALID:
 	default:
-		g_warning("Invalid Scale Position");
+		g_warning ("Invalid Scale Position");
 		break;
 	}
 	cairo_move_to (cr, x + modifierx, y + modifiery);
@@ -54,6 +54,29 @@ void goat_util_draw_num (cairo_t *cr, double x, double y, double d, GoatPosition
 	// restore the initial context properties
 	cairo_restore (cr);
 }
+
+void goat_util_calc_num_extents (double d, int *width, int *height)
+{
+	cairo_surface_t* surface = cairo_image_surface_create( CAIRO_FORMAT_ARGB32, 100, 300 );
+	cairo_t* cr = cairo_create( surface );
+	PangoLayout *lay = pango_cairo_create_layout (cr);
+	PangoFontDescription *fontdesc = pango_font_description_new ();
+	pango_font_description_set_size (fontdesc, 8 * PANGO_SCALE);
+	pango_layout_set_font_description (lay, fontdesc);
+
+	gchar *text = g_strdup_printf ("%.2g", d);
+	g_assert (text);
+	pango_layout_set_text (lay, text, -1);
+
+	pango_layout_get_pixel_size(lay, width, height);
+
+	g_object_unref (lay);
+	g_free (text);
+	pango_font_description_free (fontdesc);
+
+	cairo_surface_destroy(surface);
+	cairo_destroy(cr);
+} 
 
 /**
  * provides nice numerical limits when scaling an axis
@@ -87,4 +110,3 @@ double goat_util_nice_num (double x, int round)
 	}
 	return signx * niced * powf (10.f, exp);
 }
-

@@ -63,7 +63,7 @@ struct _GoatTriple {
 
 GType goat_dataset_simple_get_type (void) G_GNUC_CONST;
 
-// TODO use enums instead of boolean 
+// TODO use enums instead of boolean
 GoatDatasetSimple *goat_dataset_simple_new (GList *list, gboolean valid_stddev, gboolean interpolate);
 
 gint goat_dataset_simple_get_length (GoatDatasetSimple *dataset);

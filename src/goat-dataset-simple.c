@@ -106,10 +106,10 @@ static void goat_dataset_simple_get_gproperty (GObject *object, guint prop_id, G
 
 	switch (prop_id) {
 	case PROP_INTERPOLATION_ENABLED:
-		g_value_set_boolean(value, priv->interpolation_enabled);
+		g_value_set_boolean (value, priv->interpolation_enabled);
 		break;
 	case PROP_VALID_STDDEV:
-		g_value_set_boolean(value, priv->valid_stddev);
+		g_value_set_boolean (value, priv->valid_stddev);
 		break;
 	case PROP_COUNT:
 		g_value_set_int (value, priv->count);
@@ -138,10 +138,12 @@ static void goat_dataset_simple_class_init (GoatDatasetSimpleClass *klass)
 	    g_param_spec_int ("count", "GoatDataset::count", "count of datapoints", -1, 10000, -1, G_PARAM_READABLE);
 
 	obj_properties[PROP_VALID_STDDEV] =
-	    g_param_spec_boolean ("valid_stddev", "GoatDataset::valid_stddev", "is the stdandard deviation associated to this datatset valid", FALSE, G_PARAM_READWRITE);
+	    g_param_spec_boolean ("valid_stddev", "GoatDataset::valid_stddev",
+	                          "is the stdandard deviation associated to this datatset valid", FALSE, G_PARAM_READWRITE);
 
 	obj_properties[PROP_INTERPOLATION_ENABLED] =
-	    g_param_spec_boolean ("interpolation_enabled", "GoatDataset::interpolation_enabled", "shall the points be interpolated", FALSE, G_PARAM_READWRITE);
+	    g_param_spec_boolean ("interpolation_enabled", "GoatDataset::interpolation_enabled",
+	                          "shall the points be interpolated", FALSE, G_PARAM_READWRITE);
 
 	g_object_class_install_properties (object_class, N_PROPERTIES, obj_properties);
 }
@@ -172,11 +174,8 @@ static void goat_dataset_simple_init (GoatDatasetSimple *self)
  */
 GoatDatasetSimple *goat_dataset_simple_new (GList *list, gboolean valid_stddev, gboolean interpolate)
 {
-	return g_object_new (GOAT_TYPE_DATASET_SIMPLE,
-						 "valid_stddev", valid_stddev,
-						 "interpolation_enabled", interpolate,
-						 "list", list,
-						 NULL);
+	return g_object_new (GOAT_TYPE_DATASET_SIMPLE, "valid_stddev", valid_stddev, "interpolation_enabled", interpolate,
+	                     "list", list, NULL);
 }
 
 
@@ -206,7 +205,7 @@ static void update_extrema_cache (GoatDatasetSimple *self)
 	double register x_max, y_max;
 	double register y_upper;
 	double register y_lower;
-	const gboolean register valid_stddev = goat_dataset_has_valid_standard_deviation (GOAT_DATASET(self));
+	const gboolean register valid_stddev = goat_dataset_has_valid_standard_deviation (GOAT_DATASET (self));
 
 	x_log_min = x_min = +G_MAXDOUBLE;
 	y_log_min = y_min = +G_MAXDOUBLE;
@@ -218,8 +217,10 @@ static void update_extrema_cache (GoatDatasetSimple *self)
 		x_min = x_max = x;
 		y_min = y_max = y;
 
-		if( x > 0. ) x_log_min = x;
-		if( y > 0. ) y_log_min = y;
+		if (x > 0.)
+			x_log_min = x;
+		if (y > 0.)
+			y_log_min = y;
 
 		if (valid_stddev) {
 			y_min -= ystddev;
@@ -233,12 +234,12 @@ static void update_extrema_cache (GoatDatasetSimple *self)
 			if (x > x_max) {
 				x_max = x;
 			}
-			if( x < x_log_min && x > 0. ) {
+			if (x < x_log_min && x > 0.) {
 				x_log_min = x;
 			}
 			y_upper = y_lower = y;
 			if (valid_stddev) {
-				g_assert(ystddev >= 0.);
+				g_assert (ystddev >= 0.);
 				y_upper += ystddev;
 				y_lower -= ystddev;
 			}
@@ -248,7 +249,7 @@ static void update_extrema_cache (GoatDatasetSimple *self)
 			if (y_upper > y_max) {
 				y_max = y_upper;
 			}
-			if( y < y_log_min && y > 0. ) {
+			if (y < y_log_min && y > 0.) {
 				y_log_min = y;
 			}
 		}
@@ -270,8 +271,8 @@ void goat_dataset_simple_append (GoatDatasetSimple *self, gdouble x, gdouble y, 
 	pair->x = x;
 	pair->y = y;
 	if (ystddev < 0.) {
-		g_warning("goat_dataset_simple_append: ystddev has to be positive");
-		ystddev = fabs(ystddev);
+		g_warning ("goat_dataset_simple_append: ystddev has to be positive");
+		ystddev = fabs (ystddev);
 	}
 	pair->ystddev = ystddev;
 	if (priv->count < 0) {
@@ -282,14 +283,14 @@ void goat_dataset_simple_append (GoatDatasetSimple *self, gdouble x, gdouble y, 
 		priv->x_min = x;
 	if (priv->x_max < x)
 		priv->x_max = x;
-	if( priv->x_log_min > x && x > 0. )
+	if (priv->x_log_min > x && x > 0.)
 		priv->x_log_min = x;
 
-	const gboolean register valid_stddev = goat_dataset_has_valid_standard_deviation (GOAT_DATASET(self));
+	const gboolean register valid_stddev = goat_dataset_has_valid_standard_deviation (GOAT_DATASET (self));
 	double register y_lower = y;
 	double register y_upper = y;
 	if (valid_stddev) {
-		g_assert(ystddev >= 0.);
+		g_assert (ystddev >= 0.);
 		y_upper += ystddev;
 		y_lower -= ystddev;
 	}
@@ -297,7 +298,7 @@ void goat_dataset_simple_append (GoatDatasetSimple *self, gdouble x, gdouble y, 
 		priv->y_min = y_lower;
 	if (priv->y_max < y_upper)
 		priv->y_max = y_upper;
-	if( priv->y_log_min > y_lower && y_lower > 0. )
+	if (priv->y_log_min > y_lower && y_lower > 0.)
 		priv->y_log_min = y_lower;
 
 	/* g_printf ("calc x range: %lf..%lf\n", priv->x_min, priv->x_max); */
@@ -445,7 +446,8 @@ static void get_marker_size (GoatDataset *dataset, double *size)
 
 static gboolean get_marker_fill (GoatDataset *dataset)
 {
-	if(!dataset) return FALSE;
+	if (!dataset)
+		return FALSE;
 
 	GoatDatasetSimple *self = GOAT_DATASET_SIMPLE (dataset);
 	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
@@ -557,14 +559,16 @@ static GoatMarkerStyle get_marker_style (GoatDataset *dataset)
 	return priv->style;
 }
 
-static gboolean has_valid_standard_deviation(GoatDataset *dataset) {
-	g_return_val_if_fail(GOAT_IS_DATASET_SIMPLE (dataset), FALSE);
-	return GOAT_DATASET_SIMPLE(dataset)->priv->valid_stddev;
+static gboolean has_valid_standard_deviation (GoatDataset *dataset)
+{
+	g_return_val_if_fail (GOAT_IS_DATASET_SIMPLE (dataset), FALSE);
+	return GOAT_DATASET_SIMPLE (dataset)->priv->valid_stddev;
 }
 
-static gboolean is_interpolation_enabled(GoatDataset *dataset) {
-	g_return_val_if_fail(GOAT_IS_DATASET_SIMPLE (dataset), FALSE);
-	return GOAT_DATASET_SIMPLE(dataset)->priv->interpolation_enabled;
+static gboolean is_interpolation_enabled (GoatDataset *dataset)
+{
+	g_return_val_if_fail (GOAT_IS_DATASET_SIMPLE (dataset), FALSE);
+	return GOAT_DATASET_SIMPLE (dataset)->priv->interpolation_enabled;
 }
 
 /**
@@ -573,7 +577,7 @@ static gboolean is_interpolation_enabled(GoatDataset *dataset) {
  */
 gint get_length (GoatDataset *dataset)
 {
-	g_return_val_if_fail(GOAT_IS_DATASET_SIMPLE (dataset), FALSE);
+	g_return_val_if_fail (GOAT_IS_DATASET_SIMPLE (dataset), FALSE);
 	GoatDatasetSimple *self = GOAT_DATASET_SIMPLE (dataset);
 	GoatDatasetSimplePrivate *priv = goat_dataset_simple_get_instance_private (self);
 	if (priv->count >= 0)

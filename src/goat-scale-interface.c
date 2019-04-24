@@ -10,15 +10,20 @@ static void goat_scale_default_init (GoatScaleInterface *iface)
 	iface->set_range_auto = NULL;
 	iface->set_range = NULL;
 	iface->update_range = NULL;
+	iface->get_range = NULL;
+	iface->get_position = NULL;
+	iface->set_position = NULL;
+	iface->get_orientation = NULL;
+	iface->set_orientation = NULL;
 }
 
-void goat_scale_draw (GoatScale *self, cairo_t *cr, gint left, gint right, gint top, gint bottom )
+void goat_scale_draw (GoatScale *self, cairo_t *cr, gint left, gint right, gint top, gint bottom)
 {
 	GoatScaleInterface *iface;
 
 	iface = GOAT_SCALE_GET_IFACE (self);
 	if (iface->draw) {
-		iface->draw (self, cr, left, right, top, bottom );
+		iface->draw (self, cr, left, right, top, bottom);
 	} else {
 		g_error ("Missing draw handler for GoatScaleInterface!");
 	}
@@ -95,5 +100,30 @@ void goat_scale_grid_show (GoatScale *self, gboolean show)
 	iface = GOAT_SCALE_GET_IFACE (self);
 	if (iface->show_grid) {
 		iface->show_grid (self, show);
+	}
+}
+
+void goat_scale_set_position (GoatScale *self, GoatPosition position) {
+	GoatScaleInterface* iface = GOAT_SCALE_GET_IFACE(self);
+	if (iface->set_position) {
+		iface->set_position(self,position);
+	}
+}
+void goat_scale_set_orientation (GoatScale *self, GoatOrientation orientation) {
+	GoatScaleInterface* iface = GOAT_SCALE_GET_IFACE(self);
+	if (iface->set_orientation) {
+		iface->set_orientation(self,orientation);
+	}
+}
+GoatPosition goat_scale_get_position (GoatScale *self) {
+	GoatScaleInterface* iface = GOAT_SCALE_GET_IFACE(self);
+	if (iface->get_position) {
+		return iface->get_position(self);
+	}
+}
+GoatOrientation goat_scale_get_orientation (GoatScale *self) {
+	GoatScaleInterface* iface = GOAT_SCALE_GET_IFACE(self);
+	if (iface->get_orientation) {
+		return iface->get_orientation(self);
 	}
 }

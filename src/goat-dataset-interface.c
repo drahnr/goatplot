@@ -40,7 +40,7 @@ int goat_dataset_get_length (GoatDataset *self)
 }
 
 
-gboolean goat_dataset_get_marker_fill (GoatDataset *self )
+gboolean goat_dataset_get_marker_fill (GoatDataset *self)
 {
 	GoatDatasetInterface *iface;
 
@@ -108,7 +108,7 @@ void goat_dataset_get_marker_size (GoatDataset *self, double *size)
 	if (iface->get_marker_size) {
 		iface->get_marker_size (self, size);
 	} else {
-		*size = 8.;;
+		*size = 8.;
 	}
 }
 
@@ -172,7 +172,7 @@ gboolean goat_dataset_get_log_extrema (GoatDataset *dataset, gdouble *xmin, gdou
 	iface = GOAT_DATASET_GET_IFACE (dataset);
 	if (iface->get_log_extrema) {
 		return iface->get_log_extrema (dataset, xmin, xmax, ymin, ymax);
-	} else if( iface->get_extrema ) {
+	} else if (iface->get_extrema) {
 		return iface->get_extrema (dataset, xmin, xmax, ymin, ymax);
 	} else {
 		*xmin = *xmax = *ymin = *ymax = 0.;
@@ -211,14 +211,15 @@ gboolean goat_dataset_has_valid_standard_deviation (GoatDataset *self)
  *
  * @attention this is slow, it is recommended to cache this if possible, see #GoatDatasetSimple
  */
-static gboolean get_extrema(GoatDataset *self, gdouble *xmin, gdouble *xmax, gdouble *ymin, gdouble *ymax) {
+static gboolean get_extrema (GoatDataset *self, gdouble *xmin, gdouble *xmax, gdouble *ymin, gdouble *ymax)
+{
 	GoatDatasetIter iter;
 	double x, y, ystddev;
 	double register x_min, y_min;
 	double register x_max, y_max;
 	double register y_upper;
 	double register y_lower;
-	const gboolean register valid_stddev = goat_dataset_has_valid_standard_deviation (GOAT_DATASET(self));
+	const gboolean register valid_stddev = goat_dataset_has_valid_standard_deviation (GOAT_DATASET (self));
 
 	x_min = +G_MAXDOUBLE;
 	y_min = +G_MAXDOUBLE;
@@ -243,7 +244,7 @@ static gboolean get_extrema(GoatDataset *self, gdouble *xmin, gdouble *xmax, gdo
 			}
 			y_upper = y_lower = y;
 			if (valid_stddev) {
-				g_assert(ystddev >= 0.);
+				g_assert (ystddev >= 0.);
 				y_upper += ystddev;
 				y_lower -= ystddev;
 			}

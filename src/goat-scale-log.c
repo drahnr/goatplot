@@ -10,7 +10,8 @@ struct _GoatScaleLogPrivate {
 	// automatically choose x_min, ... y_max according to the datasets
 	gboolean autorange;
 
-	// ticks probably move into GoatTicks/Scale object (much of this should be in parent object, only draw function needs to be overriden - PLE 06/17)
+	// ticks probably move into GoatTicks/Scale object (much of this should be in parent object, only draw function
+	// needs to be overriden - PLE 06/17)
 	gdouble major_delta;
 	gint minors_per_major;
 
@@ -150,8 +151,7 @@ GoatScaleLog *goat_scale_log_new (GoatPosition position, GoatOrientation orienta
 {
 	GoatPosition assure_pos;
 	GoatOrientation assure_ori;
-	GoatScaleLog *self =
-	    g_object_new (GOAT_TYPE_SCALE_LOG, "position", position, "orientation", orientation, NULL);
+	GoatScaleLog *self = g_object_new (GOAT_TYPE_SCALE_LOG, "position", position, "orientation", orientation, NULL);
 	g_object_get (G_OBJECT (self), "position", &assure_pos, "orientation", &assure_ori, NULL);
 	g_assert (assure_pos == position);
 	g_assert (assure_ori == orientation);
@@ -172,9 +172,9 @@ void goat_scale_log_set_ticks (GoatScaleLog *scale, gdouble major, gint minors_p
 	priv->minors_per_major = minors_per_major;
 }
 
-gdouble goat_scale_log_get_major_delta (GoatScaleLog *scale )
+gdouble goat_scale_log_get_major_delta (GoatScaleLog *scale)
 {
-	if( !scale || !GOAT_IS_SCALE_LOG (scale) )
+	if (!scale || !GOAT_IS_SCALE_LOG (scale))
 		return 0.;
 
 	GoatScaleLogPrivate *priv;
@@ -190,7 +190,7 @@ gdouble goat_scale_log_get_major_delta (GoatScaleLog *scale )
  * @param x/y-nil in pixel (nil becomes void i
  * @param x/y-factor convert unit to pixel
  */
-static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top, gint bottom )
+static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top, gint bottom)
 {
 	GoatScaleLog *self = GOAT_SCALE_LOG (scale);
 	GoatScaleLogPrivate *priv = goat_scale_log_get_instance_private (self);
@@ -207,31 +207,33 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 	GdkRGBA color_minor_grid = priv->color_minor_grid;
 	GdkRGBA color_major_grid = priv->color_major_grid;
 
-	GoatPosition where = priv->position;
+	GoatPosition where = goat_scale_get_position(scale);
 	gboolean grid = priv->draw_grid;
 
 	/* Determine offset of minor grid / tick lines from linearly spaced majors */
-	gint minors_per_major = priv->minors_per_major+1;
+	gint minors_per_major = priv->minors_per_major + 1;
 
 	double major_val = priv->min;
 	double major_factor;
 
-	if( minors_per_major > 11 ) minors_per_major = 11;
+	if (minors_per_major > 11)
+		minors_per_major = 11;
 
-	for( i = 0; i < minors_per_major-1; i++ ) {
-		minor_steps[i] = 1.+log10((double) (i+1)/minors_per_major);
+	for (i = 0; i < minors_per_major - 1; i++) {
+		minor_steps[i] = 1. + log10 ((double)(i + 1) / minors_per_major);
 	}
 
 	minors_per_major -= 1;
 
 	/* Determine location of major ticks */
-	major_steps = (int) (ceil(log10( priv->max/priv->min ) / priv->major_delta) );		// major delta = 1 for steps of 10^1, 2 for steps of 10^2 etc
-	major_factor = pow( 10, priv->major_delta );
+	major_steps = (int)(ceil (log10 (priv->max / priv->min) /
+	                          priv->major_delta)); // major delta = 1 for steps of 10^1, 2 for steps of 10^2 etc
+	major_factor = pow (10, priv->major_delta);
 
 	cairo_set_line_width (cr, 1.);
 
 	if (where == GOAT_POSITION_LEFT) {
-		major_spacing = abs(top-bottom)/major_steps;
+		major_spacing = abs (top - bottom) / major_steps;
 
 		for (i = 0; i < major_steps; i++) {
 			y = top + i * major_spacing;
@@ -256,11 +258,11 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 			major_val *= major_factor;
 
 			x = left - width_minor;
-			for( j = 0; j < minors_per_major; j++ ) {
+			for (j = 0; j < minors_per_major; j++) {
 				y = top + (i + minor_steps[j]) * major_spacing;
 
 				/* Grid lines - minor over next major period */
-				if( grid ) {
+				if (grid) {
 					cairo_move_to (cr, right, y);
 					cairo_line_to (cr, left, y);
 					gdk_cairo_set_source_rgba (cr, &color_minor_grid);
@@ -297,7 +299,7 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 		goat_util_draw_num (cr, x, y, major_val, where);
 	}
 	if (where == GOAT_POSITION_RIGHT) {
-		major_spacing = abs(top-bottom)/major_steps;
+		major_spacing = abs (top - bottom) / major_steps;
 
 		for (i = 0; i < major_steps; i++) {
 			y = top + i * major_spacing;
@@ -322,11 +324,11 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 			major_val *= major_factor;
 
 			x = right + width_minor;
-			for( j = 0; j < minors_per_major; j++ ) {
+			for (j = 0; j < minors_per_major; j++) {
 				y = top + (i + minor_steps[j]) * major_spacing;
 
 				/* Grid lines - minor over next major period */
-				if( grid ) {
+				if (grid) {
 					cairo_move_to (cr, right, y);
 					cairo_line_to (cr, left, y);
 					gdk_cairo_set_source_rgba (cr, &color_minor_grid);
@@ -364,7 +366,7 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 		major_val *= major_factor;
 	}
 	if (where == GOAT_POSITION_TOP) {
-		major_spacing = abs(right-left)/major_steps;
+		major_spacing = abs (right - left) / major_steps;
 
 		for (i = 0; i < major_steps; i++) {
 			x = left + i * major_spacing;
@@ -389,11 +391,11 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 			major_val *= major_factor;
 
 			y = bottom + width_minor;
-			for( j = 0; j < minors_per_major; j++ ) {
+			for (j = 0; j < minors_per_major; j++) {
 				x = left + (i + minor_steps[j]) * major_spacing;
 
 				/* Grid lines - minor over next major period */
-				if( grid ) {
+				if (grid) {
 					cairo_move_to (cr, x, top);
 					cairo_line_to (cr, x, bottom);
 					gdk_cairo_set_source_rgba (cr, &color_minor_grid);
@@ -431,7 +433,7 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 		major_val *= major_factor;
 	}
 	if (where == GOAT_POSITION_BOTTOM) {
-		major_spacing = abs(right-left)/major_steps;
+		major_spacing = abs (right - left) / major_steps;
 
 		for (i = 0; i < major_steps; i++) {
 			x = left + i * major_spacing;
@@ -456,11 +458,11 @@ static void draw (GoatScale *scale, cairo_t *cr, gint left, gint right, gint top
 			major_val *= major_factor;
 
 			y = top - width_minor;
-			for( j = 0; j < minors_per_major; j++ ) {
+			for (j = 0; j < minors_per_major; j++) {
 				x = left + (i + minor_steps[j]) * major_spacing;
 
 				/* Grid lines - minor over next major period */
-				if( grid ) {
+				if (grid) {
 					cairo_move_to (cr, x, top);
 					cairo_line_to (cr, x, bottom);
 					gdk_cairo_set_source_rgba (cr, &color_minor_grid);
@@ -561,6 +563,31 @@ static void show_grid (GoatScale *scale, gboolean show)
 	self->priv->draw_grid = show;
 }
 
+static GoatPosition get_position (GoatScale *self)
+{
+	g_return_val_if_fail(self != NULL, GOAT_POSITION_INVALID);
+	return GOAT_SCALE_LOG(self)->priv->position;
+}
+
+static GoatOrientation get_orientation (GoatScale *self)
+{
+	g_return_val_if_fail(self != NULL, GOAT_ORIENTATION_INVALID);
+	return GOAT_SCALE_LOG(self)->priv->orientation;
+}
+
+static void set_position (GoatScale *self, GoatPosition position)
+{
+	g_return_if_fail(self != NULL);
+	GOAT_SCALE_LOG(self)->priv->position = position;
+}
+
+static void set_orientation (GoatScale *self, GoatOrientation orientation)
+{
+	g_return_if_fail(self != NULL);
+	GOAT_SCALE_LOG(self)->priv->orientation = orientation;
+}
+
+
 static void goat_scale_log_interface_init (GoatScaleInterface *iface)
 {
 	iface->draw = draw;
@@ -572,4 +599,8 @@ static void goat_scale_log_interface_init (GoatScaleInterface *iface)
 	iface->is_auto_range = is_auto_range;
 	iface->get_range = get_range;
 	iface->show_grid = show_grid;
+	iface->set_position = set_position;
+	iface->get_position = get_position;
+	iface->set_orientation = set_orientation;
+	iface->get_orientation = get_orientation;
 }

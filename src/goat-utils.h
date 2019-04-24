@@ -10,6 +10,12 @@
  */
 void goat_util_draw_num (cairo_t *cr, double x, double y, double d, GoatPosition penalty);
 
+
+/**
+ * calculate the bounding box for @d
+ */
+void goat_util_calc_num_extents(double d, int* width, int* height);
+
 /**
  * provides nice numerical limits when scaling an axis
  */

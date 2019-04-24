@@ -5,7 +5,7 @@ typedef struct {
 	gint x_index;
 	gint y_index;
 	gint ystddev_index;
-	gchar* color; // TODO move to GdkRGBA, but need to figure out GValue handling
+	gchar *color; // TODO move to GdkRGBA, but need to figure out GValue handling
 	GoatMarkerStyle marker_style;
 } GoatDatasetStorePrivate;
 
@@ -25,7 +25,8 @@ enum {
 	PROP_MARKER_STYLE,
 	PROP_COLOR,
 
-	N_PROPS };
+	N_PROPS
+};
 
 static GParamSpec *obj_properties[N_PROPS];
 
@@ -62,10 +63,10 @@ static void goat_dataset_store_get_property (GObject *object, guint prop_id, GVa
 		g_value_set_int (value, priv->ystddev_index);
 		break;
 	case PROP_COLOR:
-		g_value_take_string(value, priv->color);
+		g_value_take_string (value, priv->color);
 		break;
 	case PROP_MARKER_STYLE:
-		g_value_set_enum(value, priv->marker_style);
+		g_value_set_enum (value, priv->marker_style);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -133,7 +134,7 @@ static void goat_dataset_store_init (GoatDatasetStore *self)
 	priv->x_index = -1; // minus one so gtk_tree_model_get stops parsing
 	priv->y_index = -1;
 	priv->ystddev_index = -1;
-	priv->color = g_strdup("mediumseagreen");
+	priv->color = g_strdup ("mediumseagreen");
 	priv->marker_style = GOAT_MARKER_STYLE_POINT;
 }
 

@@ -35,6 +35,10 @@ GoatScaleLinear *goat_scale_linear_new (GoatPosition position, GoatOrientation o
 
 void goat_scale_linear_set_ticks (GoatScaleLinear *scale, gdouble major_step, gint minors_per_major);
 void goat_scale_linear_set_label (GoatScaleLinear *plot, gchar *label);
+void goat_scale_linear_set_position (GoatScaleLinear *scale, GoatPosition position);
+void goat_scale_linear_set_orientation (GoatScaleLinear *scale, GoatOrientation orientation);
+GoatPosition goat_scale_linear_get_position (GoatScaleLinear *scale);
+GoatOrientation goat_scale_linear_get_orientation (GoatScaleLinear *scale);
 
 G_END_DECLS
 
