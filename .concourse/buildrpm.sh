@@ -8,7 +8,7 @@ set -e
 name="${1}"
 version="${2}"
 pwd 2>&1
-RPMBUILD_DIR="$(pwd)/${1}/rpmbuild"
+RPMBUILD_DIR="$(pwd)/rpmbuild"
 
 mkdir -p ${RPMBUILD_DIR}/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
 
@@ -26,9 +26,9 @@ rpmbuild \
 --define "_srcrpmdir %{_topdir}/SRPMS" \
 --define "_specdir %{_topdir}/SPECS" \
 --define "_sourcedir  %{_topdir}/SOURCES" \
--ba SPECS/${name}.spec || exit 1
+-ba SPECS/${name}.spec
 
 mkdir -p $(pwd)/${1}/{,s}rpm/
 rm -vf ${RPMBUILD_DIR}/RPMS/*/${name}-*debug*.rpm
-cp -vf ${RPMBUILD_DIR}/RPMS/*/${name}-*.rpm $(pwd)/${1}/rpm/
-cp -vf ${RPMBUILD_DIR}/SRPMS/${name}-*.src.rpm $(pwd)/${1}/srpm/
+cp -vf ${RPMBUILD_DIR}/RPMS/*/${name}-*.rpm $(pwd)/../rpm/
+cp -vf ${RPMBUILD_DIR}/SRPMS/${name}-*.src.rpm $(pwd)/../srpm/
