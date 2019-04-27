@@ -26,14 +26,14 @@ resources:
     token: {{copr-token}}
     url: {{copr-url}}
 
-- name: rpm-release
-  type: s3
-  source:
-    endpoint: https://minio.spearow.io
-    bucket: goatplot-rpm
-    regexp: (.*).rpm
-    access_key_id: {{minio-access-key}}
-    secret_access_key: {{minio-secret-key}}
+# - name: rpm-release
+#   type: s3
+#   source:
+#     endpoint: https://minio.spearow.io
+#     bucket: goatplot-rpm
+#     regexp: (.*).rpm
+#     access_key_id: {{minio-access-key}}
+#     secret_access_key: {{minio-secret-key}}
 
 jobs:
   - name: build-pkg-rpm
@@ -64,18 +64,19 @@ jobs:
               ./.concourse/buildrpm.sh goatplot "$(./waf version | head -n 1)"
           dir: git-tag-resource
 
-    - put: rpm-release
-      params:
-        file: rpm/*.rpm
-        acl: public-read
+    # - aggregate:
+    #   - put: rpm-release
+    #     params:
+    #       file: rpm/*.rpm
+    #       acl: public-read
 
     - put: copr
       resource: copr-resource
       params:
+        project_id: 826
         rpmbuild_dir: "srpm"
         chroots: ["fedora-rawhide-x86_64", "fedora-30-x86_64", "fedora-29-x86_64"]
         enable_net: false
         max_n_bytes: 250000000
-        project_id: 16287
         regex: ".*goatplot-.*\\.src\\.rpm$"
       
