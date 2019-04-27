@@ -17,6 +17,7 @@ resources:
   source:
     branch: master
     uri: https://github.com/drahnr/goatplot.git
+    tag_filter: v[0-9]*.[0-9]*.[0-9]*
 
 - name: copr-resource
   type: copr
@@ -56,11 +57,11 @@ jobs:
         - name: srpm
         - name: rpm
         run:
-          path: zsh
+          path: sh
           args:
             - -exec
             - |
-              ./.concourse/buildrpm.sh goatploat $(./waf version | head -n 1)
+              ./.concourse/buildrpm.sh goatploat "$(./waf version | head -n 1)"
           dir: git-tag-resource
 
     - put: rpm-release

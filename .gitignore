@@ -4,3 +4,6 @@ build/*
 *.lock
 *.pyc
 .waf-*
+*.tar.gz
+*.tar.xz
+rpmbuild
