@@ -61,7 +61,7 @@ jobs:
           args:
             - -exec
             - |
-              ./.concourse/buildrpm.sh goatploat "$(./waf version | head -n 1)"
+              ./.concourse/buildrpm.sh goatplot "$(./waf version | head -n 1)"
           dir: git-tag-resource
 
     - put: rpm-release
