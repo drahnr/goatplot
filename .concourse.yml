@@ -9,8 +9,8 @@ resources:
   type: docker-image
   source:
     repository: quay.io/ratpoison/oregano-test-fedora
-    username: {{quay-username}}
-    password: {{quay-password}}
+    username: {{quay-drahnr-username}}
+    password: {{quay-drahnr-password}}
 
 - name: git-tag-resource
   type: git
@@ -46,7 +46,7 @@ jobs:
         trigger: true
 
     - task: create-rpm
-      timeout: 10m
+      timeout: 7m
       image: container-test-fedora
       config:
         platform: linux
@@ -56,8 +56,11 @@ jobs:
         - name: srpm
         - name: rpm
         run:
-          path: ./.concourse/buildrpm.sh
-          args: [ .. ]
+          path: zsh
+          args:
+            - -exec
+            - |
+              ./.concourse/buildrpm.sh goatploat $(./waf version | head -n 1)
           dir: git-tag-resource
 
     - put: rpm-release

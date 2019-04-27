@@ -29,10 +29,10 @@ The development files for the GoatPlot Gtk+ widget
 %setup -q -n goatplot-%{version}
 
 %build
-./waf configure --prefix=%{_prefix} --destdir=%{buildroot} build --notests --no-glade-dtd-check
+./waf configure --prefix=%{_prefix} --destdir=%{buildroot} build --no-tests --no-glade-dtd-check
 
 %install
-./waf --prefix=%{_prefix} --destdir=%{buildroot} install --notests --no-glade-dtd-check
+./waf --prefix=%{_prefix} --destdir=%{buildroot} install --no-tests --no-glade-dtd-check
 
 %clean
 rm -rf %{buildroot}

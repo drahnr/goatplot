@@ -3,7 +3,10 @@
 set -x
 set -e
 
-name="zshxt"
+./waf configure build --no-tests
+
+name="${1}"
+version="${2}"
 pwd 2>&1
 RPMBUILD_DIR="$(pwd)/${1}/rpmbuild"
 
@@ -11,9 +14,9 @@ mkdir -p ${RPMBUILD_DIR}/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
 
 cp -v build/meta/${name}.spec ${RPMBUILD_DIR}/SPECS/
 
-git archive --format=tar --prefix=${name}/ HEAD | xz > ${name}.tar.xz
+git archive --format=tar --prefix=${name}-${version}/ HEAD | gzip > v${version}.tar.gz
 
-cp -v ${name}*.tar.xz ${RPMBUILD_DIR}/SOURCES/
+cp -v v${version}*.tar.* ${RPMBUILD_DIR}/SOURCES/
 
 cd ${RPMBUILD_DIR}
 rpmbuild \
@@ -26,6 +29,6 @@ rpmbuild \
 -ba SPECS/${name}.spec || exit 1
 
 mkdir -p $(pwd)/${1}/{,s}rpm/
-rm -vf ${RPMBUILD_DIR}/RPMS/noarch/${name}-*debug*.rpm
-cp -vf ${RPMBUILD_DIR}/RPMS/noarch/${name}-*.rpm $(pwd)/${1}/rpm/
+rm -vf ${RPMBUILD_DIR}/RPMS/*/${name}-*debug*.rpm
+cp -vf ${RPMBUILD_DIR}/RPMS/*/${name}-*.rpm $(pwd)/${1}/rpm/
 cp -vf ${RPMBUILD_DIR}/SRPMS/${name}-*.src.rpm $(pwd)/${1}/srpm/

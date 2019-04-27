@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # encoding: utf-8
 
-VERSION = '0.0.11'
+VERSION = '0.1.0'
 LIBNAME = 'goatplot'
 
 top = '.'
@@ -91,3 +91,15 @@ class codestyle(Context):
     	"""format code properly"""
     	cmd = 'codestyle'
     	fun = 'codestyle_fun'
+
+
+
+from waflib.Context import Context
+
+def version_fun(ctx):
+	print(VERSION)
+
+class version(Context):
+	"""get current goatplot version"""
+	cmd = 'version'
+	fun = 'version_fun'
