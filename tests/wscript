@@ -18,7 +18,7 @@ def build(bld):
 	bld.env.CFLAGS = ['-ggdb', '-Wall']
 
 	test_screenshot = bld.program(
-		features = ['c', 'glib2', 'unites'],
+		features = ['c', 'glib2'],
 		target = 'test-screenshot',
 		source = ['screenshot.c'],
 		includes = includes,
@@ -29,7 +29,7 @@ def build(bld):
 	)
 
 	test_dynamic = bld.program(
-		features = ['c', 'glib2', 'unites'],
+		features = ['c', 'glib2'],
 		target = 'test-dynamic',
 		source = ['dynamic.c'],
 		includes = includes,
@@ -40,7 +40,7 @@ def build(bld):
 	)
 
 	test_glade = bld.program(
-	    features = ['c', 'glib2', 'unites'],
+	    features = ['c', 'glib2'],
 	    target = 'test-glade-line',
 	    source = ['glade-line.c'],
 	    includes = includes,

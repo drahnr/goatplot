@@ -34,6 +34,7 @@ gboolean self_destruct (GtkWidget *widget)
 }
 
 #define TEST_MULTIPLE 1
+
 int main (int argc, char *argv[])
 {
 	GtkWidget *window;
@@ -47,7 +48,7 @@ int main (int argc, char *argv[])
 
 	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 	box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-	scale_x = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_TOP, GOAT_ORIENTATION_HORIZONTAL));
+	scale_x = GOAT_SCALE (goat_scale_log_new (GOAT_POSITION_TOP, GOAT_ORIENTATION_HORIZONTAL));
 	goat_scale_set_range (scale_x, -44., +30.);
 	goat_scale_linear_set_ticks (GOAT_SCALE_LINEAR (scale_x), 100, 5);
 	scale_y = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_LEFT, GOAT_ORIENTATION_VERTICAL));
@@ -56,7 +57,7 @@ int main (int argc, char *argv[])
 	plot = goat_plot_new (scale_x, scale_y);
 
 	scale_x_auto = GOAT_SCALE (goat_scale_linear_new (GOAT_POSITION_BOTTOM, GOAT_ORIENTATION_HORIZONTAL));
-	goat_scale_set_range (scale_x, -100., +300.);
+	goat_scale_set_range (scale_x, -100., +3.2e10);
 	plot_clone = goat_plot_new (scale_x_auto, scale_y); // yep, we can re-use those
 
 	GList *list1 = NULL;
@@ -75,7 +76,7 @@ int main (int argc, char *argv[])
 #if TEST_MULTIPLE
 		pair = g_new (GoatTriple, 1);
 		pair->x = i;
-		pair->y = sin (2 * M_PI / 64 * i) * 25;
+		pair->y = sin (2 * M_PI / 64 * pow(3,i)) * 25;
 		pair->ystddev = sqrt (pair->y * pair->x);
 		list2 = g_list_prepend (list2, pair);
 

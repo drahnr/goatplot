@@ -1,0 +1,77 @@
+resource_types:
+- name: copr
+  type: docker-image
+  source:
+    repository: quay.io/ahoi/concourse-copr-resource
+
+resources:
+- name: container-test-fedora
+  type: docker-image
+  source:
+    repository: quay.io/ratpoison/oregano-test-fedora
+    username: {{quay-username}}
+    password: {{quay-password}}
+
+- name: git-tag-resource
+  type: git
+  source:
+    branch: master
+    uri: https://github.com/drahnr/goatplot.git
+
+- name: copr-resource
+  type: copr
+  source:
+    login: {{copr-login}}
+    token: {{copr-token}}
+    url: {{copr-url}}
+
+- name: rpm-release
+  type: s3
+  source:
+    endpoint: https://minio.spearow.io
+    bucket: goatplot-rpm
+    regexp: (.*).rpm
+    access_key_id: {{minio-access-key}}
+    secret_access_key: {{minio-secret-key}}
+
+jobs:
+  - name: build-pkg-rpm
+    build_logs_to_retain: 5
+    public: true
+    plan:
+    - aggregate:
+      - get: container-test-fedora
+        trigger: true
+      - get: git-tag-resource
+        trigger: true
+
+    - task: create-rpm
+      timeout: 10m
+      image: container-test-fedora
+      config:
+        platform: linux
+        inputs:
+        - name: git-tag-resource
+        outputs:
+        - name: srpm
+        - name: rpm
+        run:
+          path: ./.concourse/buildrpm.sh
+          args: [ .. ]
+          dir: git-tag-resource
+
+    - put: rpm-release
+      params:
+        file: rpm/*.rpm
+        acl: public-read
+
+    - put: copr
+      resource: copr-resource
+      params:
+        rpmbuild_dir: "srpm"
+        chroots: ["fedora-rawhide-x86_64", "fedora-30-x86_64", "fedora-29-x86_64"]
+        enable_net: false
+        max_n_bytes: 250000000
+        project_id: 16287
+        regex: ".*goatplot-.*\\.src\\.rpm$"
+      
