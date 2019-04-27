@@ -30,5 +30,5 @@ rpmbuild \
 
 mkdir -p $(pwd)/${1}/{,s}rpm/
 rm -vf ${RPMBUILD_DIR}/RPMS/*/${name}-*debug*.rpm
-cp -vf ${RPMBUILD_DIR}/RPMS/*/${name}-*.rpm $(pwd)/../rpm/
-cp -vf ${RPMBUILD_DIR}/SRPMS/${name}-*.src.rpm $(pwd)/../srpm/
+cp -vf ${RPMBUILD_DIR}/RPMS/*/${name}-*.rpm $(pwd)/../../rpm/
+cp -vf ${RPMBUILD_DIR}/SRPMS/${name}-*.src.rpm $(pwd)/../../srpm/
