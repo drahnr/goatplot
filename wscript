@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # encoding: utf-8
 
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 LIBNAME = 'goatplot'
 
 top = '.'
