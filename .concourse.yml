@@ -40,7 +40,7 @@ jobs:
     build_logs_to_retain: 5
     public: true
     plan:
-    - aggregate:
+    - in_parallel:
       - get: container-test-fedora
         trigger: true
       - get: git-tag-resource
@@ -64,7 +64,7 @@ jobs:
               ./.concourse/buildrpm.sh goatplot "$(./waf version | head -n 1)"
           dir: git-tag-resource
 
-    # - aggregate:
+    # - in_parallel:
     #   - put: rpm-release
     #     params:
     #       file: rpm/*.rpm
